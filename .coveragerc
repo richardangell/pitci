@@ -1,0 +1,18 @@
+[run]
+
+branch = True
+
+include = pitci/*
+
+omit = 
+      pitci/helpers.py
+      pitci/_version.py
+      conftest.py
+      *__init__.py
+      tests/*
+
+[report]
+
+show_missing = True
+
+fail_under = 90

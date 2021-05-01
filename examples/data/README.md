@@ -1,0 +1,1 @@
+Any data that is downloaded for use in the example notebooks in the `examples` directory will be saved here.
