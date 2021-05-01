@@ -2,17 +2,12 @@ import pandas as pd
 import numpy as np
 import xgboost as xgb
 
-from abc import ABC, abstractmethod
-
-from typing import Union, Optional, Dict, List, Any
+from typing import Union, Optional
 
 from pitci.checks import (
     check_type,
-    check_attribute,
     check_objective_supported,
-    check_allowed_value,
 )
-import pitci.nonconformity as nonconformity
 from pitci.predictors.base import AbsoluteErrorConformalPredictor
 
 
@@ -153,4 +148,4 @@ class XGBoostAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
 
             response = data.get_label()
 
-        super()._calibrate_interval(data = data, alpha = alpha, response = response)
+        super()._calibrate_interval(data=data, alpha=alpha, response=response)

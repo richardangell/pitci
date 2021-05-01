@@ -13,8 +13,8 @@ import pitci.nonconformity as nonconformity
 
 
 class AbsoluteErrorConformalPredictor(ABC):
-    """Abstract base class for a conformal interval predictor for any 
-    underlying  model using non-scaled absolute error as the 
+    """Abstract base class for a conformal interval predictor for any
+    underlying  model using non-scaled absolute error as the
     nonconformity measure.
     """
 
@@ -44,7 +44,7 @@ class AbsoluteErrorConformalPredictor(ABC):
             Confidence level for the interval.
 
         response : np.ndarray, pd.Series or None, default = None
-            The associated response values for every record in data. 
+            The associated response values for every record in data.
 
         """
 
@@ -104,8 +104,15 @@ class AbsoluteErrorConformalPredictor(ABC):
         return predictions_with_interval
 
     @abstractmethod
-    def _generate_predictions(self) -> None:
-        """Method to generate predictions with underlying model."""
+    def _generate_predictions(self, data: Any) -> np.ndarray:
+        """Method to generate predictions with underlying model.
+
+        Parameters
+        ----------
+        data : Any
+            Dataset to generate predictions for.
+
+        """
 
         pass
 
@@ -115,7 +122,7 @@ class AbsoluteErrorConformalPredictor(ABC):
         response: Union[np.ndarray, pd.Series],
         alpha: Union[int, float] = 0.95,
     ) -> None:
-        """Method to set the baseline conformal interval. Result is stored 
+        """Method to set the baseline conformal interval. Result is stored
         in the baseline_interval attribute.
 
         The value passed in alpha is also stored in an attribute of the
@@ -145,5 +152,3 @@ class AbsoluteErrorConformalPredictor(ABC):
         )
 
         self.baseline_interval = np.quantile(nonconformity_values, alpha)
-
-
