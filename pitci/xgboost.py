@@ -84,43 +84,43 @@ class XGBoostAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
         "count:poisson",
     ]
 
-    def __init__(self, booster: xgb.Booster) -> None:
+    def __init__(
+        self, model: Union[xgb.Booster, xgb.XGBRegressor, xgb.XGBClassifier]
+    ) -> None:
 
         super().__init__()
 
-        check_type(
-            booster, [xgb.Booster, xgb.XGBRegressor, xgb.XGBClassifier], "booster"
-        )
+        check_type(model, [xgb.Booster, xgb.XGBRegressor, xgb.XGBClassifier], "booster")
 
-        if type(booster) is xgb.Booster:
+        if type(model) is xgb.Booster:
 
-            check_objective_supported(booster, self.SUPPORTED_OBJECTIVES)
+            check_objective_supported(model, self.SUPPORTED_OBJECTIVES)
 
         else:
 
-            check_objective_supported(booster.get_booster(), self.SUPPORTED_OBJECTIVES)
+            check_objective_supported(model.get_booster(), self.SUPPORTED_OBJECTIVES)
 
-        self.booster = booster
+        self.model = model
 
     def _generate_predictions(
         self, data: Union[xgb.DMatrix, np.ndarray, pd.DataFrame]
     ) -> np.ndarray:
         """Method to generate predictions from the xgboost model.
 
-        Method calls xgb.Booster.predict with ntree_limit =
-        booster.best_iteration + 1.
+        Calls predict method on the model attribute with
+        ntree_limit = booster.best_iteration + 1.
 
         Parameters
         ----------
-        data : xgb.DMatrix
+        data : xgb.DMatrix, np.ndarray or pd.DataFrame
             Data to generate predictions on.
 
         """
 
         check_type(data, [xgb.DMatrix, np.ndarray, pd.DataFrame], "data")
 
-        predictions = self.booster.predict(
-            data, ntree_limit=self.booster.best_iteration + 1
+        predictions = self.model.predict(
+            data, ntree_limit=self.model.best_iteration + 1
         )
 
         return predictions
@@ -131,6 +131,25 @@ class XGBoostAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
         response: Optional[Union[np.ndarray, pd.Series]] = None,
         alpha: Union[int, float] = 0.95,
     ) -> None:
+        """Method to calibrate conformal intervals that will be applied
+        to new instances when calling predict_with_interval.
+
+        Calls the parent class calibrate method after extracting the
+        response from the data argument, if response is not passed
+        and data is an xgb.DMatrix object.
+
+        Parameters
+        ----------
+        data : xgb.DMatrix, np.ndarray or pd.DataFrame
+            Dataset to calibrate baselines on.
+
+        alpha : int or float, default = 0.95
+            Confidence level for the interval.
+
+        response : np.ndarray, pd.Series or None, default = None
+            The associated response values for every record in data.
+
+        """
 
         if type(data) is xgb.DMatrix and response is None:
 
@@ -156,16 +175,14 @@ class XGBoostAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
 
         Parameters
         ----------
-        data : xgb.DMatrix
+        data : xgb.DMatrix, np.ndarray or pd.DataFrame
             Dataset to use to set baseline interval width.
 
         alpha : int or float, default = 0.95
             Confidence level for the interval.
 
-        response : np.ndarray, pd.Series or None, default = None
-            The response values for the records in data. If passed as
-            None then the function will attempt to extract the response from
-            the data argument with get_label.
+        response : np.ndarray or pd.Series
+            The response values for the records in data.
 
         """
 
