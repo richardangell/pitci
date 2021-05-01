@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from abc import ABC, abstractmethod
 
-from typing import Union, Optional, Any
+from typing import Union, Any
 
 from pitci._version import __version__
 from pitci.checks import (
@@ -26,7 +26,7 @@ class AbsoluteErrorConformalPredictor(ABC):
     def calibrate(
         self,
         data: Any,
-        response: Optional[Union[np.ndarray, pd.Series]],
+        response: Union[np.ndarray, pd.Series],
         alpha: Union[int, float] = 0.95,
     ) -> None:
         """Method to calibrate conformal intervals that will be applied
@@ -53,6 +53,10 @@ class AbsoluteErrorConformalPredictor(ABC):
         if not (alpha >= 0 and alpha <= 1):
 
             raise ValueError("alpha must be in range [0 ,1]")
+
+        if response is None:
+
+            raise TypeError("response cannot be none")
 
         self._calibrate_interval(data=data, alpha=alpha, response=response)
 

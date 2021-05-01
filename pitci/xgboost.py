@@ -2,13 +2,13 @@ import pandas as pd
 import numpy as np
 import xgboost as xgb
 
-from typing import Union, Optional
+from typing import Union, Optional, cast
 
 from pitci.checks import (
     check_type,
     check_objective_supported,
 )
-from pitci.predictors.base import AbsoluteErrorConformalPredictor
+from pitci.base import AbsoluteErrorConformalPredictor
 
 
 class XGBoostAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
@@ -88,12 +88,23 @@ class XGBoostAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
 
         super().__init__()
 
-        check_type(booster, [xgb.Booster], "booster")
-        check_objective_supported(booster, self.SUPPORTED_OBJECTIVES)
+        check_type(
+            booster, [xgb.Booster, xgb.XGBRegressor, xgb.XGBClassifier], "booster"
+        )
+
+        if type(booster) is xgb.Booster:
+
+            check_objective_supported(booster, self.SUPPORTED_OBJECTIVES)
+
+        else:
+
+            check_objective_supported(booster.get_booster(), self.SUPPORTED_OBJECTIVES)
 
         self.booster = booster
 
-    def _generate_predictions(self, data: xgb.DMatrix) -> np.ndarray:
+    def _generate_predictions(
+        self, data: Union[xgb.DMatrix, np.ndarray, pd.DataFrame]
+    ) -> np.ndarray:
         """Method to generate predictions from the xgboost model.
 
         Method calls xgb.Booster.predict with ntree_limit =
@@ -106,19 +117,35 @@ class XGBoostAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
 
         """
 
-        check_type(data, [xgb.DMatrix], "data")
+        check_type(data, [xgb.DMatrix, np.ndarray, pd.DataFrame], "data")
 
         predictions = self.booster.predict(
-            data=data, ntree_limit=self.booster.best_iteration + 1
+            data, ntree_limit=self.booster.best_iteration + 1
         )
 
         return predictions
 
+    def calibrate(
+        self,
+        data: Union[xgb.DMatrix, np.ndarray, pd.DataFrame],
+        response: Optional[Union[np.ndarray, pd.Series]] = None,
+        alpha: Union[int, float] = 0.95,
+    ) -> None:
+
+        if type(data) is xgb.DMatrix and response is None:
+
+            # only to stop mypy complaining about get_label method
+            data = cast(xgb.DMatrix, data)
+
+            response = data.get_label()
+
+        super().calibrate(data=data, alpha=alpha, response=response)
+
     def _calibrate_interval(
         self,
-        data: xgb.DMatrix,
+        data: Union[xgb.DMatrix, np.ndarray, pd.DataFrame],
+        response: Union[np.ndarray, pd.Series],
         alpha: Union[int, float] = 0.95,
-        response: Optional[Union[np.ndarray, pd.Series]] = None,
     ) -> None:
         """Method to set the baseline conformal interval.
 
@@ -142,10 +169,6 @@ class XGBoostAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
 
         """
 
-        check_type(data, [xgb.DMatrix], "data")
-
-        if response is None:
-
-            response = data.get_label()
+        check_type(data, [xgb.DMatrix, np.ndarray, pd.DataFrame], "data")
 
         super()._calibrate_interval(data=data, alpha=alpha, response=response)
