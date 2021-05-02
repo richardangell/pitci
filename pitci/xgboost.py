@@ -341,7 +341,7 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
         check_attribute(
             self,
             "leaf_node_counts",
-            "LeafNodeScaledConformalPredictor does not have leaf_node_counts attribute, "
+            "XGBoosterLeafNodeScaledConformalPredictor does not have leaf_node_counts attribute, "
             "run calibrate first.",
         )
 
@@ -497,10 +497,272 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
     def _get_tree_tabular_structure(self) -> pd.DataFrame:
         """Method to return the xgboost model in a tabular structure.
 
-        Method simply class the trees_to_dataframe method of the model
+        Method simply calls the trees_to_dataframe method of the model
         attribute.
         """
 
         tabular_model = self.model.trees_to_dataframe()
+
+        return tabular_model
+
+
+class XGBSklearnLeafNodeScaledConformalPredictor(
+    XGBoosterLeafNodeScaledConformalPredictor
+):
+    """Conformal interval predictor for an underlying `xgboost.XGBRegressor`
+    or `xgboost.XGBClassifier` model using scaled absolute error as the
+    nonconformity measure.
+
+    Class implements inductive conformal intervals where a calibration
+    dataset is used to learn the information that is used when generating
+    intervals for new instances.
+
+    The predictor outputs varying width intervals for every new instance.
+    The scaling function uses the number of times that the leaf nodes were
+    visited for each tree in making the prediction, for that row, were
+    visited in the calibration dataset.
+
+    Intuitively, for rows that have higher leaf node counts from the calibration
+    set - the model will be more 'familiar' with hence the interval for
+    these rows will be shrunk. The inverse is true for rows that have lower
+    leaf node counts from the calibration set.
+
+    The currently supported xgboost objective functions (given the nonconformity
+    measure that is based on absolute error) are defined in the
+    SUPPORTED_OBJECTIVES attribute.
+
+    Parameters
+    ----------
+    model : xgb.XGBRegressor or xgb.XGBClassifier
+        Model to generate predictions with conformal intervals.
+
+    Attributes
+    ----------
+    model : xgb.XGBRegressor or xgb.XGBClassifier
+        Model passed in initialisation of the class.
+
+    leaf_node_counts : list
+        Counts of number of times each leaf node in each tree was visited when
+        making predictions on the calibration dataset. Attribute is set when the
+        calibrate method is run, which calls _calibrate_leaf_node_counts. The
+        length of the list corresponds to the number of trees.
+
+    baseline_interval : float
+        Default, baseline conformal interval width. Will be scaled for each
+        prediction generated. Attribute is set when the calibrate method is
+        run, which calls _calibrate_interval.
+
+    alpha : int or float
+        The confidence level of the conformal intervals that will be produced.
+        Attribute is set when the calibrate method is run, which calls
+        _calibrate_interval.
+
+    SUPPORTED_OBJECTIVES : list
+        Booster supported objectives, if an xgb.XGBRegressor or xgb.XGBClassifier
+        with a non-supported objective is passed when initialising an instance
+        of the class an error will be raised.
+
+    """
+
+    def __init__(self, model: Union[xgb.XGBRegressor, xgb.XGBClassifier]) -> None:
+
+        check_type(model, [xgb.XGBRegressor, xgb.XGBClassifier], "booster")
+
+        self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABS_ERROR
+
+        check_objective_supported(model.get_booster(), self.SUPPORTED_OBJECTIVES)
+
+        self.model = model
+
+        LeafNodeScaledConformalPredictor.__init__(self)
+
+    def calibrate(  # type: ignore[override]
+        self,
+        data: Union[np.ndarray, pd.DataFrame],
+        response: Union[np.ndarray, pd.Series],
+        alpha: Union[int, float] = 0.95,
+    ) -> None:
+        """Method to calibrate conformal intervals that will allow
+        prediction intervals that vary by row.
+
+        Method calls the LeafNodeScaledConformalPredictor.calibrate
+        method and skips the parent calibrate method.
+
+        Gradnparent calibrate method calls _calibrate_leaf_node_counts
+        to record the numberof times each leaf node is visited across
+        the whole of the passed data.
+
+        Gradnparent calibrate method calls _calibrate_interval to set the
+        default interval that will be scaled using the inverse of the
+        noncomformity function when making predictions. This allows
+        intervals to vary by instance.
+
+        Parameters
+        ----------
+        data : np.ndarray or pd.DataFrame
+            Dataset to use to set baselines.
+
+        alpha : int or float, default = 0.95
+            Confidence level for the interval.
+
+        response : np.ndarray or pd.Series
+            The response values for the records in data.
+
+        """
+
+        LeafNodeScaledConformalPredictor.calibrate(
+            self, data=data, response=response, alpha=alpha
+        )
+
+    def predict_with_interval(
+        self, data: Union[np.ndarray, pd.DataFrame]
+    ) -> np.ndarray:
+        """Method to generate predictions on data with conformal intervals.
+
+        This method runs the underlying model's predict method twice, once to
+        generate predictions and once to produce the leaf node indexes.
+
+        Each prediction is produced with an associated conformal interval.
+        The default interval is of a fixed width and this is scaled
+        differently for each row. Scaling is done, for a given row, by
+        counting the number of times each leaf node, visited to make the
+        prediction, was visited in the calibration dataset. The counts of
+        leaf node visits in the calibration data are set by the
+        _calibrate_leaf_node_counts method.
+
+        The scaling factors, generated by _calculate_scaling_factors, are
+        multiploed by the baseline_interval value. The scaled nonconformity
+        function implements the inverse and divides the absolute error
+        by the scaling factors.
+
+        Parameters
+        ----------
+        data : np.ndarray or pd.DataFrame
+            Data to generate predictions with conformal intervals on.
+
+        Returns
+        -------
+        predictions_with_interval : np.ndarray
+            Array of predictions with intervals for each row in data.
+            Output array will have 3 columns where the first is the
+            lower interval, second are the predictions and the third
+            is the upper interval.
+
+        """
+
+        check_type(data, [np.ndarray, pd.DataFrame], "data")
+
+        check_attribute(
+            self,
+            "leaf_node_counts",
+            "XGBSklearnLeafNodeScaledConformalPredictor does not have leaf_node_counts attribute, "
+            "run calibrate first.",
+        )
+
+        predictions_with_interval = (
+            LeafNodeScaledConformalPredictor.predict_with_interval(self, data=data)
+        )
+
+        return predictions_with_interval
+
+    def _calculate_scaling_factors(
+        self, data: Union[np.ndarray, pd.DataFrame]
+    ) -> np.ndarray:
+        """Method to calculate the scaling factors for a given dataset.
+
+        First leaf node indexes are generated for the passed data using
+        the _generate_leaf_node_predictions method.
+
+        Then leaf node indexes are passed to _count_leaf_node_visits_from_calibration
+        which, for each row, counts the total number of times each leaf
+        node index was visited in the calibration dataset.
+
+        1 / leaf node counts are returned from this function so that the scaling
+        factor is inverted i.e. smaller values are better.
+
+        Parameters
+        ----------
+        data : np.ndarray or pd.DataFrame
+            Data to calculate interval scaling factors for.
+
+        Returns
+        -------
+        leaf_node_counts : np.ndarray
+            Array of same length as input data giving factor for each input row.
+
+        """
+
+        check_type(data, [np.ndarray, pd.DataFrame], "data")
+
+        reciprocal_leaf_node_counts = (
+            LeafNodeScaledConformalPredictor._calculate_scaling_factors(self, data=data)
+        )
+
+        return reciprocal_leaf_node_counts
+
+    def _generate_predictions(
+        self, data: Union[np.ndarray, pd.DataFrame]
+    ) -> np.ndarray:
+        """Method to generate predictions from the xgboost model.
+
+        Calls predict method on the model attribute with
+        ntree_limit = model's best_iteration + 1.
+
+        Parameters
+        ----------
+        data : np.ndarray or pd.DataFrame
+            Data to generate predictions on.
+
+        """
+
+        check_type(data, [np.ndarray, pd.DataFrame], "data")
+
+        predictions = self.model.predict(
+            data, ntree_limit=self.model.best_iteration + 1
+        )
+
+        return predictions
+
+    def _generate_leaf_node_predictions(
+        self, data: Union[np.ndarray, pd.DataFrame]
+    ) -> np.ndarray:
+        """Method to generate leaf node predictions from the xgboost model.
+
+        Method calls the underlying model's apply method with ntree_limit =
+        model's best_iteration + 1.
+
+        If the output of predict is not a 2d matrix the output is shaped to
+        be 2d.
+
+        Parameters
+        ----------
+        data : np.ndarray or pd.DataFrame
+            Data to generate predictions on.
+
+        """
+
+        check_type(data, [np.ndarray, pd.DataFrame], "data")
+
+        # matrix of (nsample, ntrees) with each record giving
+        # the leaf node of each sample in each tree
+        leaf_node_predictions = self.model.apply(
+            X=data, ntree_limit=self.model.best_iteration + 1
+        )
+
+        # if the input data is a single column reshape the output to
+        # be 2d array rather than 1d
+        if len(leaf_node_predictions.shape) == 1:
+
+            leaf_node_predictions = leaf_node_predictions.reshape((data.shape[0], 1))
+
+        return leaf_node_predictions
+
+    def _get_tree_tabular_structure(self) -> pd.DataFrame:
+        """Method to return the xgboost model in a tabular structure.
+
+        Method simply calls the trees_to_dataframe method of the model.
+        """
+
+        tabular_model = self.model.get_booster().trees_to_dataframe()
 
         return tabular_model
