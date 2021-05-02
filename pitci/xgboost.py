@@ -1,11 +1,48 @@
 import pandas as pd
 import numpy as np
-import xgboost as xgb
+import json
 
-from typing import Union, Optional, cast
+try:
 
-from pitci.checks import check_type, check_objective_supported, check_attribute
+    import xgboost as xgb
+
+except ModuleNotFoundError as err:
+
+    raise ImportError(
+        "xgboost must be installed to use functionality in pitci.xgboost"
+    ) from err
+
+from typing import Union, Optional, List, cast
+
 from pitci.base import AbsoluteErrorConformalPredictor, LeafNodeScaledConformalPredictor
+from pitci.checks import check_type, check_attribute, check_allowed_value
+from pitci.dispatchers import (
+    get_leaf_node_scaled_conformal_predictor,
+    get_absolute_error_conformal_predictor,
+)
+
+
+def check_objective_supported(
+    booster: xgb.Booster, supported_objectives: List[str]
+) -> None:
+    """Function to check that the booster objective parameter is in the
+    supported_objectives list and raise and exception if not.
+    """
+
+    check_type(booster, [xgb.Booster], "booster")
+    check_type(supported_objectives, [list], "supported_objectives")
+
+    for i, objective in enumerate(supported_objectives):
+
+        check_type(objective, [str], f"supported_objectives[{i}]")
+
+    booster_config = json.loads(booster.save_config())
+
+    booster_objective = booster_config["learner"]["objective"]["name"]
+
+    check_allowed_value(
+        booster_objective, supported_objectives, "booster objective not supported"
+    )
 
 
 # currently the only supported learning tasks where the basis of the
@@ -614,3 +651,45 @@ class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredicto
             leaf_node_predictions = leaf_node_predictions.reshape((data.shape[0], 1))
 
         return leaf_node_predictions
+
+
+@get_absolute_error_conformal_predictor.register(xgb.Booster)
+@get_absolute_error_conformal_predictor.register(xgb.XGBRegressor)
+@get_absolute_error_conformal_predictor.register(xgb.XGBClassifier)
+def return_xgb_absolute_error_confromal_predictor(
+    model: Union[xgb.Booster, xgb.XGBRegressor, xgb.XGBClassifier]
+) -> XGBoosterAbsoluteErrorConformalPredictor:
+    """Function to return an instance of XGBoosterAbsoluteErrorConformalPredictor
+    class the passed xgboost model object.
+    """
+
+    confo_model = XGBoosterAbsoluteErrorConformalPredictor(model=model)
+
+    return confo_model
+
+
+@get_leaf_node_scaled_conformal_predictor.register(xgb.Booster)
+def return_xgb_booster_leaf_node_scaled_confromal_predictor(
+    model: xgb.Booster,
+) -> XGBoosterLeafNodeScaledConformalPredictor:
+    """Function to return an instance of XGBoosterLeafNodeScaledConformalPredictor
+    class the passed xgb.Booster object.
+    """
+
+    confo_model = XGBoosterLeafNodeScaledConformalPredictor(model=model)
+
+    return confo_model
+
+
+@get_leaf_node_scaled_conformal_predictor.register(xgb.XGBRegressor)
+@get_leaf_node_scaled_conformal_predictor.register(xgb.XGBClassifier)
+def return_xgb_sklearn_leaf_node_scaled_confromal_predictor(
+    model: Union[xgb.XGBRegressor, xgb.XGBClassifier]
+) -> XGBSklearnLeafNodeScaledConformalPredictor:
+    """Function to return an instance of XGBSklearnLeafNodeScaledConformalPredictor
+    class the passed xgb.XGBRegressor object.
+    """
+
+    confo_model = XGBSklearnLeafNodeScaledConformalPredictor(model=model)
+
+    return confo_model

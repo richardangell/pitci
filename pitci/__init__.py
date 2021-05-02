@@ -1,9 +1,13 @@
 from pitci._version import __version__
-from pitci.xgboost import (
-    XGBoosterAbsoluteErrorConformalPredictor,
-    XGBoosterLeafNodeScaledConformalPredictor,
-)
-import pitci.helpers as helpers
-import pitci.checks as checks
+
 import pitci.base as base
-import pitci.xgboost as xgboost
+import pitci.checks as checks
+import pitci.dispatchers as dispatchers
+import pitci.helpers as helpers
+
+from pitci.dispatchers import get_leaf_node_scaled_conformal_predictor
+
+try:
+    import pitci.xgboost as xgboost
+except ImportError:
+    pass
