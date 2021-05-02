@@ -341,8 +341,8 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
         check_attribute(
             self,
             "leaf_node_counts",
-            "XGBoosterLeafNodeScaledConformalPredictor does not have leaf_node_counts attribute, "
-            "run calibrate first.",
+            "XGBoosterLeafNodeScaledConformalPredictor does not have leaf_node_counts"
+            " attribute, run calibrate first.",
         )
 
         predictions_with_interval = super().predict_with_interval(data=data)
@@ -403,9 +403,7 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
         return leaf_node_predictions
 
 
-class XGBSklearnLeafNodeScaledConformalPredictor(
-    XGBoosterLeafNodeScaledConformalPredictor
-):
+class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor):
     """Conformal interval predictor for an underlying `xgboost.XGBRegressor`
     or `xgboost.XGBClassifier` model using scaled absolute error as the
     nonconformity measure.
@@ -473,7 +471,7 @@ class XGBSklearnLeafNodeScaledConformalPredictor(
 
         LeafNodeScaledConformalPredictor.__init__(self)
 
-    def calibrate(  # type: ignore[override]
+    def calibrate(
         self,
         data: Union[np.ndarray, pd.DataFrame],
         response: Union[np.ndarray, pd.Series],
@@ -507,9 +505,9 @@ class XGBSklearnLeafNodeScaledConformalPredictor(
 
         """
 
-        LeafNodeScaledConformalPredictor.calibrate(
-            self, data=data, response=response, alpha=alpha
-        )
+        check_type(data, [np.ndarray, pd.DataFrame], "data")
+
+        super().calibrate(data=data, response=response, alpha=alpha)
 
     def predict_with_interval(
         self, data: Union[np.ndarray, pd.DataFrame]
@@ -552,50 +550,13 @@ class XGBSklearnLeafNodeScaledConformalPredictor(
         check_attribute(
             self,
             "leaf_node_counts",
-            "XGBSklearnLeafNodeScaledConformalPredictor does not have leaf_node_counts attribute, "
-            "run calibrate first.",
+            "XGBSklearnLeafNodeScaledConformalPredictor does not have leaf_node_counts"
+            " attribute, run calibrate first.",
         )
 
-        predictions_with_interval = (
-            LeafNodeScaledConformalPredictor.predict_with_interval(self, data=data)
-        )
+        predictions_with_interval = super().predict_with_interval(data=data)
 
         return predictions_with_interval
-
-    def _calculate_scaling_factors(
-        self, data: Union[np.ndarray, pd.DataFrame]
-    ) -> np.ndarray:
-        """Method to calculate the scaling factors for a given dataset.
-
-        First leaf node indexes are generated for the passed data using
-        the _generate_leaf_node_predictions method.
-
-        Then leaf node indexes are passed to _count_leaf_node_visits_from_calibration
-        which, for each row, counts the total number of times each leaf
-        node index was visited in the calibration dataset.
-
-        1 / leaf node counts are returned from this function so that the scaling
-        factor is inverted i.e. smaller values are better.
-
-        Parameters
-        ----------
-        data : np.ndarray or pd.DataFrame
-            Data to calculate interval scaling factors for.
-
-        Returns
-        -------
-        leaf_node_counts : np.ndarray
-            Array of same length as input data giving factor for each input row.
-
-        """
-
-        check_type(data, [np.ndarray, pd.DataFrame], "data")
-
-        reciprocal_leaf_node_counts = (
-            LeafNodeScaledConformalPredictor._calculate_scaling_factors(self, data=data)
-        )
-
-        return reciprocal_leaf_node_counts
 
     def _generate_predictions(
         self, data: Union[np.ndarray, pd.DataFrame]
