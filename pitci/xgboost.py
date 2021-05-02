@@ -453,10 +453,6 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
 
         """
 
-        # convert the xgboost model to tabular structure in order
-        # to identify all leaf nodes in the model
-        model_df = self._get_tree_tabular_structure()
-
         leaf_node_predictions = self._generate_leaf_node_predictions(data)
 
         leaf_node_predictions_df = pd.DataFrame(leaf_node_predictions)
@@ -470,40 +466,6 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
             self.leaf_node_counts.append(
                 leaf_node_predictions_df[tree_no].value_counts().to_dict()
             )
-
-            tree_subset = model_df.loc[
-                (model_df["Tree"] == tree_no) & (model_df["Feature"] == "Leaf")
-            ]
-
-            if not tree_subset.shape[0] > 0:
-                raise ValueError(f"no leaf nodes found in model for tree {tree_no}")
-
-            tree_all_leaf_nodes = tree_subset["Node"].tolist()
-
-            # note, because data can be any dataset
-            # it is not guaranteed that every single leaf node
-            # will be represented there (that would only be
-            # the case if data was the exact same
-            # dataset as what the model was trained on)
-            # so we need to check all leaf nodes and add them
-            # into leaf_node_counts, with a count of 0, if
-            # they are not already present
-            for leaf_node in tree_all_leaf_nodes:
-
-                if leaf_node not in self.leaf_node_counts[tree_no].keys():
-
-                    self.leaf_node_counts[tree_no][leaf_node] = 0
-
-    def _get_tree_tabular_structure(self) -> pd.DataFrame:
-        """Method to return the xgboost model in a tabular structure.
-
-        Method simply calls the trees_to_dataframe method of the model
-        attribute.
-        """
-
-        tabular_model = self.model.trees_to_dataframe()
-
-        return tabular_model
 
 
 class XGBSklearnLeafNodeScaledConformalPredictor(
@@ -756,13 +718,3 @@ class XGBSklearnLeafNodeScaledConformalPredictor(
             leaf_node_predictions = leaf_node_predictions.reshape((data.shape[0], 1))
 
         return leaf_node_predictions
-
-    def _get_tree_tabular_structure(self) -> pd.DataFrame:
-        """Method to return the xgboost model in a tabular structure.
-
-        Method simply calls the trees_to_dataframe method of the model.
-        """
-
-        tabular_model = self.model.get_booster().trees_to_dataframe()
-
-        return tabular_model

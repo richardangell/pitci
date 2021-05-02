@@ -478,6 +478,20 @@ def _sum_dict_values(arr: np.ndarray, counts: List[Dict[int, int]]) -> int:
 
     for i, value in enumerate(arr):
 
-        total += counts[i][value]
+        tree_counts = counts[i]
+
+        try:
+
+            total += tree_counts[value]
+
+        # if value is not in the keys of tree_counts then we simply
+        # move on, this means that that particular leaf node was not
+        # visited in the calibration
+        # it is not guaranteed that every leaf node will be visited
+        # unless the same dataset that was used for training was
+        # used for calibration
+        except KeyError:
+
+            pass
 
     return total
