@@ -407,6 +407,39 @@ class LeafNodeScaledConformalPredictor(ABC):
 
         return leaf_node_counts
 
+    def _calibrate_leaf_node_counts(self, data: Any) -> None:
+        """Method to set that baseline leaf node counts.
+
+        First the _generate_leaf_node_predictions method is called to
+        get the leaf node indexes that were visted in every tree for
+        every row in the passed data arg.
+
+        Then each column in the output from _generate_leaf_node_predictions
+        (representing a single tree in the model) is the tabulated to
+        count the number of times each leaf node in the tree was
+        visited when making predictions for data.
+
+        Parameters
+        ----------
+        data : Any
+            Data to set baseline counts of leaf nodes.
+
+        """
+
+        leaf_node_predictions = self._generate_leaf_node_predictions(data)
+
+        leaf_node_predictions_df = pd.DataFrame(leaf_node_predictions)
+
+        self.leaf_node_counts = []
+
+        for tree_no, column in enumerate(leaf_node_predictions_df.columns.values):
+
+            # count the number of times each leaf node is visited in
+            # each tree for predictions on data
+            self.leaf_node_counts.append(
+                leaf_node_predictions_df[tree_no].value_counts().to_dict()
+            )
+
     @abstractmethod
     def _generate_predictions(self, data: Any) -> np.ndarray:
         """Method to generate predictions with underlying model.
@@ -428,19 +461,6 @@ class LeafNodeScaledConformalPredictor(ABC):
         ----------
         data : Any
             Data to generate predictions on.
-
-        """
-
-        pass
-
-    @abstractmethod
-    def _calibrate_leaf_node_counts(self, data: Any) -> None:
-        """Method to set that baseline leaf node occurences.
-
-        Parameters
-        ----------
-        data : Any
-            Data to set baseline counts of leaf nodes with.
 
         """
 

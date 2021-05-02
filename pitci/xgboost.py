@@ -433,40 +433,6 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
 
         return leaf_node_predictions
 
-    def _calibrate_leaf_node_counts(self, data: xgb.DMatrix) -> None:
-        """Method to set that baseline leaf node occurences.
-
-        The data passed is scored with the pred_leaf option which returns
-        the leaf nodes traversed for each tree for each row. Then the number
-        of times each leaf node is visited is summed across rows.
-
-        The results are stored in the leaf_node_counts attribute, which is
-        a list of length n, where n is the number of trees in the underlying
-        model. Each value in the list is a dict which gives the number
-        of times each leaf node in the nth tree was visited in generating
-        predictions for data.
-
-        Parameters
-        ----------
-        data : xgb.DMatrix
-            Data to set baseline counts of leaf nodes.
-
-        """
-
-        leaf_node_predictions = self._generate_leaf_node_predictions(data)
-
-        leaf_node_predictions_df = pd.DataFrame(leaf_node_predictions)
-
-        self.leaf_node_counts = []
-
-        for tree_no, column in enumerate(leaf_node_predictions_df.columns.values):
-
-            # count the number of times each leaf node is visited in
-            # each tree for predictions on data
-            self.leaf_node_counts.append(
-                leaf_node_predictions_df[tree_no].value_counts().to_dict()
-            )
-
 
 class XGBSklearnLeafNodeScaledConformalPredictor(
     XGBoosterLeafNodeScaledConformalPredictor
