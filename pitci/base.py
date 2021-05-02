@@ -355,7 +355,7 @@ class LeafNodeScaledConformalPredictor(ABC):
 
         Parameters
         ----------
-        data : xgb.DMatrix
+        data : Any
             Data to calculate interval scaling factors for.
 
         Returns

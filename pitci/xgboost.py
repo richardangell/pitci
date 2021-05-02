@@ -349,37 +349,6 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
 
         return predictions_with_interval
 
-    def _calculate_scaling_factors(self, data: xgb.DMatrix) -> np.ndarray:
-        """Method to calculate the scaling factors for a given dataset.
-
-        First leaf node indexes are generated for the passed data using
-        the _generate_leaf_node_predictions method.
-
-        Then leaf node indexes are passed to _count_leaf_node_visits_from_calibration
-        which, for each row, counts the total number of times each leaf
-        node index was visited in the calibration dataset.
-
-        1 / leaf node counts are returned from this function so that the scaling
-        factor is inverted i.e. smaller values are better.
-
-        Parameters
-        ----------
-        data : xgb.DMatrix
-            Data to calculate interval scaling factors for.
-
-        Returns
-        -------
-        leaf_node_counts : np.ndarray
-            Array of same length as input data giving factor for each input row.
-
-        """
-
-        check_type(data, [xgb.DMatrix], "data")
-
-        reciprocal_leaf_node_counts = super()._calculate_scaling_factors(data=data)
-
-        return reciprocal_leaf_node_counts
-
     def _generate_predictions(self, data: xgb.DMatrix) -> np.ndarray:
         """Method to generate predictions from the xgboost model.
 
