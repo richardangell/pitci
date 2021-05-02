@@ -61,12 +61,12 @@ class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
 
     Parameters
     ----------
-    booster : xgb.Booster
+    model : xgb.Booster
         Underly model to generate prediction intervals for.
 
     Attributes
     ----------
-    booster : xgb.Booster
+    model : xgb.Booster
         Underlying model passed in initialisation of the class.
 
     baseline_interval : float
@@ -78,8 +78,8 @@ class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
         Attribute is set when the calibrate method is run.
 
     SUPPORTED_OBJECTIVES : list
-        Booster supported objectives, if an xgb.Booster object is passed when
-        initialising a AbsoluteErrorConformalPredictor object an error will be raised.
+        Booster supported objectives. If an xgboost model with a non-supported
+        objective is passed when initialising the class object an error will be raised.
 
     """
 
@@ -109,7 +109,7 @@ class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
         """Method to generate predictions from the xgboost model.
 
         Calls predict method on the model attribute with
-        ntree_limit = booster.best_iteration + 1.
+        ntree_limit = model's best_iteration + 1.
 
         Parameters
         ----------
@@ -216,12 +216,12 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
 
     Parameters
     ----------
-    booster : xgb.Booster
+    model : xgb.Booster
         Model to generate predictions with conformal intervals.
 
     Attributes
     ----------
-    booster : xgb.Booster
+    model : xgb.Booster
         Model passed in initialisation of the class.
 
     leaf_node_counts : list
@@ -241,21 +241,21 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
         _calibrate_interval.
 
     SUPPORTED_OBJECTIVES : list
-        Booster supported objectives, if an xgb.Booster object is passed when
-        initialising a LeafNodeScaledConformalPredictor object an error
+        Booster supported objectives. If an xgb.Booster object is passed using
+        a non-supported objective when initialising the class an an error
         will be raised.
 
     """
 
-    def __init__(self, booster: xgb.Booster) -> None:
+    def __init__(self, model: xgb.Booster) -> None:
 
-        check_type(booster, [xgb.Booster], "booster")
+        check_type(model, [xgb.Booster], "booster")
 
         self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABS_ERROR
 
-        check_objective_supported(booster, self.SUPPORTED_OBJECTIVES)
+        check_objective_supported(model, self.SUPPORTED_OBJECTIVES)
 
-        self.booster = booster
+        self.model = model
 
         super().__init__()
 
@@ -384,7 +384,7 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
         """Method to generate predictions from the xgboost model.
 
         Calls predict method on the model attribute with
-        ntree_limit = booster.best_iteration + 1.
+        ntree_limit = model's best_iteration + 1.
 
         Parameters
         ----------
@@ -395,8 +395,8 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
 
         check_type(data, [xgb.DMatrix], "data")
 
-        predictions = self.booster.predict(
-            data, ntree_limit=self.booster.best_iteration + 1
+        predictions = self.model.predict(
+            data, ntree_limit=self.model.best_iteration + 1
         )
 
         return predictions
@@ -405,7 +405,7 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
         """Method to generate leaf node predictions from the xgboost model.
 
         Method calls xgb.Booster.predict with pred_leaf = True and
-        ntree_limit = booster.best_iteration + 1.
+        ntree_limit = model's best_iteration + 1.
 
         If the output of predict is not a 2d matrix the output is shaped to
         be 2d.
@@ -421,8 +421,8 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
 
         # matrix of (nsample, ntrees) with each record giving
         # the leaf node of each sample in each tree
-        leaf_node_predictions = self.booster.predict(
-            data=data, pred_leaf=True, ntree_limit=self.booster.best_iteration + 1
+        leaf_node_predictions = self.model.predict(
+            data=data, pred_leaf=True, ntree_limit=self.model.best_iteration + 1
         )
 
         # if the input data is a single column reshape the output to
@@ -442,7 +442,7 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
 
         The results are stored in the leaf_node_counts attribute, which is
         a list of length n, where n is the number of trees in the underlying
-        booster. Each value in the list is a dict which gives the number
+        model. Each value in the list is a dict which gives the number
         of times each leaf node in the nth tree was visited in generating
         predictions for data.
 
@@ -497,10 +497,10 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
     def _get_tree_tabular_structure(self) -> pd.DataFrame:
         """Method to return the xgboost model in a tabular structure.
 
-        Method simply class the trees_to_dataframe method on the booster
+        Method simply class the trees_to_dataframe method of the model
         attribute.
         """
 
-        tabular_model = self.booster.trees_to_dataframe()
+        tabular_model = self.model.trees_to_dataframe()
 
         return tabular_model
