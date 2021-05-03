@@ -6,10 +6,24 @@ import pytest
 
 
 @pytest.fixture
-def dmatrix_2x1_with_label():
+def np_2x1_with_label():
+    """Return 2x1 np array with label."""
+
+    return np.array([[0], [1]]), np.array([[0], [1]])
+
+
+@pytest.fixture
+def np_4x2_with_label():
+    """Return 4x2 np array with label."""
+
+    return np.array([[1, 1], [1, 0], [0, 1], [0, 0]]), np.array([90, 10, 0, 0])
+
+
+@pytest.fixture
+def dmatrix_2x1_with_label(np_2x1_with_label):
     """Create an 2x1 xgb.DMatrix with response."""
 
-    xgb_data = xgb.DMatrix(data=np.array([[0], [1]]), label=np.array([[0], [1]]))
+    xgb_data = xgb.DMatrix(data=np_2x1_with_label[0], label=np_2x1_with_label[1])
 
     return xgb_data
 
@@ -24,12 +38,10 @@ def dmatrix_2x1_with_label_gamma():
 
 
 @pytest.fixture
-def dmatrix_4x2_with_label():
+def dmatrix_4x2_with_label(np_4x2_with_label):
     """Create an 4x2 xgb.DMatrix with response."""
 
-    xgb_data = xgb.DMatrix(
-        data=np.array([[1, 1], [1, 0], [0, 1], [0, 0]]), label=np.array([90, 10, 0, 0])
-    )
+    xgb_data = xgb.DMatrix(data=np_4x2_with_label[0], label=np_4x2_with_label[1])
 
     return xgb_data
 
@@ -40,6 +52,20 @@ def xgboost_1_split_1_tree(dmatrix_2x1_with_label):
 
     model = xgb.train(
         params={"max_depth": 1}, dtrain=dmatrix_2x1_with_label, num_boost_round=1
+    )
+
+    return model
+
+
+@pytest.fixture
+def xgb_regressor_1_split_1_tree(np_2x1_with_label):
+    """Build a dummy xgb.XGBRegressor model with a single split on 1 variable."""
+
+    model = xgb.XGBRegressor(max_depth=1, n_estimators=1)
+
+    model.fit(
+        X=np_2x1_with_label[0],
+        y=np_2x1_with_label[1],
     )
 
     return model
