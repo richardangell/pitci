@@ -9,7 +9,7 @@ import pytest
 def np_2x1_with_label():
     """Return 2x1 np array with label."""
 
-    return np.array([[0], [1]]), np.array([[0], [1]])
+    return np.array([[0], [1]]), np.array([0, 1])
 
 
 @pytest.fixture
@@ -62,6 +62,20 @@ def xgb_regressor_1_split_1_tree(np_2x1_with_label):
     """Build a dummy xgb.XGBRegressor model with a single split on 1 variable."""
 
     model = xgb.XGBRegressor(max_depth=1, n_estimators=1)
+
+    model.fit(
+        X=np_2x1_with_label[0],
+        y=np_2x1_with_label[1],
+    )
+
+    return model
+
+
+@pytest.fixture
+def xgb_classifier_1_split_1_tree(np_2x1_with_label):
+    """Build a dummy xgb.XGBClassifier model with a single split on 1 variable."""
+
+    model = xgb.XGBClassifier(max_depth=1, n_estimators=1, use_label_encoder=False)
 
     model.fit(
         X=np_2x1_with_label[0],
