@@ -43,20 +43,17 @@ class AbsoluteErrorConformalPredictor(ABC):
         alpha : int or float, default = 0.95
             Confidence level for the interval.
 
-        response : np.ndarray, pd.Series or None, default = None
+        response : np.ndarray, pd.Series
             The associated response values for every record in data.
 
         """
 
         check_type(alpha, [int, float], "alpha")
+        check_type(response, [np.ndarray, pd.Series], "response")
 
         if not (alpha >= 0 and alpha <= 1):
 
             raise ValueError("alpha must be in range [0 ,1]")
-
-        if response is None:
-
-            raise TypeError("response cannot be none")
 
         self._calibrate_interval(data=data, alpha=alpha, response=response)
 
