@@ -24,6 +24,18 @@ class TestInit:
             "AbsoluteErrorConformalPredictor"
         )
 
+    def test_model_type_exception(self):
+        """Test an exception is raised if model is not a xgb.Booster object."""
+
+        with pytest.raises(
+            TypeError,
+            match=re.escape(
+                f"model is not in expected types {[xgb.Booster]}, got {tuple}"
+            ),
+        ):
+
+            XGBoosterAbsoluteErrorConformalPredictor((1, 2, 3))
+
     def test_attributes_set(self, xgboost_1_split_1_tree):
         """Test that SUPPORTED_OBJECTIVES, version and model attributes are set."""
 

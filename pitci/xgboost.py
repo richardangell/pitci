@@ -244,7 +244,7 @@ class XGBSklearnAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor)
 
         super().__init__()
 
-        check_type(model, [xgb.XGBRegressor, xgb.XGBClassifier], "booster")
+        check_type(model, [xgb.XGBRegressor, xgb.XGBClassifier], "model")
 
         self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABS_ERROR
 
@@ -255,7 +255,7 @@ class XGBSklearnAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor)
     def calibrate(
         self,
         data: Union[np.ndarray, pd.DataFrame],
-        response: Optional[Union[np.ndarray, pd.Series]] = None,
+        response: Union[np.ndarray, pd.Series],
         alpha: Union[int, float] = 0.95,
     ) -> None:
         """Method to calibrate conformal intervals that will be applied
