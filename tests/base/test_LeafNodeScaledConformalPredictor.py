@@ -325,3 +325,133 @@ class TestCalculateScalingFactors:
         results = dummy_confo_model._calculate_scaling_factors(np.array([0]))
 
         np.testing.assert_array_equal(results, expected_results)
+
+
+class TestCountLeafNodeVisitsFromCalibration:
+    """Tests for the LeafNodeScaledConformalPredictor._count_leaf_node_visits_from_calibration method."""
+
+    def test_sum_dict_values(self, mocker):
+        """Test that _sum_dict_values is applied to every row in the passed
+        leaf_node_predictions args.
+        """
+
+        mocked = mocker.patch.object(pitci.base, "_sum_dict_values")
+
+        dummy_confo_model = DummyLeafNodeScaledConformalPredictor()
+
+        # set leaf_node_counts attribute so np.apply_along_axis can run
+        dummy_confo_model.leaf_node_counts = {"a": 1}
+
+        leaf_node_predictions_value = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+
+        dummy_confo_model._count_leaf_node_visits_from_calibration(
+            leaf_node_predictions_value
+        )
+
+        assert (
+            mocked.call_count == leaf_node_predictions_value.shape[0]
+        ), "incorrect number of calls to _sum_dict_values"
+
+        for call_no in range(leaf_node_predictions_value.shape[0]):
+
+            call_args = mocked.call_args_list[call_no]
+            call_pos_args = call_args[0]
+            call_kwargs = call_args[1]
+
+            assert call_kwargs == {
+                "counts": dummy_confo_model.leaf_node_counts
+            }, f"keyword args in _sum_dict_values call {call_no} incorrect"
+
+            assert (
+                len(call_pos_args) == 1
+            ), f"number of positional args in _sum_dict_values call {call_no} incorrect"
+
+            np.testing.assert_array_equal(
+                call_pos_args[0], leaf_node_predictions_value[call_no, :]
+            )
+
+    def test_sum_dict_values_returned(self, mocker):
+        """Test the output of running _sum_dict_values on each row is returned from the method."""
+
+        # set the return value from _sum_dict_values calls
+        sum_dict_values_return_values = [-2, 1, 0]
+
+        mocker.patch.object(
+            pitci.base, "_sum_dict_values", side_effect=sum_dict_values_return_values
+        )
+
+        dummy_confo_model = DummyLeafNodeScaledConformalPredictor()
+
+        # set leaf_node_counts attribute so np.apply_along_axis can run
+        dummy_confo_model.leaf_node_counts = {"a": 1}
+
+        # set leaf_node_predictions arg so _sum_dict_values will be called 3 times
+        leaf_node_predictions_value = np.array([[1], [2], [3]])
+
+        results = dummy_confo_model._count_leaf_node_visits_from_calibration(
+            leaf_node_predictions_value
+        )
+
+        np.testing.assert_array_equal(results, np.array(sum_dict_values_return_values))
+
+
+class TestCalibrateLeafNodeCounts:
+    """Tests for the LeafNodeScaledConformalPredictor._calibrate_leaf_node_counts method."""
+
+    def test_leaf_node_counts_calculated_correctly(self, mocker):
+        """Test that leaf_node_counts are calculated as expected."""
+
+        leaf_node_preds = np.array(
+            [[1, 2, 3, 1, 3], [2, 2, 4, 2, 1], [1, 2, 5, 1, 7], [1, 2, 0, -4, 1]]
+        )
+
+        # set return value from _generate_leaf_node_predictions
+        mocker.patch.object(
+            DummyLeafNodeScaledConformalPredictor,
+            "_generate_leaf_node_predictions",
+            return_value=leaf_node_preds,
+        )
+
+        dummy_confo_model = DummyLeafNodeScaledConformalPredictor()
+
+        dummy_confo_model._calibrate_leaf_node_counts(np.array([0]))
+
+        # leaf_node_counts should be a tabulation of each column in leaf_node_preds
+        expected_leaf_node_counts = [
+            {1: 3, 2: 1},
+            {2: 4},
+            {0: 1, 3: 1, 4: 1, 5: 1},
+            {-4: 1, 1: 2, 2: 1},
+            {1: 2, 3: 1, 7: 1},
+        ]
+
+        assert (
+            dummy_confo_model.leaf_node_counts == expected_leaf_node_counts
+        ), "leaf_node_counts not calculated correctly"
+
+
+class TestSumDictValues:
+    """Tests for the base._sum_dict_values function."""
+
+    @pytest.mark.parametrize(
+        "arr, counts, expected_output",
+        [
+            (np.array([1]), {0: {1: 123}}, 123),
+            (
+                np.array([1, 1, 1]),
+                {0: {1: 123, 0: 21}, 1: {3: -1, 1: 100}, 2: {1: 5}},
+                228,
+            ),
+            (
+                np.array([1, 2, 3]),
+                {0: {1: -1}, 1: {3: 21, 1: 100, 2: -1}, 2: {1: 5, 2: 99, 3: -1}},
+                -3,
+            ),
+        ],
+    )
+    def test_expected_output(self, arr, counts, expected_output):
+        """Test the correct values are summed in function."""
+
+        output = pitci.base._sum_dict_values(arr, counts)
+
+        assert output == expected_output, "_sum_dict_values produced incorrect output"
