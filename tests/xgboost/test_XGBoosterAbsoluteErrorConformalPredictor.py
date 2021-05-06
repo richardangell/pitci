@@ -221,8 +221,8 @@ class TestGeneratePredictions:
 
         assert call_pos_args == (
             dmatrix_2x1_with_label,
-        ), "positional args incorrect in call to AbsoluteErrorConformalPredictor.calibrate"
+        ), "positional args incorrect in call to xgb.Booster.predict"
 
         assert call_kwargs == {
             "ntree_limit": xgboost_1_split_1_tree.best_iteration + 1
-        }, "positional args incorrect in call to AbsoluteErrorConformalPredictor.calibrate"
+        }, "keyword args incorrect in call to xgb.Booster.predict"
