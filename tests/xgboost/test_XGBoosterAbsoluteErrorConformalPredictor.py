@@ -30,7 +30,7 @@ class TestInit:
         with pytest.raises(
             TypeError,
             match=re.escape(
-                f"model is not in expected types {[xgb.Booster]}, got {tuple}"
+                f"booster is not in expected types {[xgb.Booster]}, got {tuple}"
             ),
         ):
 
