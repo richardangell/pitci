@@ -384,3 +384,197 @@ class TestGenerateLeafNodePredictions:
         )
 
         np.testing.assert_array_equal(results, expected_results)
+
+
+class TestCalibrateLeafNodeCounts:
+    """Tests that _calibrate_leaf_node_counts calculate the correct values."""
+
+    def test_leaf_node_counts_correct_1(
+        self, xgboost_2_split_1_tree, dmatrix_4x2_with_label
+    ):
+        """Test the leaf_node_counts attribute has the correct values with hand workable example."""
+
+        # rules for xgboost_2_split_1_tree are as follows;
+        # leaf 1 - if (f0 < 0.5)
+        # leaf 3 - if (f0 > 0.5) & (f1 < 0.5)
+        # leaf 4 - if (f0 > 0.5) & (f1 > 0.5)
+
+        # there for the dmatrix_4x2_with_label data will be mapped to;
+        # [1, 1] - leaf 4
+        # [1, 0] - leaf 3
+        # [0, 1] - leaf 1
+        # [0, 0] - leaf 1
+
+        # therefore the leaf_node_counts attribute for a single tree
+        # should be;
+        expected_leaf_node_counts = [{1: 2, 3: 1, 4: 1}]
+
+        confo_model = XGBoosterLeafNodeScaledConformalPredictor(xgboost_2_split_1_tree)
+
+        confo_model._calibrate_leaf_node_counts(dmatrix_4x2_with_label)
+
+        assert (
+            confo_model.leaf_node_counts == expected_leaf_node_counts
+        ), "leaf_node_counts not calculated correctly"
+
+    def test_leaf_node_counts_correct_2(self, xgboost_2_split_1_tree):
+        """Test the leaf_node_counts attribute has the correct values with 2nd hand workable example."""
+
+        # rules for xgboost_2_split_1_tree are as follows;
+        # leaf 1 - if (f0 < 0.5)
+        # leaf 3 - if (f0 > 0.5) & (f1 < 0.5)
+        # leaf 4 - if (f0 > 0.5) & (f1 > 0.5)
+
+        # for this dataset the leaf nodes for each row are inline below;
+        xgb_data = xgb.DMatrix(
+            data=np.array(
+                [
+                    [1, 1],  # leaf 4
+                    [1, 0],  # leaf 3
+                    [0, 1],  # leaf 1
+                    [0, 0],  # leaf 1
+                    [1, 0],  # leaf 3
+                    [0, 1],  # leaf 1
+                    [0, 0],  # leaf 1
+                ]
+            )
+        )
+
+        # therefore the leaf_node_counts attribute for a single tree
+        # should be;
+        expected_leaf_node_counts = [{1: 4, 3: 2, 4: 1}]
+
+        confo_model = XGBoosterLeafNodeScaledConformalPredictor(xgboost_2_split_1_tree)
+
+        confo_model._calibrate_leaf_node_counts(xgb_data)
+
+        assert (
+            confo_model.leaf_node_counts == expected_leaf_node_counts
+        ), "leaf_node_counts not calculated correctly"
+
+    def test_leaf_node_counts_correct_3(self, xgboost_2_split_2_tree):
+        """Test the leaf_node_counts attribute has the correct values with 3rd hand workable example."""
+
+        # rules for xgboost_2_split_1_tree are as follows;
+        # tree 1, leaf 1 - if (f0 < 0.5)
+        # tree 1, leaf 2 - if (f0 > 0.5)
+        # tree 2, leaf 1 - if (f1 < 0.5)
+        # tree 2, leaf 2 - if (f1 > 0.5)
+
+        # for this dataset the leaf nodes for each row are inline below;
+        xgb_data = xgb.DMatrix(
+            data=np.array(
+                [
+                    [1, 1],  # tree 1, leaf 2 > tree 2, leaf 2
+                    [1, 1],  # tree 1, leaf 2 > tree 2, leaf 2
+                    [1, 1],  # tree 1, leaf 2 > tree 2, leaf 2
+                    [1, 1],  # tree 1, leaf 2 > tree 2, leaf 2
+                    [1, 0],  # tree 1, leaf 2 > tree 2, leaf 1
+                    [1, 0],  # tree 1, leaf 2 > tree 2, leaf 1
+                    [1, 0],  # tree 1, leaf 2 > tree 2, leaf 1
+                    [1, 0],  # tree 1, leaf 2 > tree 2, leaf 1
+                    [0, 1],  # tree 1, leaf 1 > tree 2, leaf 2
+                ]
+            )
+        )
+
+        # therefore the leaf_node_counts attribute for a single tree
+        # should be;
+        expected_leaf_node_counts = [{1: 1, 2: 8}, {1: 4, 2: 5}]
+
+        confo_model = XGBoosterLeafNodeScaledConformalPredictor(xgboost_2_split_2_tree)
+
+        confo_model._calibrate_leaf_node_counts(xgb_data)
+
+        assert (
+            confo_model.leaf_node_counts == expected_leaf_node_counts
+        ), "leaf_node_counts not calculated correctly"
+
+    def test_leaf_node_counts_excludes_non_visited_nodes(self, xgboost_2_split_2_tree):
+        """Test that leaf_node_counts does not include nodes that were not visited when
+        predicting on data.
+        """
+
+        # note, this dataset does not include any rows that visit tree 1, leaf 1
+        # for this dataset the leaf nodes for each row are inline below;
+        xgb_data = xgb.DMatrix(
+            data=np.array(
+                [
+                    [1, 1],  # tree 1, leaf 2 > tree 2, leaf 2
+                    [1, 1],  # tree 1, leaf 2 > tree 2, leaf 2
+                    [1, 1],  # tree 1, leaf 2 > tree 2, leaf 2
+                    [1, 1],  # tree 1, leaf 2 > tree 2, leaf 2
+                    [1, 0],  # tree 1, leaf 2 > tree 2, leaf 1
+                    [1, 0],  # tree 1, leaf 2 > tree 2, leaf 1
+                    [1, 0],  # tree 1, leaf 2 > tree 2, leaf 1
+                    [1, 0],  # tree 1, leaf 2 > tree 2, leaf 1
+                ]
+            )
+        )
+
+        # therefore the leaf_node_counts attribute for a single tree
+        # should be;
+        expected_leaf_node_counts = [{2: 8}, {1: 4, 2: 4}]
+
+        confo_model = XGBoosterLeafNodeScaledConformalPredictor(xgboost_2_split_2_tree)
+
+        confo_model._calibrate_leaf_node_counts(xgb_data)
+
+        assert (
+            confo_model.leaf_node_counts == expected_leaf_node_counts
+        ), "leaf_node_counts not calculated correctly when nodes not visited"
+
+    @pytest.mark.parametrize("dataset", [("diabetes_xgb_data")])
+    @pytest.mark.parametrize(
+        "params_dict",
+        [
+            ({"max_depth": 5, "eta": 0.09}),
+            ({"max_depth": 3, "eta": 0.09}),
+            ({"max_depth": 1, "eta": 0.09}),
+            ({"max_depth": 3, "eta": 0.11}),
+            ({"max_depth": 7, "eta": 0.05}),
+        ],
+    )
+    def test_test_leaf_node_counts_correct(self, dataset, params_dict, request):
+        """Test leaf_node_counts is calculated correctly - on larger models that require automated
+        calculation to check against what is produced by _calibrate_leaf_node_counts.
+        """
+
+        # this is used to parameterise which fixture to use to provide the data
+        dataset = request.getfixturevalue(dataset)
+
+        # build model with params passed
+        model = xgb.train(
+            params=params_dict,
+            dtrain=dataset[0],
+            num_boost_round=500,
+            evals=[(dataset[1], "validate")],
+            early_stopping_rounds=5,
+            verbose_eval=False,
+        )
+
+        confo_model = XGBoosterLeafNodeScaledConformalPredictor(model)
+
+        # set leaf_node_counts attribute
+        # note, we are using a different dataset to training so not guaranteed to have
+        # every leaf node in the model visited
+        confo_model._calibrate_leaf_node_counts(dataset[2])
+
+        # now calculate values (leaf node counts) from scratch
+        # first generate leaf node predictions
+        leaf_node_predictions = model.predict(
+            data=dataset[2], pred_leaf=True, ntree_limit=model.best_iteration + 1
+        )
+
+        # loop through each column i.e. tree
+        for column_no in range(leaf_node_predictions.shape[1]):
+
+            # these are the counts we expected to see in confo_model.leaf_node_counts[column_no]
+            # unless a particular node was not visited at all in the dataset
+            counts = (
+                pd.Series(leaf_node_predictions[:, column_no]).value_counts().to_dict()
+            )
+
+            assert (
+                confo_model.leaf_node_counts[column_no] == counts
+            ), f"incorrect leaf node count for tree {column_no}"
