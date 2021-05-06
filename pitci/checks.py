@@ -1,6 +1,3 @@
-import xgboost as xgb
-import json
-
 from typing import Any, Type, List
 
 
@@ -50,26 +47,3 @@ def check_allowed_value(
     if value not in allowed_values:
 
         raise ValueError(f"{message}\n{value} not in allowed values; {allowed_values}")
-
-
-def check_objective_supported(
-    booster: xgb.Booster, supported_objectives: List[str]
-) -> None:
-    """Function to check that the booster objective parameter is in the
-    supported_objectives list and raise and exception if not.
-    """
-
-    check_type(booster, [xgb.Booster], "booster")
-    check_type(supported_objectives, [list], "supported_objectives")
-
-    for i, objective in enumerate(supported_objectives):
-
-        check_type(objective, [str], f"supported_objectives[{i}]")
-
-    booster_config = json.loads(booster.save_config())
-
-    booster_objective = booster_config["learner"]["objective"]["name"]
-
-    check_allowed_value(
-        booster_objective, supported_objectives, "booster objective not supported"
-    )
