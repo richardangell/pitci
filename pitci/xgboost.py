@@ -378,17 +378,31 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
         data: xgb.DMatrix,
         response: Optional[Union[np.ndarray, pd.Series]] = None,
         alpha: Union[int, float] = 0.95,
+        train_data: Optional[xgb.DMatrix] = None,
     ) -> None:
         """Method to calibrate conformal intervals that will allow
         prediction intervals that vary by row.
 
-        Method calls _calibrate_leaf_node_counts to record the number
-        of times each leaf node is visited across the whole of the
-        passed data.
+        There are 2 things that must be calibrated before making predictions;
+        the leaf node counts (_calibrate_leaf_node_counts method) and the
+        intervals (_calibrate_interval method).
 
-        Method calls _calibrate_interval to set the default interval that
-        will be scaled using the inverse of the noncomformity function
-        when making predictions. This allows intervals to vary by instance.
+        The user has the option to specify the training sample that was used
+        to buid the model in the train_data argument. This is to allow the
+        leaf node counts to be calibrated on the training data, what the underlying
+        model saw when it was built originally, rather than a separate calibration
+        set which is what will be passed in the data arg. The default interval
+        width for a given alpha has to be set on a separate sample to what was
+        used to build the model. If not, the errors will be smaller than they
+        otherwise would be, on a sample the underlying model has not seen before.
+        However for the leaf node counts, ideally we want counts from the train
+        sample - we're not 'learning' anything new here, just recreating stats
+        from when the model was built originally.
+
+        This method is repeating the functionality in LeafNodeScaledConformalPredictor's
+        calibrate method so that we can pass different datasets, if
+        required, to _calibrate_leaf_node_counts and _calibrate_leaf_node_counts
+        methods.
 
         Parameters
         ----------
@@ -403,9 +417,22 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
             None then the _calibrate_interval function will attempt to extract
             the response from the data argument with get_label.
 
+        train_data : xgb.DMatrix or None, default = None
+            Optional dataset that can be passed to set baseline leaf node counts from, separate
+            to the data used to set baseline interval width. With this the user can pass the
+            train sample in the train_data arg and the calibration sample in the data so leaf node
+            counts do not have to be calibrated on a separate sample, as the intervals do.
+
         """
 
         check_type(data, [xgb.DMatrix], "data")
+        check_type(train_data, [xgb.DMatrix, type(None)], "train_data")
+        check_type(response, [pd.Series, np.ndarray, type(None)], "response")
+        check_type(alpha, [int, float], "alpha")
+
+        if not (alpha >= 0 and alpha <= 1):
+
+            raise ValueError("alpha must be in range [0 ,1]")
 
         if response is None:
 
@@ -414,7 +441,15 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
 
             response = data.get_label()
 
-        super().calibrate(data=data, response=response, alpha=alpha)
+        if train_data is None:
+
+            super()._calibrate_leaf_node_counts(data=data)
+
+        else:
+
+            super()._calibrate_leaf_node_counts(data=train_data)
+
+        super()._calibrate_interval(data=data, alpha=alpha, response=response)
 
     def predict_with_interval(self, data: xgb.DMatrix) -> np.ndarray:
         """Method to generate predictions on data with conformal intervals.
@@ -590,21 +625,31 @@ class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredicto
         data: Union[np.ndarray, pd.DataFrame],
         response: Union[np.ndarray, pd.Series],
         alpha: Union[int, float] = 0.95,
+        train_data: Union[np.ndarray, pd.DataFrame] = None,
     ) -> None:
         """Method to calibrate conformal intervals that will allow
         prediction intervals that vary by row.
 
-        Method calls the LeafNodeScaledConformalPredictor.calibrate
-        method and skips the parent calibrate method.
+        There are 2 things that must be calibrated before making predictions;
+        the leaf node counts (_calibrate_leaf_node_counts method) and the
+        intervals (_calibrate_interval method).
 
-        Gradnparent calibrate method calls _calibrate_leaf_node_counts
-        to record the numberof times each leaf node is visited across
-        the whole of the passed data.
+        The user has the option to specify the training sample that was used
+        to buid the model in the train_data argument. This is to allow the
+        leaf node counts to be calibrated on the training data, what the underlying
+        model saw when it was built originally, rather than a separate calibration
+        set which is what will be passed in the data arg. The default interval
+        width for a given alpha has to be set on a separate sample to what was
+        used to build the model. If not, the errors will be smaller than they
+        otherwise would be, on a sample the underlying model has not seen before.
+        However for the leaf node counts, ideally we want counts from the train
+        sample - we're not 'learning' anything new here, just recreating stats
+        from when the model was built originally.
 
-        Gradnparent calibrate method calls _calibrate_interval to set the
-        default interval that will be scaled using the inverse of the
-        noncomformity function when making predictions. This allows
-        intervals to vary by instance.
+        This method is repeating the functionality in LeafNodeScaledConformalPredictor's
+        calibrate method so that we can pass different datasets, if
+        required, to _calibrate_leaf_node_counts and _calibrate_leaf_node_counts
+        methods.
 
         Parameters
         ----------
@@ -617,11 +662,32 @@ class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredicto
         response : np.ndarray or pd.Series
             The response values for the records in data.
 
+        train_data : np.ndarray, pd.DataFrame or None, default = None
+            Optional dataset that can be passed to set baseline leaf node counts from, separate
+            to the data used to set baseline interval width. With this the user can pass the
+            train sample in the train_data arg and the calibration sample in the data so leaf node
+            counts do not have to be calibrated on a separate sample, as the intervals do.
+
         """
 
         check_type(data, [np.ndarray, pd.DataFrame], "data")
+        check_type(train_data, [np.ndarray, pd.DataFrame, type(None)], "train_data")
+        check_type(response, [pd.Series, np.ndarray], "response")
+        check_type(alpha, [int, float], "alpha")
 
-        super().calibrate(data=data, response=response, alpha=alpha)
+        if not (alpha >= 0 and alpha <= 1):
+
+            raise ValueError("alpha must be in range [0 ,1]")
+
+        if train_data is None:
+
+            super()._calibrate_leaf_node_counts(data=data)
+
+        else:
+
+            super()._calibrate_leaf_node_counts(data=train_data)
+
+        super()._calibrate_interval(data=data, alpha=alpha, response=response)
 
     def predict_with_interval(
         self, data: Union[np.ndarray, pd.DataFrame]
