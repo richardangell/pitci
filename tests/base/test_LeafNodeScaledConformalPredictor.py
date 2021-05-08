@@ -330,6 +330,22 @@ class TestCalculateScalingFactors:
 class TestCountLeafNodeVisitsFromCalibration:
     """Tests for the LeafNodeScaledConformalPredictor._count_leaf_node_visits_from_calibration method."""
 
+    def test_no_leaf_node_counts_attribute_error(self):
+        """Test an exception is raised if leaf_node_counts attribute is not set."""
+
+        dummy_confo_model = DummyLeafNodeScaledConformalPredictor()
+
+        leaf_node_predictions_value = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+
+        with pytest.raises(
+            AttributeError,
+            match="leaf_node_counts attribute missing, run calibrate first.",
+        ):
+
+            dummy_confo_model._count_leaf_node_visits_from_calibration(
+                leaf_node_predictions_value
+            )
+
     def test_sum_dict_values(self, mocker):
         """Test that _sum_dict_values is applied to every row in the passed
         leaf_node_predictions args.

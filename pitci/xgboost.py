@@ -15,7 +15,7 @@ except ModuleNotFoundError as err:
 from typing import Union, Optional, List, cast
 
 from pitci.base import AbsoluteErrorConformalPredictor, LeafNodeScaledConformalPredictor
-from pitci.checks import check_type, check_attribute, check_allowed_value
+from pitci.checks import check_type, check_allowed_value
 from pitci.dispatchers import (
     get_leaf_node_scaled_conformal_predictor,
     get_absolute_error_conformal_predictor,
@@ -487,13 +487,6 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
 
         check_type(data, [xgb.DMatrix], "data")
 
-        check_attribute(
-            self,
-            "leaf_node_counts",
-            "XGBoosterLeafNodeScaledConformalPredictor does not have leaf_node_counts"
-            " attribute, run calibrate first.",
-        )
-
         predictions_with_interval = super().predict_with_interval(data=data)
 
         return predictions_with_interval
@@ -726,13 +719,6 @@ class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredicto
         """
 
         check_type(data, [np.ndarray, pd.DataFrame], "data")
-
-        check_attribute(
-            self,
-            "leaf_node_counts",
-            "XGBSklearnLeafNodeScaledConformalPredictor does not have leaf_node_counts"
-            " attribute, run calibrate first.",
-        )
 
         predictions_with_interval = super().predict_with_interval(data=data)
 

@@ -330,27 +330,6 @@ class TestPredictWithInterval:
 
             confo_model.predict_with_interval([])
 
-    def test_no_leaf_node_counts_attribute_exception(
-        self, np_2x1_with_label, xgb_regressor_1_split_1_tree
-    ):
-        """Test an exception is raised if leaf_node_counts attribute is not present."""
-
-        confo_model = XGBSklearnLeafNodeScaledConformalPredictor(
-            xgb_regressor_1_split_1_tree
-        )
-
-        assert not hasattr(
-            confo_model, "leaf_node_counts"
-        ), "XGBSklearnLeafNodeScaledConformalPredictor has leaf_node_counts attribute prior to running calibrate"
-
-        with pytest.raises(
-            AttributeError,
-            match="XGBSklearnLeafNodeScaledConformalPredictor does not have leaf_node_counts"
-            " attribute, run calibrate first.",
-        ):
-
-            confo_model.predict_with_interval(np_2x1_with_label[0])
-
     def test_super_predict_with_interval_call(
         self, mocker, np_2x1_with_label, xgb_regressor_1_split_1_tree
     ):
