@@ -395,6 +395,12 @@ class LeafNodeScaledConformalPredictor(ABC):
 
         """
 
+        check_attribute(
+            self,
+            "leaf_node_counts",
+            "leaf_node_counts attribute missing, run calibrate first.",
+        )
+
         leaf_node_counts = np.apply_along_axis(
             _sum_dict_values,
             1,
