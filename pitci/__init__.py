@@ -14,3 +14,8 @@ try:
     import pitci.xgboost as xgboost
 except ImportError:
     pass
+
+try:
+    import pitci.lightgbm as lightgbm
+except ImportError:
+    pass
