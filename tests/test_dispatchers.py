@@ -2,6 +2,7 @@ import re
 import pytest
 
 import pitci.xgboost as pitci_xgb
+import pitci.lightgbm as pitci_lgb
 import pitci.dispatchers as dispatchers
 
 
@@ -128,6 +129,24 @@ class TestGetLeafNodeScaledConformalPredictor:
         ), "incorrect type returned from get_leaf_node_scaled_conformal_predictor"
 
         assert confo_model.model is xgb_classifier_1_split_1_tree, (
+            "passed model arg not set to model attribute of object returned "
+            "from get_leaf_node_scaled_conformal_predictor"
+        )
+
+    def test_lgb_booster(self, lgb_booster_1_split_1_tree):
+        """Test an LGBMBoosterLeafNodeScaledConformalPredictor object is returned if
+        and lgb.Booster is passed.
+        """
+
+        confo_model = dispatchers.get_leaf_node_scaled_conformal_predictor(
+            lgb_booster_1_split_1_tree
+        )
+
+        assert (
+            type(confo_model) is pitci_lgb.LGBMBoosterLeafNodeScaledConformalPredictor
+        ), "incorrect type returned from get_leaf_node_scaled_conformal_predictor"
+
+        assert confo_model.model is lgb_booster_1_split_1_tree, (
             "passed model arg not set to model attribute of object returned "
             "from get_leaf_node_scaled_conformal_predictor"
         )

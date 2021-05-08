@@ -154,8 +154,10 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
         for tree_no in np.sort(leaf_nodes["tree_index"].unique()):
 
             tree_leaf_node_counts = {
-                row[1].values[0]: row[1].values[1]
-                for row in leaf_nodes[["leaf_index", "count"]].iterrows()
+                row[1]["leaf_index"]: row[1]["count"]
+                for row in leaf_nodes.loc[
+                    leaf_nodes["tree_index"] == tree_no, ["leaf_index", "count"]
+                ].iterrows()
             }
 
             self.leaf_node_counts.append(tree_leaf_node_counts)
@@ -201,7 +203,7 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
 
         # matrix of (nsample, ntrees) with each record giving
         # the leaf node of each sample in each tree
-        leaf_node_predictions = self.model.predict(data=data, pred_leaf=True)
+        leaf_node_predictions = self.model.predict(data, pred_leaf=True)
 
         # if the input data is a single column reshape the output to
         # be 2d array rather than 1d

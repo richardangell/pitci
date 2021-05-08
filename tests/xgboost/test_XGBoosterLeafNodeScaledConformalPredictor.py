@@ -433,7 +433,7 @@ class TestGeneratePredictions:
 
         assert call_kwargs == {
             "ntree_limit": xgboost_1_split_1_tree.best_iteration + 1
-        }, "positional args incorrect in call to xgb.Booster.predict"
+        }, "keyword args incorrect in call to xgb.Booster.predict"
 
 
 class TestGenerateLeafNodePredictions:
