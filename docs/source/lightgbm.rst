@@ -3,6 +3,6 @@ lightgbm
 
 Conformal predictor classes for underlying LightGBM models.
 
-.. autoclass:: pitci.xgboost.LGBMBoosterLeafNodeScaledConformalPredictor
+.. autoclass:: pitci.lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor
    :members:
    :show-inheritance:    
