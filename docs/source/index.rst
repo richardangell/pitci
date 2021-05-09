@@ -10,7 +10,13 @@ Welcome to pitci's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
+   dispatchers
+   base
+   lightgbm
+   xgboost
+   checks
+   helpers
+   nonconformity
 
 Indices and tables
 ==================
