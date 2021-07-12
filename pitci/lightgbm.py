@@ -116,15 +116,13 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
 
     def __init__(self, model: lgb.Booster) -> None:
 
-        super().__init__()
-
         check_type(model, [lgb.basic.Booster], "model")
+
+        super().__init__(model=model)
 
         self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABS_ERROR
 
         check_objective_supported(model, self.SUPPORTED_OBJECTIVES)
-
-        self.model = model
 
     def _calibrate_leaf_node_counts(self, data: Any) -> None:
         """Method to get the number of times each leaf node was visited on the training

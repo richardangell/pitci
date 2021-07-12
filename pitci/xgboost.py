@@ -365,13 +365,11 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
 
         check_type(model, [xgb.Booster], "model")
 
+        super().__init__(model=model)
+
         self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABS_ERROR
 
         check_objective_supported(model, self.SUPPORTED_OBJECTIVES)
-
-        self.model = model
-
-        super().__init__()
 
     def calibrate(
         self,
@@ -605,13 +603,11 @@ class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredicto
 
         check_type(model, [xgb.XGBRegressor, xgb.XGBClassifier], "model")
 
+        super().__init__(model=model)
+
         self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABS_ERROR
 
         check_objective_supported(model.get_booster(), self.SUPPORTED_OBJECTIVES)
-
-        self.model = model
-
-        LeafNodeScaledConformalPredictor.__init__(self)
 
     def calibrate(
         self,

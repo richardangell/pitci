@@ -196,9 +196,10 @@ class LeafNodeScaledConformalPredictor(ABC):
     leaf_node_counts: list
 
     @abstractmethod
-    def __init__(self) -> None:
+    def __init__(self, model: Any) -> None:
 
         self.__version__ = __version__
+        self.model = model
 
     def calibrate(
         self,
