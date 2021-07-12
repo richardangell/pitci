@@ -443,13 +443,13 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
 
         if train_data is None:
 
-            super()._calibrate_leaf_node_counts(data=data)
+            self._calibrate_leaf_node_counts(data=data)
 
         else:
 
-            super()._calibrate_leaf_node_counts(data=train_data)
+            self._calibrate_leaf_node_counts(data=train_data)
 
-        super()._calibrate_interval(data=data, alpha=alpha, response=response)
+        self._calibrate_interval(data=data, alpha=alpha, response=response)
 
     def predict_with_interval(self, data: xgb.DMatrix) -> np.ndarray:
         """Method to generate predictions on data with conformal intervals.
