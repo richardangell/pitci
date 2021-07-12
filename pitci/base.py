@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import warnings
 from abc import ABC, abstractmethod
 
 from typing import Union, Any, List, Dict
@@ -519,3 +520,221 @@ def _sum_dict_values(arr: np.ndarray, counts: List[Dict[int, int]]) -> int:
             pass
 
     return total
+
+
+class SplitConformalPredictor(LeafNodeScaledConformalPredictor):
+    """Abstract base class for conformal interval predictor whose
+    intervals vary using a scaling factor based off the number of
+    times leaf nodes used to make predictions were visited on a
+    calibration set. Intervals are also split into bins by the scaling
+    factor and calibrated separately for each bin.
+
+    Class implements inductive conformal intervals where a calibration
+    dataset is used to learn the information that is used when generating
+    intervals for new instances.
+
+    Attributes
+    ----------
+    n_bins : int
+        Number of bins to split data based off the scaling factors.
+
+    bin_quantiles : float
+        Quantiles of the scaling factor values that will be used to define
+        the limits of the bins.
+
+    baseline_intervals : list
+        Baseline interval for each bin. When intervals are generated the
+        appropriate baseline interval will be selected given the scaling
+        factor value, this is then scaled by the scaling factor.
+
+    """
+
+    def __init__(self, model: Any, n_bins: int = 3) -> None:
+
+        check_type(n_bins, [int], "n_bins")
+
+        if not n_bins > 1:
+
+            raise ValueError("n_bins should be greater than 1")
+
+        self.n_bins = n_bins
+        self.bin_quantiles = np.linspace(0, 1, self.n_bins + 1)
+
+        super().__init__(model=model)
+
+    def _calibrate_interval(
+        self,
+        data: Any,
+        response: Union[np.ndarray, pd.Series],
+        alpha: Union[int, float] = 0.95,
+    ) -> None:
+        """Method to set the baseline conformal intervals depending on
+        the value of the scaling factors.
+
+        First the scaling factors for `data` are calculated then the
+        quantiles (defined in the bin_quantiles attribute) of the scaling
+        factors are calculated. Next the scaling factors are bucketed
+        at these quantiles. Finally the `alpha` quantiles of the scaled
+        nonconformity values are calculated for each bin.
+
+        Results are stored in the `baseline_intervals` attribute. The
+        edges for the bins are stored in the `scaling_factor_cut_points`
+        attribute.
+
+        The alpha value is also stored in an attribute of the same name.
+
+        Parameters
+        ----------
+        data : Any
+            Dataset to use to set baseline interval width.
+
+        response : np.ndarray or pd.Series
+            The response values for the records in data.
+
+        alpha : int or float, default = 0.95
+            Confidence level for the interval.
+
+        """
+
+        check_attribute(
+            self,
+            "leaf_node_counts",
+            "object does not have leaf_node_counts attribute, run calibrate first.",
+        )
+
+        self.alpha = alpha
+
+        predictions = predictions = self._generate_predictions(data)
+
+        scaling_factors = self._calculate_scaling_factors(data)
+
+        nonconformity_values = nonconformity.scaled_absolute_error(
+            predictions=predictions, response=response, scaling=scaling_factors
+        )
+
+        scaling_factor_cut_points = np.quantile(scaling_factors, self.bin_quantiles)
+
+        self.scaling_factor_cut_points = scaling_factor_cut_points
+
+        # bins will be of the form; bin[i-1] < x <= bin[i]
+        # meaning the top bin will have only 1 observation in it,
+        # the maximum value in the dataset
+        scaling_factor_bins = np.digitize(
+            x=scaling_factors, bins=scaling_factor_cut_points, right=True
+        )
+
+        n_bins = len(scaling_factor_cut_points) - 1
+        self.n_bins = n_bins
+
+        # with right = True specified in np.digitize any values equal
+        # to the min will fall into bin 0, so group into bin 1
+        scaling_factor_bins = np.clip(scaling_factor_bins, a_min=1, a_max=n_bins)
+
+        baseline_intervals = []
+
+        for bin in range(1, n_bins + 1):
+
+            bin_quantile = np.quantile(
+                nonconformity_values[scaling_factor_bins == bin], alpha
+            )
+
+            baseline_intervals.append(bin_quantile)
+
+        self.baseline_intervals = np.array(baseline_intervals)
+
+        self._check_interval_monotonicity()
+
+    def predict_with_interval(self, data: Any) -> np.ndarray:
+        """Method to generate predictions on data with conformal intervals.
+
+        Each prediction is produced with an associated conformal interval.
+        The default interval is of a fixed width and this is scaled
+        differently for each row. The default interval also depends on the
+        scaling factor value. For each row the selected default/baseline
+        interval is then multiplied by the scaling factor.
+
+        The scaling factors are derived by counting the number of times
+        each leaf node, visited to make the prediction, was visited in
+        predicting the calibration dataset.
+
+        The method is very similar to the
+        `LeafNodeScaledConformalPredictor.predict_with_interval` method,
+        with the only difference being that the baseline interval is looked up
+        from the range of values using the scaling factors for each row.
+
+        Parameters
+        ----------
+        data : Any
+            Data to generate predictions with conformal intervals on.
+
+        Returns
+        -------
+        predictions_with_interval : np.ndarray
+            Array of predictions with intervals for each row in data.
+            Output array will have 3 columns where the first is the
+            lower interval, second are the predictions and the third
+            is the upper interval.
+
+        """
+
+        check_attribute(
+            self,
+            "baseline_intervals",
+            "object does not have baseline_intervals attribute, run calibrate first.",
+        )
+
+        predictions = self._generate_predictions(data)
+
+        n_preds = predictions.shape[0]
+
+        scaling_factors = self._calculate_scaling_factors(data)
+
+        baseline_interval = self._lookup_baseline_interval(scaling_factors)
+
+        lower_interval = predictions - (baseline_interval * scaling_factors)
+        upper_interval = predictions + (baseline_interval * scaling_factors)
+
+        predictions_with_interval = np.concatenate(
+            (
+                lower_interval.reshape((n_preds, 1)),
+                predictions.reshape((n_preds, 1)),
+                upper_interval.reshape((n_preds, 1)),
+            ),
+            axis=1,
+        )
+
+        return predictions_with_interval
+
+    def _lookup_baseline_interval(self, scaling_factors: Any) -> np.ndarray:
+        """Lookup the baseline intervals to use given the scaling factor
+        values passed.
+        """
+
+        bin_index_lookup = np.searchsorted(
+            a=self.scaling_factor_cut_points, v=scaling_factors, side="left"
+        )
+
+        bin_index_lookup = np.clip(bin_index_lookup, a_min=1, a_max=self.n_bins)
+
+        interval_lookup = self.baseline_intervals[bin_index_lookup - 1]
+
+        return interval_lookup
+
+    def _check_interval_monotonicity(self) -> None:
+        """Check that the baseline intervals that have been calculated are either
+        monotonically increasing or decreasing.
+
+        A warning is raised if the intervals are not monotonic in either direction.
+
+        """
+
+        monotonically_increasing = np.all(np.diff(self.baseline_intervals) >= 0)
+
+        monotonically_decreasing = np.all(np.diff(self.baseline_intervals) <= 0)
+
+        if not monotonically_increasing and not monotonically_decreasing:
+
+            warnings.warn(
+                f"baseline intervals calculated on {self.n_bins} bins are not "
+                "monotonic in either direction"
+            )
