@@ -8,6 +8,7 @@ import pitci.helpers as helpers
 from pitci.dispatchers import (
     get_leaf_node_scaled_conformal_predictor,
     get_absolute_error_conformal_predictor,
+    get_leaf_node_split_conformal_predictor,
 )
 
 try:

@@ -14,11 +14,16 @@ except ModuleNotFoundError as err:
 
 from typing import Union, Optional, List, cast
 
-from pitci.base import AbsoluteErrorConformalPredictor, LeafNodeScaledConformalPredictor
+from pitci.base import (
+    AbsoluteErrorConformalPredictor,
+    LeafNodeScaledConformalPredictor,
+    SplitConformalPredictor,
+)
 from pitci.checks import check_type, check_allowed_value
 from pitci.dispatchers import (
     get_leaf_node_scaled_conformal_predictor,
     get_absolute_error_conformal_predictor,
+    get_leaf_node_split_conformal_predictor,
 )
 
 
@@ -365,13 +370,11 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
 
         check_type(model, [xgb.Booster], "model")
 
+        super().__init__(model=model)
+
         self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABS_ERROR
 
         check_objective_supported(model, self.SUPPORTED_OBJECTIVES)
-
-        self.model = model
-
-        super().__init__()
 
     def calibrate(
         self,
@@ -443,13 +446,13 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
 
         if train_data is None:
 
-            super()._calibrate_leaf_node_counts(data=data)
+            self._calibrate_leaf_node_counts(data=data)
 
         else:
 
-            super()._calibrate_leaf_node_counts(data=train_data)
+            self._calibrate_leaf_node_counts(data=train_data)
 
-        super()._calibrate_interval(data=data, alpha=alpha, response=response)
+        self._calibrate_interval(data=data, alpha=alpha, response=response)
 
     def predict_with_interval(self, data: xgb.DMatrix) -> np.ndarray:
         """Method to generate predictions on data with conformal intervals.
@@ -605,13 +608,11 @@ class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredicto
 
         check_type(model, [xgb.XGBRegressor, xgb.XGBClassifier], "model")
 
+        super().__init__(model=model)
+
         self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABS_ERROR
 
         check_objective_supported(model.get_booster(), self.SUPPORTED_OBJECTIVES)
-
-        self.model = model
-
-        LeafNodeScaledConformalPredictor.__init__(self)
 
     def calibrate(
         self,
@@ -782,6 +783,32 @@ class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredicto
         return leaf_node_predictions
 
 
+class XGBoosterLeafNodeSplitConformalPredictor(
+    SplitConformalPredictor, XGBoosterLeafNodeScaledConformalPredictor
+):
+    """Conformal interval predictor for an underlying `xgboost.Booster`
+    model using scaled and split absolute error as the nonconformity measure.
+
+    The predictor outputs varying width intervals for every new instance.
+    The scaling function uses the number of times that the leaf nodes were
+    visited for each tree in making the prediction, for that row, were
+    visited in the calibration dataset.
+
+    Intervals are split into bins, using the scaling factors, where each bin
+    is calibrated at the required confidence level. This addresses the
+    situation that `XGBoosterLeafNodeScaledConformalPredictor` can encounter
+    where the intervals are calibrated at the overall level for a given
+    dataset but subsets of the data are not well calibrated.
+
+    This class combines the methods implemented in SplitConformalPredictor and
+    XGBoosterLeafNodeScaledConformalPredictor so nothing else is required to
+    be implemented in the child class itself.
+
+    """
+
+    pass
+
+
 @get_absolute_error_conformal_predictor.register(xgb.Booster)
 def return_xgb_booster_absolute_error_confromal_predictor(
     model: xgb.Booster,
@@ -832,5 +859,18 @@ def return_xgb_sklearn_leaf_node_scaled_confromal_predictor(
     """
 
     confo_model = XGBSklearnLeafNodeScaledConformalPredictor(model=model)
+
+    return confo_model
+
+
+@get_leaf_node_split_conformal_predictor.register(xgb.Booster)
+def return_xgb_booster_leaf_node_split_confromal_predictor(
+    model: xgb.Booster,
+) -> XGBoosterLeafNodeSplitConformalPredictor:
+    """Function to return an instance of XGBoosterLeafNodeSplitConformalPredictor
+    class the passed xgb.Booster object.
+    """
+
+    confo_model = XGBoosterLeafNodeSplitConformalPredictor(model=model)
 
     return confo_model

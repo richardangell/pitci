@@ -101,9 +101,9 @@ class TestInit:
             call_pos_args == ()
         ), "positional args in LeafNodeScaledConformalPredictor.__init__ call not correct"
 
-        assert (
-            call_kwargs == {}
-        ), "keyword args in LeafNodeScaledConformalPredictor.__init__ call not correct"
+        assert call_kwargs == {
+            "model": lgb_booster_1_split_1_tree
+        }, "keyword args in LeafNodeScaledConformalPredictor.__init__ call not correct"
 
 
 class TestCalibrateLeafNodeCounts:

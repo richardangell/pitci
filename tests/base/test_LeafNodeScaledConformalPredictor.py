@@ -14,12 +14,12 @@ class DummyLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor):
     functionality can be tested.
     """
 
-    def __init__(self):
+    def __init__(self, model="abcd"):
         """Dummy init method that only calls LeafNodeScaledConformalPredictor
         init method.
         """
 
-        super().__init__()
+        super().__init__(model=model)
 
     def _generate_predictions(self, data):
         """Dummy function that returns 0s of shape (n,) where data has n rows."""
@@ -48,6 +48,13 @@ class TestInit:
         assert (
             dummy_confo_model.__version__ == pitci.__version__
         ), "version attribute not set correctly"
+
+    def test_model_attribute_set(self):
+        """Test that the object passed in the model arg is set to the model attribute."""
+
+        dummy_confo_model = DummyLeafNodeScaledConformalPredictor(model=1)
+
+        assert dummy_confo_model.model == 1, "model attribute not set correctly"
 
 
 class TestCalibrate:
