@@ -23,6 +23,7 @@ from pitci.checks import check_type, check_allowed_value
 from pitci.dispatchers import (
     get_leaf_node_scaled_conformal_predictor,
     get_absolute_error_conformal_predictor,
+    get_leaf_node_split_conformal_predictor,
 )
 
 
@@ -858,5 +859,18 @@ def return_xgb_sklearn_leaf_node_scaled_confromal_predictor(
     """
 
     confo_model = XGBSklearnLeafNodeScaledConformalPredictor(model=model)
+
+    return confo_model
+
+
+@get_leaf_node_split_conformal_predictor.register(xgb.Booster)
+def return_xgb_booster_leaf_node_split_confromal_predictor(
+    model: xgb.Booster,
+) -> XGBoosterLeafNodeSplitConformalPredictor:
+    """Function to return an instance of XGBoosterLeafNodeSplitConformalPredictor
+    class the passed xgb.Booster object.
+    """
+
+    confo_model = XGBoosterLeafNodeSplitConformalPredictor(model=model)
 
     return confo_model

@@ -17,6 +17,7 @@ from pitci.base import LeafNodeScaledConformalPredictor, SplitConformalPredictor
 from pitci.checks import check_type, check_allowed_value
 from pitci.dispatchers import (
     get_leaf_node_scaled_conformal_predictor,
+    get_leaf_node_split_conformal_predictor,
 )
 
 
@@ -249,5 +250,18 @@ def return_lgb_booster_leaf_node_scaled_confromal_predictor(
     """
 
     confo_model = LGBMBoosterLeafNodeScaledConformalPredictor(model=model)
+
+    return confo_model
+
+
+@get_leaf_node_split_conformal_predictor.register(lgb.basic.Booster)
+def return_lgb_booster_leaf_node_split_confromal_predictor(
+    model: lgb.Booster,
+) -> LGBMBoosterLeafNodeSplitConformalPredictor:
+    """Function to return an instance of LGBMBoosterLeafNodeSplitConformalPredictor
+    class the passed lgb.Booster object.
+    """
+
+    confo_model = LGBMBoosterLeafNodeSplitConformalPredictor(model=model)
 
     return confo_model
