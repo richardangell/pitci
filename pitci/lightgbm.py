@@ -13,7 +13,7 @@ except ModuleNotFoundError as err:
 
 from typing import List, Union, Any
 
-from pitci.base import LeafNodeScaledConformalPredictor
+from pitci.base import LeafNodeScaledConformalPredictor, SplitConformalPredictor
 from pitci.checks import check_type, check_allowed_value
 from pitci.dispatchers import (
     get_leaf_node_scaled_conformal_predictor,
@@ -212,6 +212,32 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
             )
 
         return leaf_node_predictions
+
+
+class LGBMBoosterLeafNodeSplitConformalPredictor(
+    SplitConformalPredictor, LGBMBoosterLeafNodeScaledConformalPredictor
+):
+    """Conformal interval predictor for an underlying `lgb.Booster`
+    model using scaled and split absolute error as the nonconformity measure.
+
+    The predictor outputs varying width intervals for every new instance.
+    The scaling function uses the number of times that the leaf nodes were
+    visited for each tree in making the prediction, for that row, were
+    visited in the calibration dataset.
+
+    Intervals are split into bins, using the scaling factors, where each bin
+    is calibrated at the required confidence level. This addresses the
+    situation that `LGBMBoosterLeafNodeScaledConformalPredictor` can encounter
+    where the intervals are calibrated at the overall level for a given
+    dataset but subsets of the data are not well calibrated.
+
+    This class combines the methods implemented in SplitConformalPredictor and
+    LGBMBoosterLeafNodeScaledConformalPredictor so nothing else is required to
+    be implemented in the child class itself.
+
+    """
+
+    pass
 
 
 @get_leaf_node_scaled_conformal_predictor.register(lgb.basic.Booster)
