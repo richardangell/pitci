@@ -1,3 +1,5 @@
+"""Prediction intervals for trees using conformal intervals - pitci"""
+
 from pitci._version import __version__
 
 import pitci.base as base

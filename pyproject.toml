@@ -1,0 +1,52 @@
+[build-system]
+requires = ["flit_core >=2,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "pitci"
+author = "Richard Angell"
+author-email = "richardangell37@gmail.com"
+home-page = "https://github.com/richardangell/pitci"
+requires=[
+    "numpy>=1.9",
+    "pandas>=1.0.0",
+]
+requires-python=">=3.6"
+description-file="README.md"
+classifiers=[
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+]
+
+[tool.flit.metadata.requires-extra]
+xgboost = [
+    "xgboost>=0.82"
+]
+lightgbm = [
+    "lightgbm>=3.0.0"
+]
+test = [
+    "pre-commit==2.11.1",
+    "pytest==6.2.3",
+    "pytest-cov==2.11.1",
+    "pytest-mock==3.5.1",
+    "black==20.8b1",
+    "flake8==3.9.0",
+    "mypy==0.812",
+    "scikit-learn>=0.22.1",
+    "xgboost>=0.82",
+    "lightgbm>=3.0.0"
+]
+doc = [
+    "Sphinx==3.5.4",
+    "sphinx-rtd-theme==0.5.2",
+    "numpydoc==1.1.0",
+]
+
+[tool.flit.metadata.urls]
+Documentation = "https://pitci.readthedocs.io/en/latest/"
+PyPI = "https://pypi.org/project/pitci/"
+
+[tool.flit.sdist]
+exclude = ["examples/"]
