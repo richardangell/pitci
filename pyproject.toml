@@ -49,4 +49,8 @@ Documentation = "https://pitci.readthedocs.io/en/latest/"
 PyPI = "https://pypi.org/project/pitci/"
 
 [tool.flit.sdist]
-exclude = ["examples/"]
+exclude = [
+    "examples/",
+    "docs",
+    
+]
