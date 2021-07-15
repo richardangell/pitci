@@ -43,10 +43,8 @@ class AbsoluteErrorConformalPredictor(ABC):
         alpha: Union[int, float] = 0.95,
     ) -> None:
         """Method to calibrate conformal intervals that will be applied
-        to new instances when calling `predict_with_interval`.
-
-        Method calls `_calibrate_interval` to set the default, fixed width,
-        interval.
+        to new instances when calling
+        :func:`~pitci.base.AbsoluteErrorConformalPredictor.predict_with_interval`.
 
         Parameters
         ----------
@@ -54,7 +52,7 @@ class AbsoluteErrorConformalPredictor(ABC):
             Dataset to calibrate baselines on.
 
         response : np.ndarray or pd.Series
-            The associated response values for every record in `data`.
+            The associated response values for every record in ``data``.
 
         alpha : int or float, default = 0.95
             Confidence level for the interval.
@@ -72,10 +70,6 @@ class AbsoluteErrorConformalPredictor(ABC):
 
     def predict_with_interval(self, data: Any) -> np.ndarray:
         """Method to generate predictions on data with conformal intervals.
-
-        This method calls the `_generate_predictions` method once to
-        generate predictions and then puts the half interval calculated
-        in `_calibrate_interval` about the predictions.
 
         Parameters
         ----------
@@ -137,9 +131,9 @@ class AbsoluteErrorConformalPredictor(ABC):
         alpha: Union[int, float] = 0.95,
     ) -> None:
         """Method to set the baseline conformal interval. Result is stored
-        in the `baseline_interval` attribute.
+        in the baseline_interval attribute.
 
-        The value passed in `alpha` is also stored in an attribute of the
+        The value passed in alpha is also stored in an attribute of the
         same name.
 
         Parameters
@@ -148,7 +142,7 @@ class AbsoluteErrorConformalPredictor(ABC):
             Dataset to use to set baseline interval width.
 
         response : np.ndarray or pd.Series
-            The response values for the records in `data`.
+            The response values for the records in data.
 
         alpha : int or float, default = 0.95
             Confidence level for the interval.
