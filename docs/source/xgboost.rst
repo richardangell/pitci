@@ -1,22 +1,12 @@
 xgboost
 ====================
 
-.. autoclass:: pitci.xgboost.XGBoosterAbsoluteErrorConformalPredictor
-   :members:
-   :show-inheritance:
-
-.. autoclass:: pitci.xgboost.XGBSklearnAbsoluteErrorConformalPredictor
-   :members:
-   :show-inheritance:
-
-.. autoclass:: pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor
-   :members:
-   :show-inheritance:
-
-.. autoclass:: pitci.xgboost.XGBSklearnLeafNodeScaledConformalPredictor
-   :members:
-   :show-inheritance:
-
-.. autoclass:: pitci.xgboost.XGBoosterLeafNodeSplitConformalPredictor
-   :members:
-   :show-inheritance:
+.. automodule:: pitci.xgboost
+    :members:
+    :show-inheritance:
+    :exclude-members: check_objective_supported, 
+        return_xgb_booster_absolute_error_confromal_predictor,
+        return_xgb_sklearn_absolute_error_confromal_predictor,
+        return_xgb_sklearn_leaf_node_scaled_confromal_predictor,
+        return_xgb_booster_leaf_node_scaled_confromal_predictor, 
+        return_xgb_booster_leaf_node_split_confromal_predictor
