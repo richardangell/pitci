@@ -22,12 +22,19 @@ class AbsoluteErrorConformalPredictor(ABC):
     """Abstract base class for a conformal interval predictor for any
     underlying  model using non-scaled absolute error as the
     nonconformity measure.
+
+    Parameters
+    ----------
+    model : Any
+        Underly model to generate prediction intervals for.
+
     """
 
     @abstractmethod
-    def __init__(self) -> None:
+    def __init__(self, model: Any) -> None:
 
         self.__version__ = __version__
+        self.model = model
 
     def calibrate(
         self,

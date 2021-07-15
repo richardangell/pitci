@@ -129,15 +129,13 @@ class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
 
     def __init__(self, model: xgb.Booster) -> None:
 
-        super().__init__()
-
         check_type(model, [xgb.Booster], "booster")
+
+        super().__init__(model=model)
 
         self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABS_ERROR
 
         check_objective_supported(model, self.SUPPORTED_OBJECTIVES)
-
-        self.model = model
 
     def calibrate(
         self,
@@ -249,15 +247,13 @@ class XGBSklearnAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor)
 
     def __init__(self, model: Union[xgb.XGBRegressor, xgb.XGBClassifier]) -> None:
 
-        super().__init__()
-
         check_type(model, [xgb.XGBRegressor, xgb.XGBClassifier], "model")
+
+        super().__init__(model=model)
 
         self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABS_ERROR
 
         check_objective_supported(model.get_booster(), self.SUPPORTED_OBJECTIVES)
-
-        self.model = model
 
     def calibrate(
         self,
