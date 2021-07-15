@@ -153,7 +153,9 @@ class AbsoluteErrorConformalPredictor(ABC):
             predictions=predictions, response=response
         )
 
-        self.baseline_interval = np.quantile(nonconformity_values, alpha)
+        self.baseline_interval = nonconformity.nonconformity_at_alpha(
+            nonconformity_values, alpha
+        )
 
 
 class LeafNodeScaledConformalPredictor(ABC):
@@ -337,7 +339,9 @@ class LeafNodeScaledConformalPredictor(ABC):
             predictions=predictions, response=response, scaling=scaling_factors
         )
 
-        self.baseline_interval = np.quantile(nonconformity_values, alpha)
+        self.baseline_interval = nonconformity.nonconformity_at_alpha(
+            nonconformity_values, alpha
+        )
 
     def _calculate_scaling_factors(self, data: Any) -> np.ndarray:
         """Method to calculate the scaling factors for a given dataset.
@@ -634,7 +638,7 @@ class SplitConformalPredictor(LeafNodeScaledConformalPredictor):
 
         for bin in range(1, n_bins + 1):
 
-            bin_quantile = np.quantile(
+            bin_quantile = nonconformity.nonconformity_at_alpha(
                 nonconformity_values[scaling_factor_bins == bin], alpha
             )
 
