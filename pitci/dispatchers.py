@@ -1,3 +1,8 @@
+"""
+Module containing functions used to return the correct conformal predictor
+class given the underlying model type.
+"""
+
 from functools import singledispatch
 
 

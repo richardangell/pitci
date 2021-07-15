@@ -1,3 +1,8 @@
+"""
+Module containing base conformal predictor classes, model-type specific conformal
+predictor classes will inherit from these base classes.
+"""
+
 import pandas as pd
 import numpy as np
 import warnings

@@ -1,3 +1,5 @@
+"""Conformal predictor classes for LightGBM models."""
+
 import numpy as np
 import pandas as pd
 

@@ -1,3 +1,5 @@
+"""Module containing functions used for evaluating interval regions."""
+
 import pandas as pd
 import numpy as np
 

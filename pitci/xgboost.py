@@ -1,3 +1,5 @@
+"""Conformal predictor classes for XGBoost models."""
+
 import pandas as pd
 import numpy as np
 import json

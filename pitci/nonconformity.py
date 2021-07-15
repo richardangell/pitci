@@ -1,3 +1,5 @@
+"""Module containing functions to calculate nonconformity measures."""
+
 import numpy as np
 
 
