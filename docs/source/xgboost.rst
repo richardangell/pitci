@@ -1,8 +1,6 @@
 xgboost
 ====================
 
-Conformal predictor classes for underlying XGBoost models.
-
 .. autoclass:: pitci.xgboost.XGBoosterAbsoluteErrorConformalPredictor
    :members:
    :show-inheritance:
