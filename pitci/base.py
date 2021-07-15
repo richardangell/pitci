@@ -43,21 +43,21 @@ class AbsoluteErrorConformalPredictor(ABC):
         alpha: Union[int, float] = 0.95,
     ) -> None:
         """Method to calibrate conformal intervals that will be applied
-        to new instances when calling predict_with_interval.
+        to new instances when calling `predict_with_interval`.
 
-        Method calls _calibrate_interval to set the default (fixed width)
+        Method calls `_calibrate_interval` to set the default, fixed width,
         interval.
 
         Parameters
         ----------
-        data : any
+        data : Any
             Dataset to calibrate baselines on.
+
+        response : np.ndarray or pd.Series
+            The associated response values for every record in `data`.
 
         alpha : int or float, default = 0.95
             Confidence level for the interval.
-
-        response : np.ndarray, pd.Series
-            The associated response values for every record in data.
 
         """
 
@@ -73,14 +73,14 @@ class AbsoluteErrorConformalPredictor(ABC):
     def predict_with_interval(self, data: Any) -> np.ndarray:
         """Method to generate predictions on data with conformal intervals.
 
-        This method calls the _generate_predictions method once to
+        This method calls the `_generate_predictions` method once to
         generate predictions and then puts the half interval calculated
-        in _calibrate_interval about the predictions.
+        in `_calibrate_interval` about the predictions.
 
         Parameters
         ----------
         data : Any
-            Dataset to generate predictions with conformal intervals.
+            Dataset on which to generate predictions with conformal intervals.
 
         Returns
         -------
@@ -137,9 +137,9 @@ class AbsoluteErrorConformalPredictor(ABC):
         alpha: Union[int, float] = 0.95,
     ) -> None:
         """Method to set the baseline conformal interval. Result is stored
-        in the baseline_interval attribute.
+        in the `baseline_interval` attribute.
 
-        The value passed in alpha is also stored in an attribute of the
+        The value passed in `alpha` is also stored in an attribute of the
         same name.
 
         Parameters
@@ -147,13 +147,11 @@ class AbsoluteErrorConformalPredictor(ABC):
         data : Any
             Dataset to use to set baseline interval width.
 
+        response : np.ndarray or pd.Series
+            The response values for the records in `data`.
+
         alpha : int or float, default = 0.95
             Confidence level for the interval.
-
-        response : np.ndarray, pd.Series or None, default = None
-            The response values for the records in data. If passed as
-            None then the function will attempt to extract the response from
-            the data argument with get_label.
 
         """
 
