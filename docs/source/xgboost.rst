@@ -16,3 +16,7 @@ xgboost
 .. autoclass:: pitci.xgboost.XGBSklearnLeafNodeScaledConformalPredictor
    :members:
    :show-inheritance:
+
+.. autoclass:: pitci.xgboost.XGBoosterLeafNodeSplitConformalPredictor
+   :members:
+   :show-inheritance:
