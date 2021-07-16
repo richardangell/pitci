@@ -4,6 +4,7 @@ xgboost
 .. automodule:: pitci.xgboost
     :members:
     :show-inheritance:
+    :inherited-members:
     :exclude-members: check_objective_supported, 
         return_xgb_booster_absolute_error_confromal_predictor,
         return_xgb_sklearn_absolute_error_confromal_predictor,
