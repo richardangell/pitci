@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import lightgbm as lgb
 import re
 
@@ -104,6 +105,26 @@ class TestInit:
         assert call_kwargs == {
             "model": lgb_booster_1_split_1_tree
         }, "keyword args in LeafNodeScaledConformalPredictor.__init__ call not correct"
+
+
+class TestCalibrate:
+    """Tests for the LGBMBoosterLeafNodeScaledConformalPredictor.calibrate method."""
+
+    def test_data_exception(self, lgb_booster_1_split_1_tree):
+        """Test that an exception is raised if data is not a np.array or pd.Series."""
+
+        confo_model = LGBMBoosterLeafNodeScaledConformalPredictor(
+            lgb_booster_1_split_1_tree
+        )
+
+        with pytest.raises(
+            TypeError,
+            match=re.escape(
+                f"data is not in expected types {[pd.Series, np.ndarray]}, got {int}"
+            ),
+        ):
+
+            confo_model.calibrate(data=1, response=np.ndarray([1, 2]), alpha=0.8)
 
 
 class TestCalibrateLeafNodeCounts:

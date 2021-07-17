@@ -127,6 +127,39 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
 
         check_objective_supported(model, self.SUPPORTED_OBJECTIVES)
 
+    def calibrate(
+        self,
+        data: Union[np.ndarray, pd.Series],
+        response: Union[np.ndarray, pd.Series],
+        alpha: Union[int, float] = 0.95,
+    ) -> None:
+        """Calibrate conformal intervals to a given sample of ``data``.
+
+        Method calls _calibrate_leaf_node_counts to record the number
+        of times each leaf node is visited across the whole of the
+        passed data.
+
+        Method calls _calibrate_interval to set the default interval that
+        will be scaled using the inverse of the noncomformity function
+        when making predictions. This allows intervals to vary by instance.
+
+        Parameters
+        ----------
+        data : pd.Series or np.ndarray
+            Dataset to calibrate to.
+
+        response : np.ndarray or pd.Series
+            The response values for the records in ``data``.
+
+        alpha : int or float, default = 0.95
+            Confidence level for the intervals to be calibrated at.
+
+        """
+
+        check_type(data, [pd.Series, np.ndarray], "data")
+
+        super().calibrate(data=data, response=response, alpha=alpha)
+
     def _calibrate_leaf_node_counts(self, data: Any) -> None:
         """Method to get the number of times each leaf node was visited on the training
         dataset.
