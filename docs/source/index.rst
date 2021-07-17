@@ -8,15 +8,9 @@ Welcome to pitci's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: API Documentation:
+   :caption: Contents:
 
-   dispatchers
-   base
-   lightgbm
-   xgboost
-   checks
-   helpers
-   nonconformity
+   api
 
 Indices and tables
 ==================
