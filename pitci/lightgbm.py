@@ -15,9 +15,9 @@ except ModuleNotFoundError as err:
 
 from typing import List, Union, Any
 
-from pitci.base import LeafNodeScaledConformalPredictor, SplitConformalPredictor
-from pitci.checks import check_type, check_allowed_value
-from pitci.dispatchers import (
+from .base import LeafNodeScaledConformalPredictor, SplitConformalPredictor
+from .checks import check_type, check_allowed_value
+from .dispatchers import (
     get_leaf_node_scaled_conformal_predictor,
     get_leaf_node_split_conformal_predictor,
 )

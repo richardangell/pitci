@@ -5,7 +5,7 @@ import numpy as np
 
 from typing import Union, List, Tuple, Optional
 
-from pitci.checks import check_type
+from .checks import check_type
 
 
 def gather_intervals(

@@ -1,24 +1,24 @@
 """Prediction intervals for trees using conformal intervals - pitci"""
 
-from pitci._version import __version__
+from ._version import __version__
 
-import pitci.base as base
-import pitci.checks as checks
-import pitci.dispatchers as dispatchers
-import pitci.helpers as helpers
+from . import base
+from . import checks
+from . import dispatchers
+from . import helpers
 
-from pitci.dispatchers import (
+from .dispatchers import (
     get_leaf_node_scaled_conformal_predictor,
     get_absolute_error_conformal_predictor,
     get_leaf_node_split_conformal_predictor,
 )
 
 try:
-    import pitci.xgboost as xgboost
+    from . import xgboost
 except ImportError:
     pass
 
 try:
-    import pitci.lightgbm as lightgbm
+    from . import lightgbm
 except ImportError:
     pass

@@ -16,13 +16,13 @@ except ModuleNotFoundError as err:
 
 from typing import Union, Optional, List, cast
 
-from pitci.base import (
+from .base import (
     AbsoluteErrorConformalPredictor,
     LeafNodeScaledConformalPredictor,
     SplitConformalPredictor,
 )
-from pitci.checks import check_type, check_allowed_value
-from pitci.dispatchers import (
+from .checks import check_type, check_allowed_value
+from .dispatchers import (
     get_leaf_node_scaled_conformal_predictor,
     get_absolute_error_conformal_predictor,
     get_leaf_node_split_conformal_predictor,

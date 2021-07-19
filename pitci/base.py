@@ -10,12 +10,12 @@ from abc import ABC, abstractmethod
 
 from typing import Union, Any, List, Dict
 
-from pitci._version import __version__
-from pitci.checks import (
+from ._version import __version__
+from .checks import (
     check_type,
     check_attribute,
 )
-import pitci.nonconformity as nonconformity
+from . import nonconformity
 
 
 class AbsoluteErrorConformalPredictor(ABC):
