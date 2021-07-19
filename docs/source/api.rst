@@ -10,8 +10,8 @@ base module
     :toctree: api/
 
     base.AbsoluteErrorConformalPredictor
-    base.AbsoluteErrorConformalPredictor
-    base.AbsoluteErrorConformalPredictor
+    base.LeafNodeScaledConformalPredictor
+    base.SplitConformalPredictor
     
 lightgbm module
 ------------------
