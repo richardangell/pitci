@@ -194,7 +194,7 @@ class LeafNodeScaledConformalPredictor(ABC):
     leaf_node_counts : list
         Counts of number of times each leaf node in each tree was visited when
         making predictions on the calibration dataset. Attribute is set by the
-        ``_calibrate_leaf_node_counts``, called by the
+        ``_calibrate_leaf_node_counts`` method, called by the
         :func:`~pitci.base.LeafNodeScaledConformalPredictor.calibrate` method.
         The length of the list corresponds to the number of trees.
 
@@ -464,7 +464,7 @@ class LeafNodeScaledConformalPredictor(ABC):
 
     @abstractmethod
     def _generate_predictions(self, data: Any) -> np.ndarray:
-        """Fenerate predictions with underlying model.
+        """Generate predictions with underlying model.
 
         Parameters
         ----------
@@ -569,7 +569,7 @@ class SplitConformalPredictor(LeafNodeScaledConformalPredictor):
     leaf_node_counts : list
         Counts of number of times each leaf node in each tree was visited when
         making predictions on the calibration dataset. Attribute is set by the
-        ``_calibrate_leaf_node_counts``, called by the
+        ``_calibrate_leaf_node_counts`` method, called by the
         :func:`~pitci.base.LeafNodeScaledConformalPredictor.calibrate` method.
         The length of the list corresponds to the number of trees.
 

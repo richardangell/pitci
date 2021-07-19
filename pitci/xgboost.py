@@ -100,13 +100,13 @@ class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
     - reg:gamma
     - reg:tweedie
     - count:poisson
-    These are held in the SUPPORTED_OBJECTIVES attribute, see note below
+    These are held in the SUPPORTED_OBJECTIVES attribute, see note above
     for reasons for excluding some of the reg and binary objectives.
 
     Parameters
     ----------
     model : xgb.Booster
-        Underly model to generate prediction intervals for.
+        Underlying model to generate prediction intervals for.
 
     Attributes
     ----------
@@ -175,7 +175,7 @@ class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
         super().calibrate(data=data, alpha=alpha, response=response)
 
     def _generate_predictions(self, data: xgb.DMatrix) -> np.ndarray:
-        """Method to generate predictions from the xgboost model.
+        """Generate predictions from the xgboost model.
 
         Calls predict method on the model attribute with
         ntree_limit = model's best_iteration + 1.
