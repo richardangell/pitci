@@ -19,16 +19,46 @@ from . import nonconformity
 
 
 class AbsoluteErrorConformalPredictor(ABC):
-    """Abstract base class for a conformal interval predictor for any
-    underlying  model using non-scaled absolute error as the
-    nonconformity measure.
+    """Conformal interval predictor for an underlying {model} using absolute
+    error as the nonconformity measure.
+
+    Class implements inductive conformal intervals where a calibration
+    dataset is used to learn the information that is used when generating
+    intervals for new instances.
+
+    The predictor outputs fixed width intervals for every new instance,
+    there is no interval scaling implemented in this class.
+
+    {description}
 
     Parameters
     ----------
-    model : Any
-        Underly model to generate prediction intervals for.
+    model : {model_type}
+        Underlying {model_type} model to generate prediction intervals with.
+
+    {parameters}
+
+    Attributes
+    ----------
+    __version__ : str
+        The version of the ``pitci`` package that generated the object.
+
+    model : {model_type}
+        The underlying {model_type} model passed in initialising the object.
+
+    baseline_interval : float
+        The default or baseline conformal half interval width. Will be scaled
+        for each prediction generated.
+
+    alpha : int or float
+        The confidence level of the conformal intervals that will be produced.
+        Attribute is set when the {calibrate_link} method is run.
+
+    {attributes}
 
     """
+
+    __doc__: str
 
     @abstractmethod
     def __init__(self, model: Any) -> None:

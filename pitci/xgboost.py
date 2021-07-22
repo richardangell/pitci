@@ -80,52 +80,17 @@ SUPPORTED_OBJECTIVES_ABS_ERROR = [
 
 
 class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
-    """Conformal interval predictor for an underlying `xgb.Booster` model
-    using non-scaled absolute error as the nonconformity measure.
-
-    Class implements inductive conformal intervals where a calibration
-    dataset is used to learn the information that is used when generating
-    intervals for new instances.
-
-    The predictor outputs fixed width intervals for every new instance,
-    as no scaling is implemented in this class.
-
-    The currently supported xgboost objective functions for the underlying
-    model are;
-    - binary:logistic
-    - reg:logistic
-    - reg:squarederror
-    - reg:logistic
-    - reg:pseudohubererror
-    - reg:gamma
-    - reg:tweedie
-    - count:poisson
-    These are held in the SUPPORTED_OBJECTIVES attribute, see note above
-    for reasons for excluding some of the reg and binary objectives.
-
-    Parameters
-    ----------
-    model : xgb.Booster
-        Underlying model to generate prediction intervals for.
-
-    Attributes
-    ----------
-    model : xgb.Booster
-        Underlying model passed in initialisation of the class.
-
-    baseline_interval : float
-        Default, baseline conformal interval width. This is the half
-        width interval that will be returned for every instance.
-
-    alpha : int or float
-        The confidence level of the conformal intervals that will be produced.
-        Attribute is set when the calibrate method is run.
-
-    SUPPORTED_OBJECTIVES : list
-        Booster supported objectives. If an xgboost model with a non-supported
-        objective is passed when initialising the class object an error will be raised.
-
-    """
+    __doc__ = AbsoluteErrorConformalPredictor.__doc__.format(
+        model_type="``xgb.Booster``",
+        description="The currently supported xgboost objective functions, "
+        "given the nonconformity\n    measure that is based on absolute error, are defined "
+        "in the\n    SUPPORTED_OBJECTIVES attribute.",
+        parameters="",
+        calibrate_link=":func:`~pitci.xgboost.XGBoosterAbsoluteErrorConformalPredictor.calibrate`",
+        attributes="SUPPORTED_OBJECTIVES : list\n"
+        "\tBooster supported objectives. If an ``xgb.Booster`` with a non-supported "
+        "objective\n\tis passed when initialising the class object an error will be raised.",
+    )
 
     def __init__(self, model: xgb.Booster) -> None:
 
@@ -197,53 +162,18 @@ class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
 
 
 class XGBSklearnAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
-    """Conformal interval predictor for an underlying `xgb.XGBRegressor` or
-    `xgb.XGBClassifier` model using non-scaled absolute error as the
-    nonconformity measure.
-
-    Class implements inductive conformal intervals where a calibration
-    dataset is used to learn the information that is used when generating
-    intervals for new instances.
-
-    The predictor outputs fixed width intervals for every new instance,
-    as no scaling is implemented in this class.
-
-    The currently supported xgboost objective functions for the underlying
-    model are;
-    - binary:logistic
-    - reg:logistic
-    - reg:squarederror
-    - reg:logistic
-    - reg:pseudohubererror
-    - reg:gamma
-    - reg:tweedie
-    - count:poisson
-    These are held in the SUPPORTED_OBJECTIVES attribute, see note below
-    for reasons for excluding some of the reg and binary objectives.
-
-    Parameters
-    ----------
-    model : xgb.XGBRegressor or xgb.XGBClassifier
-        Underly model to generate prediction intervals for.
-
-    Attributes
-    ----------
-    model : xgb.XGBRegressor or xgb.XGBClassifier
-        Underlying model passed in initialisation of the class.
-
-    baseline_interval : float
-        Default, baseline conformal interval width. This is the half
-        width interval that will be returned for every instance.
-
-    alpha : int or float
-        The confidence level of the conformal intervals that will be produced.
-        Attribute is set when the calibrate method is run.
-
-    SUPPORTED_OBJECTIVES : list
-        Booster supported objectives. If an xgboost model with a non-supported
-        objective is passed when initialising the class object an error will be raised.
-
-    """
+    __doc__ = AbsoluteErrorConformalPredictor.__doc__.format(
+        model_type="``xgb.XGBRegressor`` or ``xgb.XGBClassifier``",
+        description="The currently supported xgboost objective functions, "
+        "given the nonconformity\n    measure that is based on absolute error, are defined "
+        "in the\n    SUPPORTED_OBJECTIVES attribute.",
+        parameters="",
+        calibrate_link=":func:`~pitci.xgboost.XGBSklearnAbsoluteErrorConformalPredictor.calibrate`",
+        attributes="SUPPORTED_OBJECTIVES : list\n"
+        "\tBooster supported objectives. If an ``xgb.XGBRegressor`` or ``xgb.XGBClassifier`` "
+        "with a non-supported objective\n\tis passed when initialising the class object an "
+        "error will be raised.",
+    )
 
     def __init__(self, model: Union[xgb.XGBRegressor, xgb.XGBClassifier]) -> None:
 

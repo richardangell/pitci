@@ -27,6 +27,15 @@ except ImportError:
 # format docs for base conformal predictors after all the other
 # modules have been imported and they have formatted the base
 # docstring
+base.AbsoluteErrorConformalPredictor.__doc__ = (
+    base.AbsoluteErrorConformalPredictor.__doc__.format(
+        model_type="``Any``",
+        description="",
+        parameters="",
+        calibrate_link=":func:`~pitci.base.AbsoluteErrorConformalPredictor.calibrate`",
+        attributes="",
+    )
+)
 base.LeafNodeScaledConformalPredictor.__doc__ = (
     base.LeafNodeScaledConformalPredictor.__doc__.format(
         model_type="``Any``", description="", parameters="", attributes=""
