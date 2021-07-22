@@ -13,6 +13,8 @@ from .dispatchers import (
     get_leaf_node_split_conformal_predictor,
 )
 
+from .docstrings import _format_base_class_docstrings
+
 try:
     from . import xgboost
 except ImportError:
@@ -23,28 +25,7 @@ try:
 except ImportError:
     pass
 
-
 # format docs for base conformal predictors after all the other
 # modules have been imported and they have formatted the base
-# docstring
-base.AbsoluteErrorConformalPredictor.__doc__ = (
-    base.AbsoluteErrorConformalPredictor.__doc__.format(
-        model_type="``Any``",
-        description="",
-        parameters="",
-        calibrate_link=":func:`~pitci.base.AbsoluteErrorConformalPredictor.calibrate`",
-        attributes="",
-    )
-)
-base.LeafNodeScaledConformalPredictor.__doc__ = (
-    base.LeafNodeScaledConformalPredictor.__doc__.format(
-        model_type="``Any``", description="", parameters="", attributes=""
-    )
-)
-base.SplitConformalPredictor.__doc__ = base.SplitConformalPredictor.__doc__.format(
-    model_type="``Any``",
-    description="",
-    parameters="",
-    calibrate_link="``calibrate``",
-    attributes="",
-)
+# docstrings for their classes
+_format_base_class_docstrings()
