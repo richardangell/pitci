@@ -65,57 +65,16 @@ SUPPORTED_OBJECTIVES_ABS_ERROR = [
 
 
 class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor):
-    """Conformal interval predictor for an underlying lightgbm model
-    using scaled absolute error as the nonconformity measure.
-
-    Class implements inductive conformal intervals where a calibration
-    dataset is used to learn the information that is used when generating
-    intervals for new instances.
-
-    The predictor outputs varying width intervals for every new instance.
-    The scaling function uses the number of times that the leaf nodes were
-    visited for each tree in making the prediction, for that row, were
-    visited in the training dataset.
-
-    Intuitively, for rows that have higher leaf node counts from the train
-    set - the model will be more 'familiar' with hence the interval for
-    these rows will be shrunk. The inverse is true for rows that have lower
-    leaf node counts from the train set.
-
-    The currently supported lgboost objective functions (given the nonconformity
-    measure that is based on absolute error) are defined in the
-    SUPPORTED_OBJECTIVES attribute.
-
-    Parameters
-    ----------
-    model : lgb.Booster
-        Model to generate predictions with conformal intervals.
-
-    Attributes
-    ----------
-    model : lgb.Booster
-        Model passed in initialisation of the class.
-
-    leaf_node_counts : list
-        Counts of number of times each leaf node in each tree was visited when
-        making predictions on the train dataset. Attribute is set when the
-        calibrate method is run.
-
-    baseline_interval : float
-        Default, baseline conformal interval width. Will be scaled for each
-        prediction generated. Attribute is set when the calibrate method is
-        run.
-
-    alpha : int or float
-        The confidence level of the conformal intervals that will be produced.
-        Attribute is set when the calibrate method is run.
-
-    SUPPORTED_OBJECTIVES : list
-        Booster supported objectives. If an lgb.Booster object is passed using
-        a non-supported objective when initialising the class an an error
-        will be raised.
-
-    """
+    __doc__ = LeafNodeScaledConformalPredictor.__doc__.format(
+        model_type="``lgb.Booster``",
+        description="The currently supported lgboost objective functions, "
+        "given the nonconformity\n    measure that is based on absolute error, are defined "
+        "in the\n    SUPPORTED_OBJECTIVES attribute.",
+        parameters="",
+        attributes="SUPPORTED_OBJECTIVES : list\n"
+        "\tBooster supported objectives. If a model with a non-supported "
+        "objective\n\tis passed when initialising the class object an error will be raised.",
+    )
 
     def __init__(self, model: lgb.Booster) -> None:
 

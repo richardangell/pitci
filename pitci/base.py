@@ -163,9 +163,12 @@ class AbsoluteErrorConformalPredictor(ABC):
 
 
 class LeafNodeScaledConformalPredictor(ABC):
-    """Abstract base class for a conformal interval predictor for any
-    underlying  model using absolute error scaled by leaf node counts
-    as the nonconformity measure.
+    """Conformal interval predictor for an underlying {model_type} model using
+    absolute error scaled by leaf node counts as the nonconformity measure.
+
+    Class implements inductive conformal intervals where a calibration
+    dataset is used to learn the information that is used when generating
+    intervals for new instances.
 
     The predictor outputs varying width intervals for every new instance.
     The scaling function uses the number of times that the leaf nodes were
@@ -177,41 +180,45 @@ class LeafNodeScaledConformalPredictor(ABC):
     these rows will be shrunk. The inverse is true for rows that have lower
     leaf node counts from the calibration set.
 
+    {description}
+
     Parameters
     ----------
-    model : Any
-        Underly model to generate prediction intervals for.
+    model : {model_type}
+        Underly {model_type} model to generate prediction intervals for.
+
+    {parameters}
 
     Attributes
     ----------
     __version__ : str
         The version of the ``pitci`` package that generated the object.
 
-    model : Any
-        The underlying model to generate predictions intervals for. Passed in
-        initialising the object.
+    model : {model_type}
+        The underlying {model_type} model passed in initialising the object.
 
     leaf_node_counts : list
-        Counts of number of times each leaf node in each tree was visited when
-        making predictions on the calibration dataset. Attribute is set by the
-        ``_calibrate_leaf_node_counts`` method, called by the
-        :func:`~pitci.base.LeafNodeScaledConformalPredictor.calibrate` method.
-        The length of the list corresponds to the number of trees.
+        The number of times each leaf node in each tree was visited when
+        making predictions on the calibration dataset. Each item in the list
+        is a ``dict`` giving a mapping between leaf node index and counts
+        for a given tree. The length of the list corresponds to the number
+        of trees in ``model``.
 
     baseline_interval : float
-        Default, baseline conformal interval width. Will be scaled for each
-        prediction generated. Attribute is set when ``_calibrate_interval`` is
-        called by the
-        :func:`~pitci.base.LeafNodeScaledConformalPredictor.calibrate` method.
+        The default or baseline conformal half interval width. Will be scaled
+        for each prediction generated.
 
     alpha : int or float
         The confidence level of the conformal intervals that will be produced.
         Attribute is set when ``_calibrate_interval`` is called by the
         :func:`~pitci.base.LeafNodeScaledConformalPredictor.calibrate` method.
 
+    {attributes}
+
     """
 
     leaf_node_counts: list
+    __doc__: str
 
     @abstractmethod
     def __init__(self, model: Any) -> None:
