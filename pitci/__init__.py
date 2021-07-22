@@ -22,3 +22,13 @@ try:
     from . import lightgbm
 except ImportError:
     pass
+
+
+# format docs for base conformal predictors after all the other
+# modules have been imported and they have formatted the base
+# docstring
+base.LeafNodeScaledConformalPredictor.__doc__ = (
+    base.LeafNodeScaledConformalPredictor.__doc__.format(
+        model_type="Any", description="", parameters="", attributes=""
+    )
+)

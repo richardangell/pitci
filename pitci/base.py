@@ -217,11 +217,8 @@ class LeafNodeScaledConformalPredictor(ABC):
 
     """
 
-    __doc__ = __doc__.format(
-        model_type="Any", description="", parameters="", attributes=""
-    )
-
     leaf_node_counts: list
+    __doc__: str
 
     @abstractmethod
     def __init__(self, model: Any) -> None:
