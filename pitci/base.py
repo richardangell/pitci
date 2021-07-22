@@ -73,12 +73,13 @@ class AbsoluteErrorConformalPredictor(ABC):
         alpha: Union[int, float] = 0.95,
     ) -> None:
         """Calibrate conformal intervals that will be applied to new instances
-        when calling
-        :func:`~pitci.base.AbsoluteErrorConformalPredictor.predict_with_interval`.
+        when calling ``predict_with_interval``.
+
+        {description}
 
         Parameters
         ----------
-        data : Any
+        data : {data_type}
             Dataset to calibrate baselines on.
 
         response : np.ndarray or pd.Series

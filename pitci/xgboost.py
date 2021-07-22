@@ -27,6 +27,7 @@ from .dispatchers import (
     get_absolute_error_conformal_predictor,
     get_leaf_node_split_conformal_predictor,
 )
+from . import docstrings
 
 
 def check_objective_supported(
@@ -102,31 +103,22 @@ class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
 
         check_objective_supported(model, self.SUPPORTED_OBJECTIVES)
 
+    @docstrings.doc_inherit_kwargs(
+        AbsoluteErrorConformalPredictor.calibrate,
+        style=docstrings.str_format_merge_style,
+        description="Calls the parent class "
+        ":func:`~pitci.base.AbsoluteErrorConformalPredictor.calibrate` "
+        "method after extracting the\n\t"
+        "response from the data argument, if response is not passed\n\t"
+        "and data is an xgb.DMatrix object.",
+        data_type="xgb.DMatrix, np.ndarray or pd.DataFrame",
+    )
     def calibrate(
         self,
         data: xgb.DMatrix,
         response: Optional[Union[np.ndarray, pd.Series]] = None,
         alpha: Union[int, float] = 0.95,
     ) -> None:
-        """Method to calibrate conformal intervals that will be applied
-        to new instances when calling predict_with_interval.
-
-        Calls the parent class calibrate method after extracting the
-        response from the data argument, if response is not passed
-        and data is an xgb.DMatrix object.
-
-        Parameters
-        ----------
-        data : xgb.DMatrix, np.ndarray or pd.DataFrame
-            Dataset to calibrate baselines on.
-
-        alpha : int or float, default = 0.95
-            Confidence level for the interval.
-
-        response : np.ndarray, pd.Series or None, default = None
-            The associated response values for every record in data.
-
-        """
 
         check_type(data, [xgb.DMatrix], "data")
 
