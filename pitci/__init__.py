@@ -29,6 +29,6 @@ except ImportError:
 # docstring
 base.LeafNodeScaledConformalPredictor.__doc__ = (
     base.LeafNodeScaledConformalPredictor.__doc__.format(
-        model_type="Any", description="", parameters="", attributes=""
+        model_type="``Any``", description="", parameters="", attributes=""
     )
 )

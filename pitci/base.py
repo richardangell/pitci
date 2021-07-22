@@ -185,7 +185,7 @@ class LeafNodeScaledConformalPredictor(ABC):
     Parameters
     ----------
     model : {model_type}
-        Underly {model_type} model to generate prediction intervals for.
+        Underlying {model_type} model to generate prediction intervals with.
 
     {parameters}
 
