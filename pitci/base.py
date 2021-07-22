@@ -19,7 +19,7 @@ from . import nonconformity
 
 
 class AbsoluteErrorConformalPredictor(ABC):
-    """Conformal interval predictor for an underlying {model_type} using absolute
+    """Conformal interval predictor for an underlying {model_type} model using absolute
     error as the nonconformity measure.
 
     Class implements inductive conformal intervals where a calibration
