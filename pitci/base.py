@@ -581,51 +581,75 @@ def _sum_dict_values(arr: np.ndarray, counts: List[Dict[int, int]]) -> int:
 
 
 class SplitConformalPredictor(LeafNodeScaledConformalPredictor):
-    """Abstract base class for a conformal interval predictor for any
-    underlying  model using absolute error scaled by leaf node counts
-    as the nonconformity measure. Intervals are also split into bins
-    by the scaling factors and calibrated separately for each bin.
+    """Conformal interval predictor for an underlying {model_type} model using
+    absolute error scaled by leaf node counts as the nonconformity measure.
+    Intervals are also split into bins based off the scaling factors and
+    calibrated separately for each bin.
+
+    Class implements inductive conformal intervals where a calibration
+    dataset is used to learn the information that is used when generating
+    intervals for new instances.
+
+    The predictor outputs varying width intervals for every new instance.
+    The scaling function uses the number of times that the leaf nodes were
+    visited for each tree in making the prediction, for that row, were
+    visited in the calibration dataset.
+
+    Intuitively, for rows that have higher leaf node counts from the calibration
+    set - the model will be more 'familiar' with hence the interval for
+    these rows will be shrunk. The inverse is true for rows that have lower
+    leaf node counts from the calibration set.
+
+    Intervals are split into bins, using the scaling factors, where each bin
+    is calibrated at the required confidence level. This addresses the
+    situation where the leaf node scaled conformal predictors are not well
+    calibrated on subsets of the data, despite being calibrated at the
+    required ``alpha`` confidence level overall.
+
+    {description}
 
     Parameters
     ----------
-    model : Any
-        Underly model to generate prediction intervals for.
+    model : {model_type}
+        Underlying {model_type} model to generate prediction intervals with.
 
     n_bins : int
-        Number of bins to split data into based off the scaling factors.
+        Number of bins to split data into based on the scaling factors.
+
+    {parameters}
 
     Attributes
     ----------
     __version__ : str
         The version of the ``pitci`` package that generated the object.
 
-    model : Any
-        The underlying model to generate predictions intervals for. Passed in
-        initialising the object.
+    model : {model_type}
+        The underlying {model_type} model passed in initialising the object.
 
     leaf_node_counts : list
-        Counts of number of times each leaf node in each tree was visited when
-        making predictions on the calibration dataset. Attribute is set by the
-        ``_calibrate_leaf_node_counts`` method, called by the
-        :func:`~pitci.base.LeafNodeScaledConformalPredictor.calibrate` method.
-        The length of the list corresponds to the number of trees.
+        The number of times each leaf node in each tree was visited when
+        making predictions on the calibration dataset. Each item in the list
+        is a ``dict`` giving a mapping between leaf node index and counts
+        for a given tree. The length of the list corresponds to the number
+        of trees in ``model``.
 
-    baseline_intervals : list
-        Baseline interval for each bin. When intervals are generated the
-        appropriate baseline interval will be selected given the scaling
-        factor value, this is then scaled by the scaling factor.
+    baseline_interval : float
+        The default or baseline conformal half interval width. Will be scaled
+        for each prediction generated.
 
     alpha : int or float
         The confidence level of the conformal intervals that will be produced.
-        Attribute is set when ``_calibrate_interval`` is called by the
-        :func:`~pitci.base.LeafNodeScaledConformalPredictor.calibrate` method.
+        Attribute is set when the {calibrate_link} method is run.
 
     n_bins : int
         Number of bins to split data into based off the scaling factors.
 
     bin_quantiles : float
         Quantiles of the scaling factor values that will be used to define
-        the limits of the bins.
+        the limits of the bins. Attribute is set when the {calibrate_link}
+        method is run.
+
+    {attributes}
 
     """
 

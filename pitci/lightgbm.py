@@ -212,26 +212,21 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
 class LGBMBoosterLeafNodeSplitConformalPredictor(
     SplitConformalPredictor, LGBMBoosterLeafNodeScaledConformalPredictor
 ):
-    """Conformal interval predictor for an underlying `lgb.Booster`
-    model using scaled and split absolute error as the nonconformity measure.
+    __doc__ = SplitConformalPredictor.__doc__.format(
+        model_type="``lgb.Booster``",
+        description="The currently supported lgboost objective functions, "
+        "given the nonconformity\n    measure that is based on absolute error, are defined "
+        "in the\n    SUPPORTED_OBJECTIVES attribute.",
+        parameters="",
+        calibrate_link="``calibrate``",
+        attributes="SUPPORTED_OBJECTIVES : list\n"
+        "\tBooster supported objectives. If a model with a non-supported "
+        "objective\n\tis passed when initialising the class object an error will be raised.",
+    )
 
-    The predictor outputs varying width intervals for every new instance.
-    The scaling function uses the number of times that the leaf nodes were
-    visited for each tree in making the prediction, for that row, were
-    visited in the calibration dataset.
-
-    Intervals are split into bins, using the scaling factors, where each bin
-    is calibrated at the required confidence level. This addresses the
-    situation that `LGBMBoosterLeafNodeScaledConformalPredictor` can encounter
-    where the intervals are calibrated at the overall level for a given
-    dataset but subsets of the data are not well calibrated.
-
-    This class combines the methods implemented in SplitConformalPredictor and
-    LGBMBoosterLeafNodeScaledConformalPredictor so nothing else is required to
-    be implemented in the child class itself.
-
-    """
-
+    # This class inherits the methods implemented in SplitConformalPredictor and
+    # LGBMBoosterLeafNodeScaledConformalPredictor so nothing else is required to
+    # be implemented in the child class itself
     pass
 
 

@@ -41,3 +41,10 @@ base.LeafNodeScaledConformalPredictor.__doc__ = (
         model_type="``Any``", description="", parameters="", attributes=""
     )
 )
+base.SplitConformalPredictor.__doc__ = base.SplitConformalPredictor.__doc__.format(
+    model_type="``Any``",
+    description="",
+    parameters="",
+    calibrate_link="``calibrate``",
+    attributes="",
+)
