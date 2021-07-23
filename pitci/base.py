@@ -82,7 +82,7 @@ class AbsoluteErrorConformalPredictor(ABC):
         data : {data_type}
             Dataset to calibrate baselines on.
 
-        response : np.ndarray or pd.Series
+        response : {response_type}
             The associated response values for every record in ``data``.
 
         alpha : int or float, default = 0.95

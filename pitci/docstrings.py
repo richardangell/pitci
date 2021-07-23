@@ -36,8 +36,7 @@ def _format_base_class_docstrings() -> None:
     )
 
     base.AbsoluteErrorConformalPredictor.calibrate.__doc__ = base.AbsoluteErrorConformalPredictor.calibrate.__doc__.format(  # type: ignore[union-attr]
-        data_type="``Any``",
-        description="",
+        description="", data_type="``Any``", response_type="np.ndarray or pd.Series"
     )
 
     base.LeafNodeScaledConformalPredictor.__doc__ = (

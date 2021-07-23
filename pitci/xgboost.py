@@ -112,6 +112,7 @@ class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
         "response from the data argument, if response is not passed\n\t"
         "and data is an xgb.DMatrix object.",
         data_type="xgb.DMatrix, np.ndarray or pd.DataFrame",
+        response_type="np.ndarray, pd.Series or None, default = None",
     )
     def calibrate(
         self,
@@ -177,31 +178,19 @@ class XGBSklearnAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor)
 
         check_objective_supported(model.get_booster(), self.SUPPORTED_OBJECTIVES)
 
+    @docstrings.doc_inherit_kwargs(
+        AbsoluteErrorConformalPredictor.calibrate,
+        style=docstrings.str_format_merge_style,
+        description="",
+        data_type="np.ndarray or pd.DataFrame",
+        response_type="np.ndarray or pd.Series",
+    )
     def calibrate(
         self,
         data: Union[np.ndarray, pd.DataFrame],
         response: Union[np.ndarray, pd.Series],
         alpha: Union[int, float] = 0.95,
     ) -> None:
-        """Method to calibrate conformal intervals that will be applied
-        to new instances when calling predict_with_interval.
-
-        Calls the parent class calibrate method after extracting the
-        response from the data argument, if response is not passed
-        and data is an xgb.DMatrix object.
-
-        Parameters
-        ----------
-        data : np.ndarray or pd.DataFrame
-            Dataset to calibrate baselines on.
-
-        alpha : int or float, default = 0.95
-            Confidence level for the interval.
-
-        response : np.ndarray, pd.Series or None, default = None
-            The associated response values for every record in data.
-
-        """
 
         check_type(data, [np.ndarray, pd.DataFrame], "data")
 
