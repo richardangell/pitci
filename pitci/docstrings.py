@@ -39,7 +39,8 @@ def _format_absolute_error_conformal_predictor() -> None:
     in the AbsoluteErrorConformalPredictor class.
     """
 
-    base.AbsoluteErrorConformalPredictor.__doc__ = base.AbsoluteErrorConformalPredictor.__doc__.format(
+    _str_format_docstring(
+        base.AbsoluteErrorConformalPredictor,
         model_type="``Any``",
         description="",
         parameters="",
@@ -47,12 +48,17 @@ def _format_absolute_error_conformal_predictor() -> None:
         attributes="",
     )
 
-    base.AbsoluteErrorConformalPredictor.calibrate.__doc__ = base.AbsoluteErrorConformalPredictor.calibrate.__doc__.format(  # type: ignore[union-attr]
-        description="", data_type="``Any``", response_type="np.ndarray or pd.Series"
+    _str_format_docstring(
+        base.AbsoluteErrorConformalPredictor.calibrate,
+        description="",
+        data_type="``Any``",
+        response_type="np.ndarray or pd.Series",
     )
 
-    base.AbsoluteErrorConformalPredictor.predict_with_interval.__doc__ = base.AbsoluteErrorConformalPredictor.predict_with_interval.__doc__.format(  # type: ignore[union-attr]
-        description="", data_type="``Any``"
+    _str_format_docstring(
+        base.AbsoluteErrorConformalPredictor.predict_with_interval,
+        description="",
+        data_type="``Any``",
     )
 
 
@@ -61,13 +67,16 @@ def _format_leaf_node_scaled_absolute_error_conformal_predictor() -> None:
     in the LeafNodeScaledConformalPredictor class.
     """
 
-    base.LeafNodeScaledConformalPredictor.__doc__ = (
-        base.LeafNodeScaledConformalPredictor.__doc__.format(
-            model_type="``Any``", description="", parameters="", attributes=""
-        )
+    _str_format_docstring(
+        base.LeafNodeScaledConformalPredictor,
+        model_type="``Any``",
+        description="",
+        parameters="",
+        attributes="",
     )
 
-    base.LeafNodeScaledConformalPredictor.calibrate.__doc__ = base.LeafNodeScaledConformalPredictor.calibrate.__doc__.format(  # type: ignore[union-attr]
+    _str_format_docstring(
+        base.LeafNodeScaledConformalPredictor.calibrate,
         predict_with_interval_method=":func:`~pitci.base.LeafNodeScaledConformalPredictor.predict_with_interval`",
         data_type="``Any``",
         response_type="np.ndarray or pd.Series",
@@ -75,7 +84,8 @@ def _format_leaf_node_scaled_absolute_error_conformal_predictor() -> None:
         description="",
     )
 
-    base.LeafNodeScaledConformalPredictor.predict_with_interval.__doc__ = base.LeafNodeScaledConformalPredictor.predict_with_interval.__doc__.format(  # type: ignore[union-attr]
+    _str_format_docstring(
+        base.LeafNodeScaledConformalPredictor.predict_with_interval,
         data_type="``Any``",
     )
 
@@ -85,13 +95,26 @@ def _format_leaf_node_split_absolute_error_conformal_predictor() -> None:
     in the SplitConformalPredictor class.
     """
 
-    base.SplitConformalPredictor.__doc__ = base.SplitConformalPredictor.__doc__.format(
+    _str_format_docstring(
+        base.SplitConformalPredictor,
         model_type="``Any``",
         description="",
         parameters="",
         calibrate_link="``calibrate``",
         attributes="",
     )
+
+
+def _str_format_docstring(obj: Any, **kwargs) -> None:
+    """Format a class or methods docstring using the str.format method
+    with the keyword arguments passed.
+
+    obj : Any
+        An object with a __doc__ attribute to apply str.format to.
+
+    """
+
+    obj.__doc__ = obj.__doc__.format(**kwargs)
 
 
 def doc_inherit_kwargs(
