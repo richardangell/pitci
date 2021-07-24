@@ -27,6 +27,18 @@ def _format_base_class_docstrings() -> None:
 
     """
 
+    _format_absolute_error_conformal_predictor()
+
+    _format_leaf_node_scaled_absolute_error_conformal_predictor()
+
+    _format_leaf_node_split_absolute_error_conformal_predictor()
+
+
+def _format_absolute_error_conformal_predictor() -> None:
+    """Format the class docstring and user facing methods docstrings
+    in the AbsoluteErrorConformalPredictor class.
+    """
+
     base.AbsoluteErrorConformalPredictor.__doc__ = base.AbsoluteErrorConformalPredictor.__doc__.format(
         model_type="``Any``",
         description="",
@@ -43,11 +55,23 @@ def _format_base_class_docstrings() -> None:
         description="", data_type="``Any``"
     )
 
+
+def _format_leaf_node_scaled_absolute_error_conformal_predictor() -> None:
+    """Format the class docstring and user facing methods docstrings
+    in the LeafNodeScaledConformalPredictor class.
+    """
+
     base.LeafNodeScaledConformalPredictor.__doc__ = (
         base.LeafNodeScaledConformalPredictor.__doc__.format(
             model_type="``Any``", description="", parameters="", attributes=""
         )
     )
+
+
+def _format_leaf_node_split_absolute_error_conformal_predictor() -> None:
+    """Format the class docstring and user facing methods docstrings
+    in the SplitConformalPredictor class.
+    """
 
     base.SplitConformalPredictor.__doc__ = base.SplitConformalPredictor.__doc__.format(
         model_type="``Any``",
