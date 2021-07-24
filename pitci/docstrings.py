@@ -39,6 +39,10 @@ def _format_base_class_docstrings() -> None:
         description="", data_type="``Any``", response_type="np.ndarray or pd.Series"
     )
 
+    base.AbsoluteErrorConformalPredictor.predict_with_interval.__doc__ = base.AbsoluteErrorConformalPredictor.predict_with_interval.__doc__.format(  # type: ignore[union-attr]
+        description="", data_type="``Any``"
+    )
+
     base.LeafNodeScaledConformalPredictor.__doc__ = (
         base.LeafNodeScaledConformalPredictor.__doc__.format(
             model_type="``Any``", description="", parameters="", attributes=""

@@ -100,12 +100,15 @@ class AbsoluteErrorConformalPredictor(ABC):
         self._calibrate_interval(data=data, alpha=alpha, response=response)
 
     def predict_with_interval(self, data: Any) -> np.ndarray:
-        """Generate predictions with conformal intervals.
+        """Generate predictions with conformal intervals using the underlying
+        ``model``.
+
+        {description}
 
         Parameters
         ----------
-        data : Any
-            Dataset to generate predictions with conformal intervals for.
+        data : {data_type}
+            Dataset to generate predictions with intervals on.
 
         Returns
         -------

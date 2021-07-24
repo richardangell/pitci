@@ -132,6 +132,18 @@ class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
 
         super().calibrate(data=data, alpha=alpha, response=response)
 
+    @docstrings.doc_inherit_kwargs(
+        AbsoluteErrorConformalPredictor.predict_with_interval,
+        style=docstrings.str_format_merge_style,
+        description="",
+        data_type="xgb.DMatrix",
+    )
+    def predict_with_interval(self, data: xgb.DMatrix) -> np.ndarray:
+
+        check_type(data, [xgb.DMatrix], "data")
+
+        return super().predict_with_interval(data)
+
     def _generate_predictions(self, data: xgb.DMatrix) -> np.ndarray:
         """Generate predictions from the xgboost model.
 
@@ -140,7 +152,7 @@ class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
 
         Parameters
         ----------
-        data : xgb.DMatrix, np.ndarray or pd.DataFrame
+        data : xgb.DMatrix
             Data to generate predictions on.
 
         """
@@ -196,6 +208,20 @@ class XGBSklearnAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor)
 
         super().calibrate(data=data, alpha=alpha, response=response)
 
+    @docstrings.doc_inherit_kwargs(
+        AbsoluteErrorConformalPredictor.predict_with_interval,
+        style=docstrings.str_format_merge_style,
+        description="",
+        data_type="np.ndarray or pd.DataFrame",
+    )
+    def predict_with_interval(
+        self, data: Union[np.ndarray, pd.DataFrame]
+    ) -> np.ndarray:
+
+        check_type(data, [np.ndarray, pd.DataFrame], "data")
+
+        return super().predict_with_interval(data)
+
     def _generate_predictions(
         self, data: Union[np.ndarray, pd.DataFrame]
     ) -> np.ndarray:
@@ -210,8 +236,6 @@ class XGBSklearnAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor)
             Data to generate predictions on.
 
         """
-
-        check_type(data, [np.ndarray, pd.DataFrame], "data")
 
         predictions = self.model.predict(
             data, ntree_limit=self.model.best_iteration + 1
