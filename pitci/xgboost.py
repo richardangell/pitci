@@ -271,7 +271,7 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
         style=docstrings.str_format_merge_style,
         description="If ``response`` is not passed then the method will attempt to extract\n\t"
         "the response values from ``data`` using the ``get_label`` method.",
-        predict_with_interval_method=":func:`~pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.predict_with_interval`",
+        predict_with_interval_method="pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
         baseline_interval_attribute="baseline_interval",
         data_type="xgb.DMatrix",
         response_type="np.ndarray, pd.Series or None, default = None",
@@ -391,7 +391,7 @@ class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredicto
         LeafNodeScaledConformalPredictor.calibrate,
         style=docstrings.str_format_merge_style,
         description="",
-        predict_with_interval_method=":func:`~pitci.xgboost.XGBSklearnLeafNodeScaledConformalPredictor.predict_with_interval`",
+        predict_with_interval_method="pitci.xgboost.XGBSklearnLeafNodeScaledConformalPredictor.predict_with_interval",
         baseline_interval_attribute="baseline_interval",
         data_type="np.ndarray or pd.DataFrame",
         response_type="np.ndarray or pd.Series",
@@ -506,7 +506,7 @@ class XGBoosterLeafNodeSplitConformalPredictor(
         "The ``baseline_intervals`` are each calibrated to the required ``alpha``\n\t"
         "level on the subsets of the data where the scaling factor values\n\t"
         "fall into the range for that particular bucket.",
-        predict_with_interval_method=":func:`~pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.predict_with_interval`",
+        predict_with_interval_method="pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
         baseline_interval_attribute="baseline_intervals",
         data_type="xgb.DMatrix",
         response_type="np.ndarray, pd.Series or None, default = None",

@@ -271,7 +271,7 @@ class LeafNodeScaledConformalPredictor(ABC):
         """Calibrate conformal intervals to a given sample of ``data`` at a given
         confidence level, ``alpha``, between 0 and 1.
 
-        This method must be run before {predict_with_interval_method} can be
+        This method must be run before :func:`~{predict_with_interval_method}` can be
         used to generate predictions.
 
         There are 2 items to be calibrated; the leaf node counts stored

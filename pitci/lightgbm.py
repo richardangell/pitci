@@ -91,7 +91,7 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
         LeafNodeScaledConformalPredictor.calibrate,
         style=docstrings.str_format_merge_style,
         description="",
-        predict_with_interval_method=":func:`~pitci.lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor.predict_with_interval`",
+        predict_with_interval_method="pitci.lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
         baseline_interval_attribute="baseline_interval",
         data_type="np.ndarray or pd.DataFrame",
         response_type="np.ndarray or pd.Series",
@@ -236,7 +236,7 @@ class LGBMBoosterLeafNodeSplitConformalPredictor(
         description="The ``baseline_intervals`` are each calibrated to the required ``alpha``\n\t"
         "level on the subsets of the data where the scaling factor values\n\t"
         "fall into the range for that particular bucket.",
-        predict_with_interval_method=":func:`~pitci.lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor.predict_with_interval`",
+        predict_with_interval_method="pitci.lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
         baseline_interval_attribute="baseline_intervals",
         data_type="np.ndarray or pd.DataFrame",
         response_type="np.ndarray or pd.Series",
