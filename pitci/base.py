@@ -266,26 +266,31 @@ class LeafNodeScaledConformalPredictor(ABC):
         response: Union[np.ndarray, pd.Series],
         alpha: Union[int, float] = 0.95,
     ) -> None:
-        """Calibrate conformal intervals that will allow prediction intervals
-        that vary by row.
+        """Calibrate conformal intervals to a given sample of ``data``.
 
-        Method calls ``_calibrate_leaf_node_counts`` to record the number
-        of times each leaf node is visited across the whole of the
-        passed data. Then ``_calibrate_interval`` is called to set the default
-        interval that will be scaled using the inverse of the noncomformity
-        function when making predictions. This allows intervals to vary by
-        instance.
+        This method must be run before {predict_with_interval_method} can be
+        used to generate predictions.
+
+        There are 2 items to be calibrated; the leaf node counts stored
+        in the ``leaf_node_counts`` attribute and the half interval width
+        stored in the ``baseline_interval`` attribute.
+
+        The ``alpha`` argument must be between 0 and 1.
+
+        {description}
 
         Parameters
         ----------
-        data : xgb.DMatrix
+        data : {data_type}
             Dataset to use to set baselines.
+
+        response : {response_type}
+            The response values for the records in ``data``.
 
         alpha : int or float, default = 0.95
             Confidence level for the intervals.
 
-        response : np.ndarray or pd.Series
-            The response values for the records in ``data``.
+        {parameters}
 
         """
 
