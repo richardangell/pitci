@@ -75,6 +75,10 @@ def _format_leaf_node_scaled_absolute_error_conformal_predictor() -> None:
         description="",
     )
 
+    base.LeafNodeScaledConformalPredictor.predict_with_interval.__doc__ = base.LeafNodeScaledConformalPredictor.predict_with_interval.__doc__.format(  # type: ignore[union-attr]
+        data_type="``Any``",
+    )
+
 
 def _format_leaf_node_split_absolute_error_conformal_predictor() -> None:
     """Format the class docstring and user facing methods docstrings

@@ -111,6 +111,21 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
             data=data, response=response, alpha=alpha, train_data=train_data
         )
 
+    @docstrings.doc_inherit_kwargs(
+        LeafNodeScaledConformalPredictor.calibrate,
+        style=docstrings.str_format_merge_style,
+        data_type="np.ndarray or pd.DataFrame",
+    )
+    def predict_with_interval(
+        self, data: Union[np.ndarray, pd.DataFrame]
+    ) -> np.ndarray:
+
+        check_type(data, [np.ndarray, pd.DataFrame], "data")
+
+        predictions_with_interval = super().predict_with_interval(data=data)
+
+        return predictions_with_interval
+
     def _calibrate_leaf_node_counts(self, data: Any) -> None:
         """Method to get the number of times each leaf node was visited on the training
         dataset.
