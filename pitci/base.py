@@ -707,8 +707,8 @@ class SplitConformalPredictor(LeafNodeScaledConformalPredictor):
         at these quantiles. Finally the ``alpha`` quantiles of the scaled
         nonconformity values are calculated for each bin.
 
-        Results are stored in the ``baseline_intervals`ß` attribute. The
-        edges for the bins are stored in the ``scaling_factor_cut_points`ß`
+        Results are stored in the ``baseline_intervals`` attribute. The
+        edges for the bins are stored in the ``scaling_factor_cut_points``
         attribute.
 
         The ``alpha`` value is also stored in an attribute of the same name.
