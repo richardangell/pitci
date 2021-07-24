@@ -104,6 +104,12 @@ def _format_leaf_node_split_absolute_error_conformal_predictor() -> None:
         attributes="",
     )
 
+    _str_format_docstring(
+        base.SplitConformalPredictor.predict_with_interval,
+        predict_with_interval_method="pitci.base.LeafNodeScaledConformalPredictor.predict_with_interval",
+        data_type="``Any``",
+    )
+
 
 def _str_format_docstring(obj: Any, **kwargs) -> None:
     """Format a class or methods docstring using the str.format method

@@ -231,10 +231,17 @@ class LGBMBoosterLeafNodeSplitConformalPredictor(
         "objective\n\tis passed when initialising the class object an error will be raised.",
     )
 
-    # This class inherits the methods implemented in SplitConformalPredictor and
-    # LGBMBoosterLeafNodeScaledConformalPredictor so nothing else is required to
-    # be implemented in the child class itself
-    pass
+    @docstrings.doc_inherit_kwargs(
+        SplitConformalPredictor.predict_with_interval,
+        style=docstrings.str_format_merge_style,
+        predict_with_interval_method="pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
+        data_type="pd.DataFrame of np.ndarray",
+    )
+    def predict_with_interval(
+        self, data: Union[np.ndarray, pd.DataFrame]
+    ) -> np.ndarray:
+
+        super().predict_with_interval(data=data)
 
 
 @get_leaf_node_scaled_conformal_predictor.register(lgb.basic.Booster)

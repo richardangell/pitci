@@ -775,26 +775,25 @@ class SplitConformalPredictor(LeafNodeScaledConformalPredictor):
         self._check_interval_monotonicity()
 
     def predict_with_interval(self, data: Any) -> np.ndarray:
-        """Generate predictions on ``data`` with conformal intervals.
+        """Generate predictions with conformal intervals for the passed ``data``.
 
         Each prediction is produced with an associated conformal interval.
-        The default interval is of a fixed width and this is scaled
-        differently for each row. The default interval also depends on the
-        scaling factor value. For each row the selected default/baseline
-        interval is then multiplied by the scaling factor.
+        The default intervals are of a fixed width (``baseline_intervals`` attribute) and
+        this is scaled differently for each row. The scaling factors are calculated by
+        counting the number of times each leaf node, visited to make the prediction,
+        was visited in the calibration dataset - looking up values from the
+        ``leaf_node_counts`` list. For the ``SplitConformalPredictor`` class
+        the baseline intervals also depend on the sclaing factors - rather than
+        there being one interval as in the ``LeafNodeScaledConformalPredictor``
+        class.
 
-        The scaling factors are derived by counting the number of times
-        each leaf node, visited to make the prediction, was visited in
-        predicting the calibration dataset.
-
-        The method is very similar to the
-        :func:`~pitci.base.LeafNodeScaledConformalPredictor.predict_with_interval`
+        The method is very similar to the :func:`~{predict_with_interval_method}`
         method, with the only difference being that the baseline interval is looked up
-        from the range of values using the scaling factors for each row.
+        from the possible values using the scaling factors for each row.
 
         Parameters
         ----------
-        data : Any
+        data : {data_type}
             Data to generate predictions with conformal intervals on.
 
         Returns
