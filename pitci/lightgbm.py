@@ -92,6 +92,7 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
         style=docstrings.str_format_merge_style,
         description="",
         predict_with_interval_method=":func:`~pitci.lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor.predict_with_interval`",
+        baseline_interval_attribute="baseline_interval",
         data_type="np.ndarray or pd.DataFrame",
         response_type="np.ndarray or pd.Series",
         train_data_type="np.ndarray, pd.DataFrame or None, default = None",
@@ -230,6 +231,30 @@ class LGBMBoosterLeafNodeSplitConformalPredictor(
         "\tBooster supported objectives. If a model with a non-supported "
         "objective\n\tis passed when initialising the class object an error will be raised.",
     )
+
+    @docstrings.doc_inherit_kwargs(
+        LeafNodeScaledConformalPredictor.calibrate,
+        style=docstrings.str_format_merge_style,
+        description="The ``baseline_intervals`` are each calibrated to the required ``alpha``\n\t"
+        "level on the subsets of the data where the scaling factor values\n\t"
+        "fall into the range for that particular bucket.",
+        predict_with_interval_method=":func:`~pitci.lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor.predict_with_interval`",
+        baseline_interval_attribute="baseline_intervals",
+        data_type="np.ndarray or pd.DataFrame",
+        response_type="np.ndarray or pd.Series",
+        train_data_type="np.ndarray, pd.DataFrame or None, default = None",
+    )
+    def calibrate(
+        self,
+        data: Union[np.ndarray, pd.DataFrame],
+        response: Union[np.ndarray, pd.Series],
+        alpha: Union[int, float] = 0.95,
+        train_data: Union[np.ndarray, pd.DataFrame] = None,
+    ) -> None:
+
+        super().calibrate(
+            data=data, resppnse=response, alpha=alpha, train_data=train_data
+        )
 
     @docstrings.doc_inherit_kwargs(
         SplitConformalPredictor.predict_with_interval,

@@ -272,6 +272,7 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
         description="If ``response`` is not passed then the method will attempt to extract\n\t"
         "the response values from ``data`` using the ``get_label`` method.",
         predict_with_interval_method=":func:`~pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.predict_with_interval`",
+        baseline_interval_attribute="baseline_interval",
         data_type="xgb.DMatrix",
         response_type="np.ndarray, pd.Series or None, default = None",
         train_data_type="xgb.DMatrix or None, default = None",
@@ -393,6 +394,7 @@ class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredicto
         style=docstrings.str_format_merge_style,
         description="",
         predict_with_interval_method=":func:`~pitci.xgboost.XGBSklearnLeafNodeScaledConformalPredictor.predict_with_interval`",
+        baseline_interval_attribute="baseline_interval",
         data_type="np.ndarray or pd.DataFrame",
         response_type="np.ndarray or pd.Series",
         train_data_type="np.ndarray, pd.DataFrame or None, default = None",
@@ -499,6 +501,32 @@ class XGBoosterLeafNodeSplitConformalPredictor(
         "\tBooster supported objectives. If a model with a non-supported "
         "objective\n\tis passed when initialising the class object an error will be raised.",
     )
+
+    @docstrings.doc_inherit_kwargs(
+        LeafNodeScaledConformalPredictor.calibrate,
+        style=docstrings.str_format_merge_style,
+        description="If ``response`` is not passed then the method will attempt to extract\n\t"
+        "the response values from ``data`` using the ``get_label`` method.\n\n\t"
+        "The ``baseline_intervals`` are each calibrated to the required ``alpha``\n\t"
+        "level on the subsets of the data where the scaling factor values\n\t"
+        "fall into the range for that particular bucket.",
+        predict_with_interval_method=":func:`~pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.predict_with_interval`",
+        baseline_interval_attribute="baseline_intervals",
+        data_type="xgb.DMatrix",
+        response_type="np.ndarray, pd.Series or None, default = None",
+        train_data_type="xgb.DMatrix or None, default = None",
+    )
+    def calibrate(
+        self,
+        data: xgb.DMatrix,
+        response: Optional[Union[np.ndarray, pd.Series]] = None,
+        alpha: Union[int, float] = 0.95,
+        train_data: Optional[xgb.DMatrix] = None,
+    ) -> None:
+
+        super().calibrate(
+            data=data, response=response, alpha=alpha, train_data=train_data
+        )
 
     @docstrings.doc_inherit_kwargs(
         SplitConformalPredictor.predict_with_interval,

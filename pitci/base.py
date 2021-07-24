@@ -16,6 +16,7 @@ from .checks import (
     check_attribute,
 )
 from . import nonconformity
+from . import docstrings
 
 
 class AbsoluteErrorConformalPredictor(ABC):
@@ -275,7 +276,7 @@ class LeafNodeScaledConformalPredictor(ABC):
 
         There are 2 items to be calibrated; the leaf node counts stored
         in the ``leaf_node_counts`` attribute and the half interval width
-        stored in the ``baseline_interval`` attribute.
+        stored in the ``{baseline_interval_attribute}`` attribute.
 
         The user has the option to specify the training sample that was used
         to buid the model in the ``train_data`` argument. This is to allow the
@@ -303,7 +304,8 @@ class LeafNodeScaledConformalPredictor(ABC):
 
         train_data : {train_data_type}
             Optional dataset that can be passed to set baseline leaf node counts
-            from, separate to the ``data`` arg used to set ``baseline_interval`` width.
+            from, separate to the ``data`` arg used to set ``{baseline_interval_attribute}``
+            width.
 
         """
 
@@ -691,6 +693,30 @@ class SplitConformalPredictor(LeafNodeScaledConformalPredictor):
         self.bin_quantiles = np.linspace(0, 1, self.n_bins + 1)
 
         super().__init__(model=model)
+
+    @docstrings.doc_inherit_kwargs(
+        LeafNodeScaledConformalPredictor.calibrate,
+        style=docstrings.str_format_merge_style,
+        description="The ``baseline_intervals`` are each calibrated to the required ``alpha``\n\t"
+        "level on the subsets of the data where the scaling factor values\n\t"
+        "fall into the range for that particular bucket.",
+        predict_with_interval_method=":func:`~pitci.base.LeafNodeScaledConformalPredictor.predict_with_interval`",
+        baseline_interval_attribute="baseline_intervals",
+        data_type="Any",
+        response_type="np.ndarray or pd.Series",
+        train_data_type="Any, default = None",
+    )
+    def calibrate(
+        self,
+        data: Any,
+        response: Union[np.ndarray, pd.Series],
+        alpha: Union[int, float] = 0.95,
+        train_data: Optional[Any] = None,
+    ) -> None:
+
+        super().calibrate(
+            data=data, response=response, alpha=alpha, train_data=train_data
+        )
 
     def _calibrate_interval(
         self,

@@ -78,6 +78,7 @@ def _format_leaf_node_scaled_absolute_error_conformal_predictor() -> None:
     _str_format_docstring(
         base.LeafNodeScaledConformalPredictor.calibrate,
         predict_with_interval_method=":func:`~pitci.base.LeafNodeScaledConformalPredictor.predict_with_interval`",
+        baseline_interval_attribute="baseline_interval",
         data_type="``Any``",
         response_type="np.ndarray or pd.Series",
         train_data_type="Any, default = None",
