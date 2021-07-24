@@ -8,7 +8,7 @@ import numpy as np
 import warnings
 from abc import ABC, abstractmethod
 
-from typing import Union, Any, List, Dict
+from typing import Union, Any, List, Dict, Optional
 
 from ._version import __version__
 from .checks import (
@@ -265,8 +265,10 @@ class LeafNodeScaledConformalPredictor(ABC):
         data: Any,
         response: Union[np.ndarray, pd.Series],
         alpha: Union[int, float] = 0.95,
+        train_data: Optional[Any] = None,
     ) -> None:
-        """Calibrate conformal intervals to a given sample of ``data``.
+        """Calibrate conformal intervals to a given sample of ``data`` at a given
+        confidence level, ``alpha``, between 0 and 1.
 
         This method must be run before {predict_with_interval_method} can be
         used to generate predictions.
@@ -275,7 +277,16 @@ class LeafNodeScaledConformalPredictor(ABC):
         in the ``leaf_node_counts`` attribute and the half interval width
         stored in the ``baseline_interval`` attribute.
 
-        The ``alpha`` argument must be between 0 and 1.
+        The user has the option to specify the training sample that was used
+        to buid the model in the ``train_data`` argument. This is to allow the
+        leaf node counts to be calibrated on the same data, as the underlying
+        model was built on, rather than a separate calibration set which is what
+        will be passed in the ``data`` argument. The default interval width for a given
+        ``alpha`` has to be set on a separate sample to what was used to build the model.
+        If not, the errors will be smaller than they otherwise would be, on a sample
+        the underlying model has not seen before. However for the leaf node counts,
+        ideally we want counts from the train sample - we're not 'learning' anything
+        new here, just recreating stats from when the model was built originally.
 
         {description}
 
@@ -290,7 +301,9 @@ class LeafNodeScaledConformalPredictor(ABC):
         alpha : int or float, default = 0.95
             Confidence level for the intervals.
 
-        {parameters}
+        train_data : {train_data_type}
+            Optional dataset that can be passed to set baseline leaf node counts
+            from, separate to the ``data`` arg used to set ``baseline_interval`` width.
 
         """
 
@@ -301,7 +314,14 @@ class LeafNodeScaledConformalPredictor(ABC):
 
             raise ValueError("alpha must be in range [0 ,1]")
 
-        self._calibrate_leaf_node_counts(data=data)
+        if train_data is None:
+
+            self._calibrate_leaf_node_counts(data=data)
+
+        else:
+
+            self._calibrate_leaf_node_counts(data=train_data)
+
         self._calibrate_interval(data=data, alpha=alpha, response=response)
 
     def predict_with_interval(self, data: Any) -> np.ndarray:

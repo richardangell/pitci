@@ -269,27 +269,12 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
     @docstrings.doc_inherit_kwargs(
         LeafNodeScaledConformalPredictor.calibrate,
         style=docstrings.str_format_merge_style,
-        description="The user has the option to specify the training sample that was used \n\t"
-        "to buid the model in the ``train_data`` argument. This is to allow the \n\t"
-        "leaf node counts to be calibrated on the same data, as the underlying \n\t"
-        "model was built on, rather than a separate calibration \n\t"
-        "set which is what will be passed in the ``data`` arg. The default interval \n\t"
-        "width for a given alpha has to be set on a separate sample to what was \n\t"
-        "used to build the model. If not, the errors will be smaller than they \n\t"
-        "otherwise would be, on a sample the underlying model has not seen before. \n\t"
-        "However for the leaf node counts, ideally we want counts from the train \n\t"
-        "sample - we're not 'learning' anything new here, just recreating stats \n\t"
-        "from when the model was built originally.\n\n\t"
-        "Note, if ``response`` is not passed then the method will attempt to extract \n\t"
+        description="If ``response`` is not passed then the method will attempt to extract\n\t"
         "the response values from ``data`` using the ``get_label`` method.",
         predict_with_interval_method=":func:`~pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.predict_with_interval`",
         data_type="xgb.DMatrix",
         response_type="np.ndarray, pd.Series or None, default = None",
-        parameters="train_data : xgb.DMatrix or None, default = None\n\t"
-        "    Optional dataset that can be passed to set baseline leaf node counts from, separate\n\t"
-        "    to the data used to set baseline interval width. With this the user can pass the\n\t"
-        "    train sample in the train_data arg and the calibration sample in the data so leaf node\n\t"
-        "    counts do not have to be calibrated on a separate sample, as the intervals do.",
+        train_data_type="xgb.DMatrix or None, default = None",
     )
     def calibrate(
         self,
@@ -301,12 +286,6 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
 
         check_type(data, [xgb.DMatrix], "data")
         check_type(train_data, [xgb.DMatrix, type(None)], "train_data")
-        check_type(response, [pd.Series, np.ndarray, type(None)], "response")
-        check_type(alpha, [int, float], "alpha")
-
-        if not (alpha >= 0 and alpha <= 1):
-
-            raise ValueError("alpha must be in range [0 ,1]")
 
         if response is None:
 
@@ -315,15 +294,9 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
 
             response = data.get_label()
 
-        if train_data is None:
-
-            self._calibrate_leaf_node_counts(data=data)
-
-        else:
-
-            self._calibrate_leaf_node_counts(data=train_data)
-
-        self._calibrate_interval(data=data, alpha=alpha, response=response)
+        super().calibrate(
+            data=data, response=response, alpha=alpha, train_data=train_data
+        )
 
     def predict_with_interval(self, data: xgb.DMatrix) -> np.ndarray:
         """Method to generate predictions on data with conformal intervals.
@@ -445,27 +418,11 @@ class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredicto
     @docstrings.doc_inherit_kwargs(
         LeafNodeScaledConformalPredictor.calibrate,
         style=docstrings.str_format_merge_style,
-        description="The user has the option to specify the training sample that was used \n\t"
-        "to buid the model in the ``train_data`` argument. This is to allow the \n\t"
-        "leaf node counts to be calibrated on the same data, as the underlying \n\t"
-        "model was built on, rather than a separate calibration \n\t"
-        "set which is what will be passed in the ``data`` arg. The default interval \n\t"
-        "width for a given alpha has to be set on a separate sample to what was \n\t"
-        "used to build the model. If not, the errors will be smaller than they \n\t"
-        "otherwise would be, on a sample the underlying model has not seen before. \n\t"
-        "However for the leaf node counts, ideally we want counts from the train \n\t"
-        "sample - we're not 'learning' anything new here, just recreating stats \n\t"
-        "from when the model was built originally.\n\n\t"
-        "Note, if ``response`` is not passed then the method will attempt to extract \n\t"
-        "the response values from ``data`` using the ``get_label`` method.",
+        description="",
         predict_with_interval_method=":func:`~pitci.xgboost.XGBSklearnLeafNodeScaledConformalPredictor.predict_with_interval`",
         data_type="np.ndarray or pd.DataFrame",
         response_type="np.ndarray or pd.Series",
-        parameters="train_data : np.ndarray, pd.DataFrame or None, default = None\n\t"
-        "    Optional dataset that can be passed to set baseline leaf node counts from, separate\n\t"
-        "    to the data used to set baseline interval width. With this the user can pass the\n\t"
-        "    train sample in the train_data arg and the calibration sample in the data so leaf node\n\t"
-        "    counts do not have to be calibrated on a separate sample, as the intervals do.",
+        train_data_type="np.ndarray, pd.DataFrame or None, default = None",
     )
     def calibrate(
         self,
@@ -477,22 +434,10 @@ class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredicto
 
         check_type(data, [np.ndarray, pd.DataFrame], "data")
         check_type(train_data, [np.ndarray, pd.DataFrame, type(None)], "train_data")
-        check_type(response, [pd.Series, np.ndarray], "response")
-        check_type(alpha, [int, float], "alpha")
 
-        if not (alpha >= 0 and alpha <= 1):
-
-            raise ValueError("alpha must be in range [0 ,1]")
-
-        if train_data is None:
-
-            super()._calibrate_leaf_node_counts(data=data)
-
-        else:
-
-            super()._calibrate_leaf_node_counts(data=train_data)
-
-        super()._calibrate_interval(data=data, alpha=alpha, response=response)
+        super().calibrate(
+            data=data, response=response, alpha=alpha, train_data=train_data
+        )
 
     def predict_with_interval(
         self, data: Union[np.ndarray, pd.DataFrame]

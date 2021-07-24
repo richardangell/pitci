@@ -68,11 +68,11 @@ def _format_leaf_node_scaled_absolute_error_conformal_predictor() -> None:
     )
 
     base.LeafNodeScaledConformalPredictor.calibrate.__doc__ = base.LeafNodeScaledConformalPredictor.calibrate.__doc__.format(  # type: ignore[union-attr]
-        description="",
         predict_with_interval_method=":func:`~pitci.base.LeafNodeScaledConformalPredictor.predict_with_interval`",
         data_type="``Any``",
         response_type="np.ndarray or pd.Series",
-        parameters="",
+        train_data_type="Any, default = None",
+        description="",
     )
 
 

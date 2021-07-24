@@ -21,6 +21,7 @@ from .dispatchers import (
     get_leaf_node_scaled_conformal_predictor,
     get_leaf_node_split_conformal_predictor,
 )
+from . import docstrings
 
 
 def check_objective_supported(
@@ -86,38 +87,29 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
 
         check_objective_supported(model, self.SUPPORTED_OBJECTIVES)
 
+    @docstrings.doc_inherit_kwargs(
+        LeafNodeScaledConformalPredictor.calibrate,
+        style=docstrings.str_format_merge_style,
+        description="",
+        predict_with_interval_method=":func:`~pitci.lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor.predict_with_interval`",
+        data_type="np.ndarray or pd.DataFrame",
+        response_type="np.ndarray or pd.Series",
+        train_data_type="np.ndarray, pd.DataFrame or None, default = None",
+    )
     def calibrate(
         self,
-        data: Union[np.ndarray, pd.Series],
+        data: Union[np.ndarray, pd.DataFrame],
         response: Union[np.ndarray, pd.Series],
         alpha: Union[int, float] = 0.95,
+        train_data: Union[np.ndarray, pd.DataFrame] = None,
     ) -> None:
-        """Calibrate conformal intervals to a given sample of ``data``.
-
-        Method calls _calibrate_leaf_node_counts to record the number
-        of times each leaf node is visited across the whole of the
-        passed data.
-
-        Method calls _calibrate_interval to set the default interval that
-        will be scaled using the inverse of the noncomformity function
-        when making predictions. This allows intervals to vary by instance.
-
-        Parameters
-        ----------
-        data : pd.Series or np.ndarray
-            Dataset to calibrate to.
-
-        response : np.ndarray or pd.Series
-            The response values for the records in ``data``.
-
-        alpha : int or float, default = 0.95
-            Confidence level for the intervals to be calibrated at.
-
-        """
 
         check_type(data, [pd.Series, np.ndarray], "data")
+        check_type(train_data, [np.ndarray, pd.DataFrame, type(None)], "train_data")
 
-        super().calibrate(data=data, response=response, alpha=alpha)
+        super().calibrate(
+            data=data, response=response, alpha=alpha, train_data=train_data
+        )
 
     def _calibrate_leaf_node_counts(self, data: Any) -> None:
         """Method to get the number of times each leaf node was visited on the training
