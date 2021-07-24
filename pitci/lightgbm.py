@@ -123,9 +123,7 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
 
         check_type(data, [np.ndarray, pd.DataFrame], "data")
 
-        predictions_with_interval = super().predict_with_interval(data=data)
-
-        return predictions_with_interval
+        return super().predict_with_interval(data=data)
 
     def _calibrate_leaf_node_counts(self, data: Any) -> None:
         """Method to get the number of times each leaf node was visited on the training
@@ -266,7 +264,7 @@ class LGBMBoosterLeafNodeSplitConformalPredictor(
         self, data: Union[np.ndarray, pd.DataFrame]
     ) -> np.ndarray:
 
-        super().predict_with_interval(data=data)
+        return super().predict_with_interval(data=data)
 
 
 @get_leaf_node_scaled_conformal_predictor.register(lgb.basic.Booster)

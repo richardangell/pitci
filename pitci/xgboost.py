@@ -308,9 +308,7 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
 
         check_type(data, [xgb.DMatrix], "data")
 
-        predictions_with_interval = super().predict_with_interval(data=data)
-
-        return predictions_with_interval
+        return super().predict_with_interval(data=data)
 
     def _generate_predictions(self, data: xgb.DMatrix) -> np.ndarray:
         """Method to generate predictions from the xgboost model.
@@ -425,9 +423,7 @@ class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredicto
 
         check_type(data, [np.ndarray, pd.DataFrame], "data")
 
-        predictions_with_interval = super().predict_with_interval(data=data)
-
-        return predictions_with_interval
+        return super().predict_with_interval(data=data)
 
     def _generate_predictions(
         self, data: Union[np.ndarray, pd.DataFrame]
@@ -536,7 +532,7 @@ class XGBoosterLeafNodeSplitConformalPredictor(
     )
     def predict_with_interval(self, data: xgb.DMatrix) -> np.ndarray:
 
-        super().predict_with_interval(data=data)
+        return super().predict_with_interval(data=data)
 
 
 @get_absolute_error_conformal_predictor.register(xgb.Booster)
