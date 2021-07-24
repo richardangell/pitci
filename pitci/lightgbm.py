@@ -112,7 +112,7 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
         )
 
     @docstrings.doc_inherit_kwargs(
-        LeafNodeScaledConformalPredictor.calibrate,
+        LeafNodeScaledConformalPredictor.predict_with_interval,
         style=docstrings.str_format_merge_style,
         data_type="np.ndarray or pd.DataFrame",
     )
