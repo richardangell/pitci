@@ -657,9 +657,11 @@ class SplitConformalPredictor(LeafNodeScaledConformalPredictor):
         for a given tree. The length of the list corresponds to the number
         of trees in ``model``.
 
-    baseline_interval : float
-        The default or baseline conformal half interval width. Will be scaled
-        for each prediction generated.
+    baseline_intervals : list
+        The default or baseline conformal half interval widths that depend
+        on the scaling factor values. When making prediction intervals
+        the correct interval will be looked up based off the scaling factor
+        values, this is then multiplied by the scaling factor.
 
     alpha : int or float
         The confidence level of the conformal intervals that will be produced.
