@@ -10,7 +10,8 @@ Welcome to pitci's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   api
+   Quick Start <quick-start>
+   API Documentation <api>
 
 Indices and tables
 ==================
