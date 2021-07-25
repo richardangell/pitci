@@ -591,12 +591,12 @@ def return_xgb_sklearn_leaf_node_scaled_confromal_predictor(
 
 @get_leaf_node_split_conformal_predictor.register(xgb.Booster)
 def return_xgb_booster_leaf_node_split_confromal_predictor(
-    model: xgb.Booster,
+    model: xgb.Booster, n_bins: int = 3
 ) -> XGBoosterLeafNodeSplitConformalPredictor:
     """Function to return an instance of XGBoosterLeafNodeSplitConformalPredictor
     class the passed xgb.Booster object.
     """
 
-    confo_model = XGBoosterLeafNodeSplitConformalPredictor(model=model)
+    confo_model = XGBoosterLeafNodeSplitConformalPredictor(model=model, n_bins=n_bins)
 
     return confo_model

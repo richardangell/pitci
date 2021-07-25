@@ -31,7 +31,7 @@ def get_leaf_node_scaled_conformal_predictor(model):
 
 
 @singledispatch
-def get_leaf_node_split_conformal_predictor(model):
+def get_leaf_node_split_conformal_predictor(model, n_bins=3):
     """Function to return the appropriate child class of
     SplitConformalPredictor depending on the type of the model arg.
     """

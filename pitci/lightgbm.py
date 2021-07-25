@@ -251,7 +251,7 @@ class LGBMBoosterLeafNodeSplitConformalPredictor(
     ) -> None:
 
         super().calibrate(
-            data=data, resppnse=response, alpha=alpha, train_data=train_data
+            data=data, response=response, alpha=alpha, train_data=train_data
         )
 
     @docstrings.doc_inherit_kwargs(
@@ -282,12 +282,12 @@ def return_lgb_booster_leaf_node_scaled_confromal_predictor(
 
 @get_leaf_node_split_conformal_predictor.register(lgb.basic.Booster)
 def return_lgb_booster_leaf_node_split_confromal_predictor(
-    model: lgb.Booster,
+    model: lgb.Booster, n_bins: int = 3
 ) -> LGBMBoosterLeafNodeSplitConformalPredictor:
     """Function to return an instance of LGBMBoosterLeafNodeSplitConformalPredictor
     class the passed lgb.Booster object.
     """
 
-    confo_model = LGBMBoosterLeafNodeSplitConformalPredictor(model=model)
+    confo_model = LGBMBoosterLeafNodeSplitConformalPredictor(model=model, n_bins=n_bins)
 
     return confo_model
