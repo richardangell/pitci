@@ -16,18 +16,19 @@ Methods Summary
 --------------------
 
 ``pitci`` allows the user to generate intervals about predictions when using tree based models. 
-Conformal intervals are the underlying technqiue that make this possible. Inductive conformal 
-intervals learn an expected interval width at a given confidence level (``alpha``) from a 
-calibration dataset and then this interval is applied to new examples when making predictions.
+Conformal intervals are the underlying technqiue that makes this possible. Here we use
+*inductive* conformal intervals learn an expected interval width at a given confidence level 
+(``alpha``) from a calibration dataset and then this interval is applied to new examples when 
+making predictions.
 
 The above is the most basic conformal predictor implemented in ``pitci`` referred to as the
-``Absolute Error Conformal Predictor`` as it uses the absolute error between response and 
+``Absolute Error`` predictors. They use the absolute error between response and 
 predictions on the caibration dataset as the set of values from which the baseline interval
-will be calculated by selecting the ``alpha`` quantile. The approach being if we see ``alpha`` % 
-of the absolute errors on the calibration sample less than `x`; then we expect the unseen 
-response to fall within plus or minus `x` of our predictions ``alpha`` % of the time going 
-forwards. Note that this approach produces the same interval for every prediction, so may
-not be especially useful in practice.
+will be calculated, by selecting the ``alpha`` quantile. The approach being if we see ``alpha`` % 
+of the absolute errors on the calibration sample less than x; then we expect the unseen 
+response to fall within plus or minus x of our predictions ``alpha`` % of the time going 
+forwards. This approach produces the same interval for every prediction, so may not be 
+especially useful in practice.
 
 Instead we often want the prediction intervals to vary based off the input data. ``pitci``
 also implements scaled conformal intervals whereby the baseline intervals are shrunk
@@ -35,25 +36,21 @@ if we have more confidence in a particular data item or prediction and widened i
 less confidence. The challenge is how to calculate these scaling factors that will allow
 the intervals to vary depending on the data.
 
-The ``Leaf Node Scaled Absolute Error`` predictors use the number of times leaf nodes in
-the trees were visited when making predictions as the basis for the scaling factors.
-Intuitively, we may expect to make better predictions for leaf nodes that had more data 
-partitioned into them when building the underlying model than the leaf nodes that ended 
-up with less data falling into them. Specicially ``pitci`` uses the number of times each 
-leaf node for each tree was visited during building the underlying model, when a 
-prediction is to be made the leaf nodes from each tree visited to make that prediction 
-are identified and then the leaf node counts from training are looked up for each leaf
-node and summed across all trees. In order to make intervals shrink where we have more
+The ``Leaf Node Scaled Absolute Error`` predictors use the total number of data points 
+that appeared in the specific leaf nodes used to make a prediction, when the model 
+was trained -  as the basis for the scaling factors. Intuitively, we may expect to make 
+better predictions for leaf nodes that had more data partitioned into them when building 
+the underlying model. In order to make intervals shrink where we have more
 confidence the reciprocal of the total leaf node counts is used as the scaling factor
 i.e. larger leaf node count means a smaller scaling factor and hence a smaller interval
-when multiplied.
+when multiplying the baseline interval by the scaling factor.
 
-The final type of conformal predictor implemented in ``pitci`` are the ``Split Leaf Node 
+The final type of predictor implemented in ``pitci`` are the ``Split Leaf Node 
 Scaled Absolute Error`` predictors. Here the data is split into bins according to the
 leaf node count scaling factors and each bin has a different baseline interval that is
 calibrated to the desired ``alpha`` level. This can be useful over and above the previous 
 predictor type where for a given sample of data the prediction intervals produced as 
-well calibrated at the ``alpha`` level. However if the data is subset then these subsets
+well calibrated at the ``alpha`` level however, if the data is subset then these subsets
 are no longer well calibrated at ``alpha``.
 
 External Library Support
@@ -65,9 +62,9 @@ the table below details which techniques are available for which model objects i
 ================= =============== ================================ ======================================
 Library           Absolute Error  Leaf Node Scaled Absolute Error  Split Leaf Node Scaled Absolute Error
 ================= =============== ================================ ======================================
-xgboost.Booster   x               x                                x
-xgboost SKlearn   x               x
-lightgbm.Booster                  x                                x
+xgboost Booster   x               x                                x
+xgboost SKLearn   x               x
+lightgbm Booster                  x                                x
 ================= =============== ================================ ======================================
 
 The intention is to add support for more libraries in the future!
@@ -79,26 +76,28 @@ Creating ``pitci`` Predictors
 ---------------------------------
 
 The easiest way to create the relevant ``pitci`` predictor object for your given model type is 
-to use the dispatching functions, where ``model`` is the underlying model that the user has 
-built using one of the supported libraries;
+to use the dispatching functions demonstrated below.
+
+For ``Absolute Error`` conformal predictors;
 
    .. code::
     
      pitci.get_absolute_error_conformal_predictor(model)
 
-for absolute error conformal predictors.
+For ``Leaf Node Scaled Absolute Error`` conformal predictors;
 
    .. code::
 
      pitci.get_leaf_node_scaled_conformal_predictor(model)
 
-for leaf node scaled absolute error conformal predictors.
+For ``Split Leaf Node Scaled Absolute Error`` conformal predictors;
 
    .. code::
 
      pitci.get_leaf_node_split_conformal_predictor(model)
 
-for split leaf node scaled absolute error conformal predictors.
+where ``model`` is the underlying model that the user has built using 
+one of the supported libraries.
 
 These functions will return the correct ``pitci`` predictor given the type of ``model``.
 
