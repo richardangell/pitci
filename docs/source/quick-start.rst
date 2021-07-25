@@ -156,3 +156,7 @@ The output from ``predict_with_interval`` will be an array of shape n x 3 where 
 first column are the lower prediction intervals, the second column are the predictions 
 from the underlying model and the third column are the upper prediction intervals.
 
+Examples
+---------------------------------
+
+There are example notebooks available on `Github <https://github.com/richardangell/pitci/tree/master/examples/>`_.
