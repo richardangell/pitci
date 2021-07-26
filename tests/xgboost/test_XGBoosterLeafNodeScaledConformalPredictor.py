@@ -131,24 +131,6 @@ class TestCalibrate:
                 data=dmatrix_2x1_with_label, alpha="abc", response=np.array([0, 1])
             )
 
-    def test_response_incorrect_type_error(
-        self, dmatrix_2x1_with_label, xgboost_1_split_1_tree
-    ):
-        """Test an exception is raised if response is not a pd.Series or np.ndarray."""
-
-        confo_model = XGBoosterLeafNodeScaledConformalPredictor(xgboost_1_split_1_tree)
-
-        with pytest.raises(
-            TypeError,
-            match=re.escape(
-                f"response is not in expected types {[pd.Series, np.ndarray, type(None)]}, got {bool}"
-            ),
-        ):
-
-            confo_model.calibrate(
-                data=dmatrix_2x1_with_label, alpha=0.5, response=False
-            )
-
     @pytest.mark.parametrize("alpha", [(-0.0001), (-1), (1.0001), (2), (55)])
     def test_alpha_value_error(
         self, dmatrix_2x1_with_label, xgboost_1_split_1_tree, alpha

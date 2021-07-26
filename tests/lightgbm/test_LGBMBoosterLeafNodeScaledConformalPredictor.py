@@ -120,7 +120,7 @@ class TestCalibrate:
         with pytest.raises(
             TypeError,
             match=re.escape(
-                f"data is not in expected types {[pd.Series, np.ndarray]}, got {int}"
+                f"data is not in expected types {[np.ndarray, pd.DataFrame]}, got {int}"
             ),
         ):
 

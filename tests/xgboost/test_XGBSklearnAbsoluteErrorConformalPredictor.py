@@ -143,11 +143,11 @@ class TestCalibrate:
         np.testing.assert_array_equal(call_kwargs["data"], np_2x1_with_label[0])
 
 
-class TestGeneratePredictions:
-    """Tests for the XGBSklearnAbsoluteErrorConformalPredictor._generate_predictions method."""
+class TestPredictWithInterval:
+    """Tests for the XGBSklearnAbsoluteErrorConformalPredictor.predict_with_interval method."""
 
     def test_data_type_exception(self, np_2x1_with_label, xgb_regressor_1_split_1_tree):
-        """Test an exception is raised if data is not a xgb.DMatrix object."""
+        """Test an exception is raised if data is not a pd.DataFrame or np.ndarray object."""
 
         confo_model = XGBSklearnAbsoluteErrorConformalPredictor(
             xgb_regressor_1_split_1_tree
@@ -162,7 +162,11 @@ class TestGeneratePredictions:
             ),
         ):
 
-            confo_model._generate_predictions({})
+            confo_model.predict_with_interval({})
+
+
+class TestGeneratePredictions:
+    """Tests for the XGBSklearnAbsoluteErrorConformalPredictor._generate_predictions method."""
 
     def test_predict_call(
         self, mocker, np_2x1_with_label, xgb_regressor_1_split_1_tree
