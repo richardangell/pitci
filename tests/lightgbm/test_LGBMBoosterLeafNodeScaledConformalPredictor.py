@@ -126,6 +126,134 @@ class TestCalibrate:
 
             confo_model.calibrate(data=1, response=np.ndarray([1, 2]), alpha=0.8)
 
+    def test_train_data_type_exception(self, lgb_booster_1_split_1_tree):
+        """Test that an exception is raised if train_data is not a np.array or pd.Series."""
+
+        confo_model = LGBMBoosterLeafNodeScaledConformalPredictor(
+            lgb_booster_1_split_1_tree
+        )
+
+        with pytest.raises(
+            TypeError,
+            match=re.escape(
+                f"train_data is not in expected types {[np.ndarray, pd.DataFrame, type(None)]}, got {bool}"
+            ),
+        ):
+
+            confo_model.calibrate(
+                data=np.ndarray([1, 2]), response=np.ndarray([1, 2]), train_data=True
+            )
+
+    def test_super_calibrate_call(
+        self, mocker, np_2x1_with_label, lgb_booster_1_split_1_tree
+    ):
+        """Test that LeafNodeScaledConformalPredictor.calibrate is called correctly."""
+
+        confo_model = LGBMBoosterLeafNodeScaledConformalPredictor(
+            lgb_booster_1_split_1_tree
+        )
+
+        mocked = mocker.patch.object(
+            pitci.base.LeafNodeScaledConformalPredictor, "calibrate"
+        )
+
+        train_data_array = np.array([6, 9])
+
+        confo_model.calibrate(
+            data=np_2x1_with_label[0],
+            alpha=0.99,
+            response=np_2x1_with_label[1],
+            train_data=train_data_array,
+        )
+
+        assert (
+            mocked.call_count == 1
+        ), "incorrect number of calls to LeafNodeScaledConformalPredictor.calibrate"
+
+        call_args = mocked.call_args_list[0]
+        call_pos_args = call_args[0]
+        call_kwargs = call_args[1]
+
+        assert (
+            call_pos_args == ()
+        ), "positional args incorrect in call to LeafNodeScaledConformalPredictor.calibrate"
+
+        assert call_kwargs["alpha"] == 0.99
+
+        np.testing.assert_array_equal(call_kwargs["data"], np_2x1_with_label[0])
+
+        np.testing.assert_array_equal(call_kwargs["response"], np_2x1_with_label[1])
+
+        np.testing.assert_array_equal(call_kwargs["train_data"], train_data_array)
+
+
+class TestPredictWithInterval:
+    """Tests for the LGBMBoosterLeafNodeScaledConformalPredictor.predict_with_interval method."""
+
+    def test_data_type_exception(self, lgb_booster_1_split_1_tree):
+        """Test an exception is raised if data is not a xgb.DMatrix object."""
+
+        confo_model = LGBMBoosterLeafNodeScaledConformalPredictor(
+            lgb_booster_1_split_1_tree
+        )
+
+        confo_model.calibrate(
+            data=np.array([[1], [2], [3]]),
+            response=np.array([1, 2, 3]),
+        )
+
+        with pytest.raises(
+            TypeError,
+            match=re.escape(
+                f"data is not in expected types {[np.ndarray, pd.DataFrame]}, got {int}"
+            ),
+        ):
+
+            confo_model.predict_with_interval(1)
+
+    def test_super_predict_with_interval_call(
+        self, mocker, dmatrix_2x1_with_label, lgb_booster_1_split_1_tree
+    ):
+        """Test that LeafNodeScaledConformalPredictor.predict_with_interval is called and the
+        outputs of this are returned from the method.
+        """
+
+        confo_model = LGBMBoosterLeafNodeScaledConformalPredictor(
+            lgb_booster_1_split_1_tree
+        )
+
+        confo_model.calibrate(np.array([[1], [2], [3]]), response=np.array([1, 2, 3]))
+
+        predict_return_value = np.array([200, 101, 1234])
+
+        mocked = mocker.patch.object(
+            pitci.base.LeafNodeScaledConformalPredictor,
+            "predict_with_interval",
+            return_value=predict_return_value,
+        )
+
+        data_array = np.array([[11], [21], [31]])
+
+        results = confo_model.predict_with_interval(data_array)
+
+        # test output of predict_with_interval is the return value of
+        # LeafNodeScaledConformalPredictor.predict_with_interval
+        np.testing.assert_array_equal(results, predict_return_value)
+
+        assert (
+            mocked.call_count == 1
+        ), "incorrect number of calls to LeafNodeScaledConformalPredictor.predict_with_interval"
+
+        call_args = mocked.call_args_list[0]
+        call_pos_args = call_args[0]
+        call_kwargs = call_args[1]
+
+        assert (
+            call_pos_args == ()
+        ), "positional args incorrect in call to LeafNodeScaledConformalPredictor.predict_with_interval"
+
+        np.testing.assert_array_equal(call_kwargs["data"], data_array)
+
 
 class TestCalibrateLeafNodeCounts:
     """Tests for the LGBMBoosterLeafNodeScaledConformalPredictor._calibrate_leaf_node_counts method."""
