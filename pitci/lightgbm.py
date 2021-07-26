@@ -106,7 +106,7 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
         train_data: Union[np.ndarray, pd.DataFrame] = None,
     ) -> None:
 
-        check_type(data, [pd.Series, np.ndarray], "data")
+        check_type(data, [np.ndarray, pd.DataFrame], "data")
         check_type(train_data, [np.ndarray, pd.DataFrame, type(None)], "train_data")
 
         super().calibrate(
