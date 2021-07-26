@@ -1,12 +1,14 @@
-# Prediction Intervals for Trees using Conformal Intervals - `pitci`
+# `pitci`: Prediction Intervals for Trees using Conformal Intervals
 
-A package to allow prediction intervals to be generated with tree based models using conformal intervals.
+## Introduction
 
-The basic idea of inductive conformal intervals is to use a calibration set to learn given quantile of the error distribution on that set. This quantile is used as the basis for prediction intervals on new data.
+The basic idea of inductive conformal intervals is to use a calibration set to learn a given quantile of the error distribution on that set. This quantile is used as the basis for prediction intervals on new data.
 
-However it is not very useful in it's default state - which gives the same interval for every new prediction. Instead we want to scale this interval according to the input data. Intuitively we want to increase the interval where we have less confidence about the data and associated prediction and decrease it where we have more confidence.
+However this is often not especially useful in practice as every new prediction will recieve the same interval. Instead we want to scale this interval according to the input data. Intuitively we want to increase the interval where we have less confidence about the data and associated prediction and decrease it where we have more confidence.
 
-In order to produce a value that captures the confidence or familiarity we have with some data compared to our calibration set, `pitci` uses the number of times each leaf node used to generate a particular prediction was visited across all rows of the calibration set and then summed across trees.
+In order to produce a scaling factor value captures the confidence or familiarity we have with some data compared to our calibration set, `pitci` uses the number of training data rows that fell into the specific leaf nodes that were visited in making the prediction, summed across all trees. 
+
+For a full list of the supported libraries and more detail on the methods implmeneted, see the [docs](https://pitci.readthedocs.io/en/feature-clean_up_repo/quick-start.html#external-library-support).
 
 ## Install
 
@@ -15,6 +17,17 @@ The easiest way to get `pitci` is directly from [PyPI](https://pypi.org/project/
 ```
 pip install pitci
 ```
+
+## Documentation
+
+The documentation for `pitci` can be found [here](https://pitci.readthedocs.io/en/latest/).
+
+For information on how to build the documentation locally see the docs [README](https://github.com/richardangell/pitci/tree/master/docs).
+
+## Examples
+
+There are various example notebooks demonstrating how to use the package in the [examples folder](https://github.com/richardangell/pitci/tree/master/examples) in the repo.
+
 
 ## Build
 
@@ -36,5 +49,4 @@ flit install --symlink
 ```
 
 See the [flit docs](https://flit.readthedocs.io/en/latest/cmdline.html#) for all the command line options for `flit`.
-
 
