@@ -8,7 +8,7 @@ However this is often not especially useful in practice as every new prediction 
 
 In order to produce a scaling factor value captures the confidence or familiarity we have with some data compared to our calibration set, `pitci` uses the number of training data rows that fell into the specific leaf nodes that were visited in making the prediction, summed across all trees. 
 
-For a full list of the supported libraries and more detail on the methods implmeneted, see the [docs](https://pitci.readthedocs.io/en/feature-clean_up_repo/quick-start.html#external-library-support).
+For a full list of the supported libraries and more detail on the methods implmeneted, see the [docs](https://pitci.readthedocs.io/en/latest/quick-start.html#external-library-support).
 
 ## Install
 
