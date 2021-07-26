@@ -180,7 +180,7 @@ class TestCalibrateInterval:
         # the third [141:160] and so on up to 5 bins
         # each bin has the 80th percentile calculated which give
         # the values below
-        expected_baseline_intervals = np.array([116, 136.2, 156.2, 176.2, 196.2])
+        expected_baseline_intervals = np.array([116, 136, 156, 176, 196])
 
         np.testing.assert_array_equal(
             dummy_confo_model.baseline_intervals, expected_baseline_intervals

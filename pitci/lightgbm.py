@@ -1,3 +1,5 @@
+"""Conformal predictor classes for LightGBM models."""
+
 import numpy as np
 import pandas as pd
 
@@ -13,12 +15,13 @@ except ModuleNotFoundError as err:
 
 from typing import List, Union, Any
 
-from pitci.base import LeafNodeScaledConformalPredictor, SplitConformalPredictor
-from pitci.checks import check_type, check_allowed_value
-from pitci.dispatchers import (
+from .base import LeafNodeScaledConformalPredictor, SplitConformalPredictor
+from .checks import check_type, check_allowed_value
+from .dispatchers import (
     get_leaf_node_scaled_conformal_predictor,
     get_leaf_node_split_conformal_predictor,
 )
+from . import docstrings
 
 
 def check_objective_supported(
@@ -63,57 +66,17 @@ SUPPORTED_OBJECTIVES_ABS_ERROR = [
 
 
 class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor):
-    """Conformal interval predictor for an underlying lightgbm model
-    using scaled absolute error as the nonconformity measure.
-
-    Class implements inductive conformal intervals where a calibration
-    dataset is used to learn the information that is used when generating
-    intervals for new instances.
-
-    The predictor outputs varying width intervals for every new instance.
-    The scaling function uses the number of times that the leaf nodes were
-    visited for each tree in making the prediction, for that row, were
-    visited in the training dataset.
-
-    Intuitively, for rows that have higher leaf node counts from the train
-    set - the model will be more 'familiar' with hence the interval for
-    these rows will be shrunk. The inverse is true for rows that have lower
-    leaf node counts from the train set.
-
-    The currently supported lgboost objective functions (given the nonconformity
-    measure that is based on absolute error) are defined in the
-    SUPPORTED_OBJECTIVES attribute.
-
-    Parameters
-    ----------
-    model : lgb.Booster
-        Model to generate predictions with conformal intervals.
-
-    Attributes
-    ----------
-    model : lgb.Booster
-        Model passed in initialisation of the class.
-
-    leaf_node_counts : list
-        Counts of number of times each leaf node in each tree was visited when
-        making predictions on the train dataset. Attribute is set when the
-        calibrate method is run.
-
-    baseline_interval : float
-        Default, baseline conformal interval width. Will be scaled for each
-        prediction generated. Attribute is set when the calibrate method is
-        run.
-
-    alpha : int or float
-        The confidence level of the conformal intervals that will be produced.
-        Attribute is set when the calibrate method is run.
-
-    SUPPORTED_OBJECTIVES : list
-        Booster supported objectives. If an lgb.Booster object is passed using
-        a non-supported objective when initialising the class an an error
-        will be raised.
-
-    """
+    __doc__ = LeafNodeScaledConformalPredictor.__doc__.format(
+        model_type="``lgb.Booster``",
+        description="The currently supported lgboost objective functions, "
+        "given the nonconformity\n    measure that is based on absolute error, are defined "
+        "in the\n    SUPPORTED_OBJECTIVES attribute.",
+        parameters="",
+        attributes="SUPPORTED_OBJECTIVES : list\n"
+        "\tBooster supported objectives. If a model with a non-supported "
+        "objective\n\tis passed when initialising the class object an error will be raised.",
+        calibrate_method="pitci.lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor.calibrate",
+    )
 
     def __init__(self, model: lgb.Booster) -> None:
 
@@ -124,6 +87,44 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
         self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABS_ERROR
 
         check_objective_supported(model, self.SUPPORTED_OBJECTIVES)
+
+    @docstrings.doc_inherit_kwargs(
+        LeafNodeScaledConformalPredictor.calibrate,
+        style=docstrings.str_format_merge_style,
+        description="",
+        predict_with_interval_method="pitci.lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
+        baseline_interval_attribute="baseline_interval",
+        data_type="np.ndarray or pd.DataFrame",
+        response_type="np.ndarray or pd.Series",
+        train_data_type="np.ndarray, pd.DataFrame or None, default = None",
+    )
+    def calibrate(
+        self,
+        data: Union[np.ndarray, pd.DataFrame],
+        response: Union[np.ndarray, pd.Series],
+        alpha: Union[int, float] = 0.95,
+        train_data: Union[np.ndarray, pd.DataFrame] = None,
+    ) -> None:
+
+        check_type(data, [np.ndarray, pd.DataFrame], "data")
+        check_type(train_data, [np.ndarray, pd.DataFrame, type(None)], "train_data")
+
+        super().calibrate(
+            data=data, response=response, alpha=alpha, train_data=train_data
+        )
+
+    @docstrings.doc_inherit_kwargs(
+        LeafNodeScaledConformalPredictor.predict_with_interval,
+        style=docstrings.str_format_merge_style,
+        data_type="np.ndarray or pd.DataFrame",
+    )
+    def predict_with_interval(
+        self, data: Union[np.ndarray, pd.DataFrame]
+    ) -> np.ndarray:
+
+        check_type(data, [np.ndarray, pd.DataFrame], "data")
+
+        return super().predict_with_interval(data=data)
 
     def _calibrate_leaf_node_counts(self, data: Any) -> None:
         """Method to get the number of times each leaf node was visited on the training
@@ -218,27 +219,53 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
 class LGBMBoosterLeafNodeSplitConformalPredictor(
     SplitConformalPredictor, LGBMBoosterLeafNodeScaledConformalPredictor
 ):
-    """Conformal interval predictor for an underlying `lgb.Booster`
-    model using scaled and split absolute error as the nonconformity measure.
+    __doc__ = SplitConformalPredictor.__doc__.format(
+        model_type="``lgb.Booster``",
+        description="The currently supported lgboost objective functions, "
+        "given the nonconformity\n    measure that is based on absolute error, are defined "
+        "in the\n    SUPPORTED_OBJECTIVES attribute.",
+        parameters="",
+        calibrate_link="``calibrate``",
+        attributes="SUPPORTED_OBJECTIVES : list\n"
+        "\tBooster supported objectives. If a model with a non-supported "
+        "objective\n\tis passed when initialising the class object an error will be raised.",
+    )
 
-    The predictor outputs varying width intervals for every new instance.
-    The scaling function uses the number of times that the leaf nodes were
-    visited for each tree in making the prediction, for that row, were
-    visited in the calibration dataset.
+    @docstrings.doc_inherit_kwargs(
+        LeafNodeScaledConformalPredictor.calibrate,
+        style=docstrings.str_format_merge_style,
+        description="The ``baseline_intervals`` are each calibrated to the required ``alpha``\n\t"
+        "level on the subsets of the data where the scaling factor values\n\t"
+        "fall into the range for that particular bucket.",
+        predict_with_interval_method="pitci.lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
+        baseline_interval_attribute="baseline_intervals",
+        data_type="np.ndarray or pd.DataFrame",
+        response_type="np.ndarray or pd.Series",
+        train_data_type="np.ndarray, pd.DataFrame or None, default = None",
+    )
+    def calibrate(
+        self,
+        data: Union[np.ndarray, pd.DataFrame],
+        response: Union[np.ndarray, pd.Series],
+        alpha: Union[int, float] = 0.95,
+        train_data: Union[np.ndarray, pd.DataFrame] = None,
+    ) -> None:
 
-    Intervals are split into bins, using the scaling factors, where each bin
-    is calibrated at the required confidence level. This addresses the
-    situation that `LGBMBoosterLeafNodeScaledConformalPredictor` can encounter
-    where the intervals are calibrated at the overall level for a given
-    dataset but subsets of the data are not well calibrated.
+        super().calibrate(
+            data=data, response=response, alpha=alpha, train_data=train_data
+        )
 
-    This class combines the methods implemented in SplitConformalPredictor and
-    LGBMBoosterLeafNodeScaledConformalPredictor so nothing else is required to
-    be implemented in the child class itself.
+    @docstrings.doc_inherit_kwargs(
+        SplitConformalPredictor.predict_with_interval,
+        style=docstrings.str_format_merge_style,
+        predict_with_interval_method="pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
+        data_type="pd.DataFrame of np.ndarray",
+    )
+    def predict_with_interval(
+        self, data: Union[np.ndarray, pd.DataFrame]
+    ) -> np.ndarray:
 
-    """
-
-    pass
+        return super().predict_with_interval(data=data)
 
 
 @get_leaf_node_scaled_conformal_predictor.register(lgb.basic.Booster)
@@ -256,12 +283,12 @@ def return_lgb_booster_leaf_node_scaled_confromal_predictor(
 
 @get_leaf_node_split_conformal_predictor.register(lgb.basic.Booster)
 def return_lgb_booster_leaf_node_split_confromal_predictor(
-    model: lgb.Booster,
+    model: lgb.Booster, n_bins: int = 3
 ) -> LGBMBoosterLeafNodeSplitConformalPredictor:
     """Function to return an instance of LGBMBoosterLeafNodeSplitConformalPredictor
     class the passed lgb.Booster object.
     """
 
-    confo_model = LGBMBoosterLeafNodeSplitConformalPredictor(model=model)
+    confo_model = LGBMBoosterLeafNodeSplitConformalPredictor(model=model, n_bins=n_bins)
 
     return confo_model

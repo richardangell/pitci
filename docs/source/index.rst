@@ -10,13 +10,8 @@ Welcome to pitci's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   dispatchers
-   base
-   lightgbm
-   xgboost
-   checks
-   helpers
-   nonconformity
+   Quick Start <quick-start>
+   API Documentation <api>
 
 Indices and tables
 ==================
