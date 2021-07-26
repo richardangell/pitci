@@ -1,3 +1,8 @@
+"""
+Module containing functions used to return the correct conformal predictor
+class given the underlying model type.
+"""
+
 from functools import singledispatch
 
 
@@ -22,4 +27,15 @@ def get_leaf_node_scaled_conformal_predictor(model):
 
     raise NotImplementedError(
         f"model type not supported for LeafNodeScaledConformalPredictor children; {type(model)}"
+    )
+
+
+@singledispatch
+def get_leaf_node_split_conformal_predictor(model, n_bins=3):
+    """Function to return the appropriate child class of
+    SplitConformalPredictor depending on the type of the model arg.
+    """
+
+    raise NotImplementedError(
+        f"model type not supported for SplitConformalPredictor children; {type(model)}"
     )

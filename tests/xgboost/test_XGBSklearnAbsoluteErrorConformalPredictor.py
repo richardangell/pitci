@@ -143,11 +143,11 @@ class TestCalibrate:
         np.testing.assert_array_equal(call_kwargs["data"], np_2x1_with_label[0])
 
 
-class TestGeneratePredictions:
-    """Tests for the XGBSklearnAbsoluteErrorConformalPredictor._generate_predictions method."""
+class TestPredictWithInterval:
+    """Tests for the XGBSklearnAbsoluteErrorConformalPredictor.predict_with_interval method."""
 
     def test_data_type_exception(self, np_2x1_with_label, xgb_regressor_1_split_1_tree):
-        """Test an exception is raised if data is not a xgb.DMatrix object."""
+        """Test an exception is raised if data is not a pd.DataFrame or np.ndarray object."""
 
         confo_model = XGBSklearnAbsoluteErrorConformalPredictor(
             xgb_regressor_1_split_1_tree
@@ -162,7 +162,45 @@ class TestGeneratePredictions:
             ),
         ):
 
-            confo_model._generate_predictions({})
+            confo_model.predict_with_interval({})
+
+    def test_super_predict_with_interval_result_returned(
+        self, mocker, np_2x1_with_label, xgb_regressor_1_split_1_tree
+    ):
+        """Test that super prediction_with_interval is called and the result is returned from
+        the function.
+        """
+
+        confo_model = XGBSklearnAbsoluteErrorConformalPredictor(
+            xgb_regressor_1_split_1_tree
+        )
+
+        confo_model.calibrate(np_2x1_with_label[0], np_2x1_with_label[1])
+
+        predict_return_value = np.array([123, 456])
+
+        mocked = mocker.patch.object(
+            pitci.base.AbsoluteErrorConformalPredictor,
+            "predict_with_interval",
+            return_value=predict_return_value,
+        )
+
+        results = confo_model.predict_with_interval(np_2x1_with_label[0])
+
+        assert (
+            mocked.call_count == 1
+        ), "incorrect number of calls to AbsoluteErrorConformalPredictor.predict_with_interval"
+
+        np.testing.assert_array_equal(results, predict_return_value)
+
+        call_args = mocked.call_args_list[0]
+        call_pos_args = call_args[0]
+
+        np.testing.assert_array_equal(call_pos_args[0], np_2x1_with_label[0])
+
+
+class TestGeneratePredictions:
+    """Tests for the XGBSklearnAbsoluteErrorConformalPredictor._generate_predictions method."""
 
     def test_predict_call(
         self, mocker, np_2x1_with_label, xgb_regressor_1_split_1_tree

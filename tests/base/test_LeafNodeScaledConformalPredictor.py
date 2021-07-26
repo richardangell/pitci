@@ -14,12 +14,12 @@ class DummyLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor):
     functionality can be tested.
     """
 
-    def __init__(self):
+    def __init__(self, model="abcd"):
         """Dummy init method that only calls LeafNodeScaledConformalPredictor
         init method.
         """
 
-        super().__init__()
+        super().__init__(model=model)
 
     def _generate_predictions(self, data):
         """Dummy function that returns 0s of shape (n,) where data has n rows."""
@@ -48,6 +48,13 @@ class TestInit:
         assert (
             dummy_confo_model.__version__ == pitci.__version__
         ), "version attribute not set correctly"
+
+    def test_model_attribute_set(self):
+        """Test that the object passed in the model arg is set to the model attribute."""
+
+        dummy_confo_model = DummyLeafNodeScaledConformalPredictor(model=1)
+
+        assert dummy_confo_model.model == 1, "model attribute not set correctly"
 
 
 class TestCalibrate:
@@ -99,8 +106,10 @@ class TestCalibrate:
                 data=dmatrix_2x1_with_label, alpha=0.5, response=False
             )
 
-    def test_calibrate_calls(self, mocker, dmatrix_2x1_with_label):
-        """Test the calls to _calibrate_interval and _calibrate_leaf_node_counts methods."""
+    def test_calibrate_calls_no_train_data(self, mocker, dmatrix_2x1_with_label):
+        """Test the calls to _calibrate_interval and _calibrate_leaf_node_counts methods
+        when train_data is None.
+        """
 
         dummy_confo_model = DummyLeafNodeScaledConformalPredictor()
 
@@ -121,6 +130,7 @@ class TestCalibrate:
             data=dmatrix_2x1_with_label,
             alpha=0.1,
             response=dmatrix_2x1_with_label.get_label(),
+            train_data=None,
         )
 
         # test each function is called the correct number of times
@@ -155,6 +165,91 @@ class TestCalibrate:
 
         assert (
             call_kwargs["data"] == dmatrix_2x1_with_label
+        ), "data arg incorrect in _calibrate_leaf_node_counts call"
+
+        # test the arguments in the _calibrate_interval call
+
+        call_args = mocked2.call_args_list[0]
+        call_pos_args = call_args[0]
+        call_kwargs = call_args[1]
+
+        assert (
+            call_pos_args == ()
+        ), "positional args incorrect in _calibrate_interval call"
+
+        np.testing.assert_array_equal(
+            call_kwargs["response"], dmatrix_2x1_with_label.get_label()
+        )
+
+        assert (
+            call_kwargs["alpha"] == 0.1
+        ), "alpha arg incorrect in _calibrate_interval call"
+
+        assert (
+            call_kwargs["data"] == dmatrix_2x1_with_label
+        ), "data arg incorrect in _calibrate_interval call"
+
+    def test_calibrate_calls_with_train_data(
+        self, mocker, dmatrix_2x1_with_label, dmatrix_2x1_with_label_gamma
+    ):
+        """Test the calls to _calibrate_interval and _calibrate_leaf_node_counts methods
+        when train_data is specified.
+        """
+
+        dummy_confo_model = DummyLeafNodeScaledConformalPredictor()
+
+        mock_manager = Mock()
+
+        mocked = mocker.patch.object(
+            pitci.base.LeafNodeScaledConformalPredictor, "_calibrate_leaf_node_counts"
+        )
+
+        mocked2 = mocker.patch.object(
+            pitci.base.LeafNodeScaledConformalPredictor, "_calibrate_interval"
+        )
+
+        mock_manager.attach_mock(mocked, "the_calibrate_leaf_node_counts")
+        mock_manager.attach_mock(mocked2, "the_calibrate_interval")
+
+        dummy_confo_model.calibrate(
+            data=dmatrix_2x1_with_label,
+            alpha=0.1,
+            response=dmatrix_2x1_with_label.get_label(),
+            train_data=dmatrix_2x1_with_label_gamma,
+        )
+
+        # test each function is called the correct number of times
+
+        assert (
+            mocked.call_count == 1
+        ), "incorrect number of calls to _calibrate_leaf_node_counts"
+
+        assert (
+            mocked2.call_count == 1
+        ), "incorrect number of calls to _calibrate_interval"
+
+        # test the order of calls to functions
+
+        assert (
+            mock_manager.mock_calls[0][0] == "the_calibrate_leaf_node_counts"
+        ), "_calibrate_leaf_node_counts not called first"
+
+        assert (
+            mock_manager.mock_calls[1][0] == "the_calibrate_interval"
+        ), "_calibrate_interval not called second"
+
+        # test the argumnets in the _calibrate_leaf_node_counts call
+
+        call_args = mocked.call_args_list[0]
+        call_pos_args = call_args[0]
+        call_kwargs = call_args[1]
+
+        assert (
+            call_pos_args == ()
+        ), "positional args incorrect in _calibrate_leaf_node_counts call"
+
+        assert (
+            call_kwargs["data"] == dmatrix_2x1_with_label_gamma
         ), "data arg incorrect in _calibrate_leaf_node_counts call"
 
         # test the arguments in the _calibrate_interval call
@@ -329,6 +424,22 @@ class TestCalculateScalingFactors:
 
 class TestCountLeafNodeVisitsFromCalibration:
     """Tests for the LeafNodeScaledConformalPredictor._count_leaf_node_visits_from_calibration method."""
+
+    def test_no_leaf_node_counts_attribute_error(self):
+        """Test an exception is raised if leaf_node_counts attribute is not set."""
+
+        dummy_confo_model = DummyLeafNodeScaledConformalPredictor()
+
+        leaf_node_predictions_value = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+
+        with pytest.raises(
+            AttributeError,
+            match="leaf_node_counts attribute missing, run calibrate first.",
+        ):
+
+            dummy_confo_model._count_leaf_node_visits_from_calibration(
+                leaf_node_predictions_value
+            )
 
     def test_sum_dict_values(self, mocker):
         """Test that _sum_dict_values is applied to every row in the passed

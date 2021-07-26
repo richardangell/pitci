@@ -1,3 +1,5 @@
+"""Module for simple checks used in the conformal predictor classes."""
+
 from typing import Any, Type, List
 
 

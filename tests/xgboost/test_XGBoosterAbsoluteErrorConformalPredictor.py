@@ -173,6 +173,60 @@ class TestCalibrate:
         ), "data incorrect in call to AbsoluteErrorConformalPredictor.calibrate"
 
 
+class TestPredictWithInterval:
+    """Tests for the XGBoosterAbsoluteErrorConformalPredictor.predict_with_interval method."""
+
+    def test_data_type_exception(self, dmatrix_2x1_with_label, xgboost_1_split_1_tree):
+        """Test an exception is raised if data is not a xgb.DMatrix object."""
+
+        confo_model = XGBoosterAbsoluteErrorConformalPredictor(xgboost_1_split_1_tree)
+
+        confo_model.calibrate(dmatrix_2x1_with_label)
+
+        with pytest.raises(
+            TypeError,
+            match=re.escape(
+                f"data is not in expected types {[xgb.DMatrix]}, got {list}"
+            ),
+        ):
+
+            confo_model.predict_with_interval([])
+
+    def test_super_predict_with_interval_result_returned(
+        self, mocker, dmatrix_2x1_with_label, xgboost_1_split_1_tree
+    ):
+        """Test that super prediction_with_interval is called and the result is returned from
+        the function.
+        """
+
+        confo_model = XGBoosterAbsoluteErrorConformalPredictor(xgboost_1_split_1_tree)
+
+        confo_model.calibrate(dmatrix_2x1_with_label)
+
+        predict_return_value = np.array([123, 456])
+
+        mocked = mocker.patch.object(
+            pitci.base.AbsoluteErrorConformalPredictor,
+            "predict_with_interval",
+            return_value=predict_return_value,
+        )
+
+        results = confo_model.predict_with_interval(dmatrix_2x1_with_label)
+
+        assert (
+            mocked.call_count == 1
+        ), "incorrect number of calls to AbsoluteErrorConformalPredictor.predict_with_interval"
+
+        np.testing.assert_array_equal(results, predict_return_value)
+
+        call_args = mocked.call_args_list[0]
+        call_pos_args = call_args[0]
+
+        assert call_pos_args == (
+            dmatrix_2x1_with_label,
+        ), "positional args incorrect in call to xgb.Booster.predict"
+
+
 class TestGeneratePredictions:
     """Tests for the XGBoosterAbsoluteErrorConformalPredictor._generate_predictions method."""
 

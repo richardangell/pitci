@@ -1,0 +1,8 @@
+numpy>=1.9
+pandas>=1.0.0
+custom_inherit==2.3.1
+xgboost>=0.82
+lightgbm>=3.0.0
+Sphinx==3.5.4
+sphinx-rtd-theme==0.5.2
+numpydoc==1.1.0

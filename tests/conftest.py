@@ -1,5 +1,6 @@
 import numpy as np
 import xgboost as xgb
+import lightgbm as lgb
 from sklearn.datasets import load_diabetes, load_breast_cancer
 
 import pytest
@@ -44,6 +45,42 @@ def dmatrix_4x2_with_label(np_4x2_with_label):
     xgb_data = xgb.DMatrix(data=np_4x2_with_label[0], label=np_4x2_with_label[1])
 
     return xgb_data
+
+
+@pytest.fixture
+def lgb_dataset_2x1_with_label(np_2x1_with_label):
+    """Create an 2x1 lgb.Dataset with response."""
+
+    lgb_data = lgb.Dataset(data=np_2x1_with_label[0], label=np_2x1_with_label[1])
+
+    return lgb_data
+
+
+@pytest.fixture
+def lgb_dataset_4x2_with_label(np_4x2_with_label):
+    """Create an 4x2 lgb.Dataset with response."""
+
+    lgb_data = lgb.Dataset(data=np_4x2_with_label[0], label=np_4x2_with_label[1])
+
+    return lgb_data
+
+
+@pytest.fixture
+def lgb_booster_1_split_1_tree(lgb_dataset_2x1_with_label):
+    """Build a dummy lightgbm model with a single split on 1 variable."""
+
+    model = lgb.train(
+        params={
+            "num_leaves": 2,
+            "min_data_in_leaf": 1,
+            "feature_pre_filter": False,
+            "objective": "regression",
+        },
+        train_set=lgb_dataset_2x1_with_label,
+        num_boost_round=1,
+    )
+
+    return model
 
 
 @pytest.fixture
@@ -172,6 +209,17 @@ def create_4_DMatrices(four_samples_X_y):
     return train, validate, interval, test
 
 
+def create_4_lgb_datasets(four_samples_X_y):
+    """Function to create 4 lgb.Dataset objects using consecutive pairs for X and y in each."""
+
+    train = lgb.Dataset(data=four_samples_X_y[0], label=four_samples_X_y[1])
+    validate = lgb.Dataset(data=four_samples_X_y[2], label=four_samples_X_y[3])
+    interval = lgb.Dataset(data=four_samples_X_y[4], label=four_samples_X_y[5])
+    test = lgb.Dataset(data=four_samples_X_y[6], label=four_samples_X_y[7])
+
+    return train, validate, interval, test
+
+
 @pytest.fixture(scope="session")
 def split_diabetes_data_into_4():
     """Split the diabetes data from sklearn into 4 samples and return np arrays."""
@@ -186,6 +234,13 @@ def diabetes_xgb_data(split_diabetes_data_into_4):
     """Create 4 xgb.DMatrix objects for the data samples created in split_diabetes_data_into_4."""
 
     return create_4_DMatrices(split_diabetes_data_into_4)
+
+
+@pytest.fixture(scope="session")
+def diabetes_lgb_data(split_diabetes_data_into_4):
+    """Create 4 lgb.Dataset objects for the data samples created in split_diabetes_data_into_4."""
+
+    return create_4_lgb_datasets(split_diabetes_data_into_4)
 
 
 @pytest.fixture(scope="session")

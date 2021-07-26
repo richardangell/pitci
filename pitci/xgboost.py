@@ -1,3 +1,5 @@
+"""Conformal predictor classes for XGBoost models."""
+
 import pandas as pd
 import numpy as np
 import json
@@ -14,12 +16,18 @@ except ModuleNotFoundError as err:
 
 from typing import Union, Optional, List, cast
 
-from pitci.base import AbsoluteErrorConformalPredictor, LeafNodeScaledConformalPredictor
-from pitci.checks import check_type, check_attribute, check_allowed_value
-from pitci.dispatchers import (
+from .base import (
+    AbsoluteErrorConformalPredictor,
+    LeafNodeScaledConformalPredictor,
+    SplitConformalPredictor,
+)
+from .checks import check_type, check_allowed_value
+from .dispatchers import (
     get_leaf_node_scaled_conformal_predictor,
     get_absolute_error_conformal_predictor,
+    get_leaf_node_split_conformal_predictor,
 )
+from . import docstrings
 
 
 def check_objective_supported(
@@ -73,90 +81,45 @@ SUPPORTED_OBJECTIVES_ABS_ERROR = [
 
 
 class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
-    """Conformal interval predictor for an underlying `xgb.Booster` model
-    using non-scaled absolute error as the nonconformity measure.
-
-    Class implements inductive conformal intervals where a calibration
-    dataset is used to learn the information that is used when generating
-    intervals for new instances.
-
-    The predictor outputs fixed width intervals for every new instance,
-    as no scaling is implemented in this class.
-
-    The currently supported xgboost objective functions for the underlying
-    model are;
-    - binary:logistic
-    - reg:logistic
-    - reg:squarederror
-    - reg:logistic
-    - reg:pseudohubererror
-    - reg:gamma
-    - reg:tweedie
-    - count:poisson
-    These are held in the SUPPORTED_OBJECTIVES attribute, see note below
-    for reasons for excluding some of the reg and binary objectives.
-
-    Parameters
-    ----------
-    model : xgb.Booster
-        Underly model to generate prediction intervals for.
-
-    Attributes
-    ----------
-    model : xgb.Booster
-        Underlying model passed in initialisation of the class.
-
-    baseline_interval : float
-        Default, baseline conformal interval width. This is the half
-        width interval that will be returned for every instance.
-
-    alpha : int or float
-        The confidence level of the conformal intervals that will be produced.
-        Attribute is set when the calibrate method is run.
-
-    SUPPORTED_OBJECTIVES : list
-        Booster supported objectives. If an xgboost model with a non-supported
-        objective is passed when initialising the class object an error will be raised.
-
-    """
+    __doc__ = AbsoluteErrorConformalPredictor.__doc__.format(
+        model_type="``xgb.Booster``",
+        description="The currently supported xgboost objective functions, "
+        "given the nonconformity\n    measure that is based on absolute error, are defined "
+        "in the\n    SUPPORTED_OBJECTIVES attribute.",
+        parameters="",
+        calibrate_link=":func:`~pitci.xgboost.XGBoosterAbsoluteErrorConformalPredictor.calibrate`",
+        attributes="SUPPORTED_OBJECTIVES : list\n"
+        "\tBooster supported objectives. If an ``xgb.Booster`` with a non-supported "
+        "objective\n\tis passed when initialising the class object an error will be raised.",
+    )
 
     def __init__(self, model: xgb.Booster) -> None:
 
-        super().__init__()
-
         check_type(model, [xgb.Booster], "booster")
+
+        super().__init__(model=model)
 
         self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABS_ERROR
 
         check_objective_supported(model, self.SUPPORTED_OBJECTIVES)
 
-        self.model = model
-
+    @docstrings.doc_inherit_kwargs(
+        AbsoluteErrorConformalPredictor.calibrate,
+        style=docstrings.str_format_merge_style,
+        description="Calls the parent class "
+        ":func:`~pitci.base.AbsoluteErrorConformalPredictor.calibrate` "
+        "method after extracting the\n\t"
+        "response from the data argument, if response is not passed\n\t"
+        "and data is an xgb.DMatrix object.",
+        data_type="xgb.DMatrix, np.ndarray or pd.DataFrame",
+        response_type="np.ndarray, pd.Series or None, default = None",
+    )
     def calibrate(
         self,
         data: xgb.DMatrix,
         response: Optional[Union[np.ndarray, pd.Series]] = None,
         alpha: Union[int, float] = 0.95,
     ) -> None:
-        """Method to calibrate conformal intervals that will be applied
-        to new instances when calling predict_with_interval.
-
-        Calls the parent class calibrate method after extracting the
-        response from the data argument, if response is not passed
-        and data is an xgb.DMatrix object.
-
-        Parameters
-        ----------
-        data : xgb.DMatrix, np.ndarray or pd.DataFrame
-            Dataset to calibrate baselines on.
-
-        alpha : int or float, default = 0.95
-            Confidence level for the interval.
-
-        response : np.ndarray, pd.Series or None, default = None
-            The associated response values for every record in data.
-
-        """
 
         check_type(data, [xgb.DMatrix], "data")
 
@@ -169,15 +132,27 @@ class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
 
         super().calibrate(data=data, alpha=alpha, response=response)
 
+    @docstrings.doc_inherit_kwargs(
+        AbsoluteErrorConformalPredictor.predict_with_interval,
+        style=docstrings.str_format_merge_style,
+        description="",
+        data_type="xgb.DMatrix",
+    )
+    def predict_with_interval(self, data: xgb.DMatrix) -> np.ndarray:
+
+        check_type(data, [xgb.DMatrix], "data")
+
+        return super().predict_with_interval(data)
+
     def _generate_predictions(self, data: xgb.DMatrix) -> np.ndarray:
-        """Method to generate predictions from the xgboost model.
+        """Generate predictions from the xgboost model.
 
         Calls predict method on the model attribute with
         ntree_limit = model's best_iteration + 1.
 
         Parameters
         ----------
-        data : xgb.DMatrix, np.ndarray or pd.DataFrame
+        data : xgb.DMatrix
             Data to generate predictions on.
 
         """
@@ -192,95 +167,60 @@ class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
 
 
 class XGBSklearnAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
-    """Conformal interval predictor for an underlying `xgb.XGBRegressor` or
-    `xgb.XGBClassifier` model using non-scaled absolute error as the
-    nonconformity measure.
-
-    Class implements inductive conformal intervals where a calibration
-    dataset is used to learn the information that is used when generating
-    intervals for new instances.
-
-    The predictor outputs fixed width intervals for every new instance,
-    as no scaling is implemented in this class.
-
-    The currently supported xgboost objective functions for the underlying
-    model are;
-    - binary:logistic
-    - reg:logistic
-    - reg:squarederror
-    - reg:logistic
-    - reg:pseudohubererror
-    - reg:gamma
-    - reg:tweedie
-    - count:poisson
-    These are held in the SUPPORTED_OBJECTIVES attribute, see note below
-    for reasons for excluding some of the reg and binary objectives.
-
-    Parameters
-    ----------
-    model : xgb.XGBRegressor or xgb.XGBClassifier
-        Underly model to generate prediction intervals for.
-
-    Attributes
-    ----------
-    model : xgb.XGBRegressor or xgb.XGBClassifier
-        Underlying model passed in initialisation of the class.
-
-    baseline_interval : float
-        Default, baseline conformal interval width. This is the half
-        width interval that will be returned for every instance.
-
-    alpha : int or float
-        The confidence level of the conformal intervals that will be produced.
-        Attribute is set when the calibrate method is run.
-
-    SUPPORTED_OBJECTIVES : list
-        Booster supported objectives. If an xgboost model with a non-supported
-        objective is passed when initialising the class object an error will be raised.
-
-    """
+    __doc__ = AbsoluteErrorConformalPredictor.__doc__.format(
+        model_type="``xgb.XGBRegressor`` or ``xgb.XGBClassifier``",
+        description="The currently supported xgboost objective functions, "
+        "given the nonconformity\n    measure that is based on absolute error, are defined "
+        "in the\n    SUPPORTED_OBJECTIVES attribute.",
+        parameters="",
+        calibrate_link=":func:`~pitci.xgboost.XGBSklearnAbsoluteErrorConformalPredictor.calibrate`",
+        attributes="SUPPORTED_OBJECTIVES : list\n"
+        "\tBooster supported objectives. If an ``xgb.XGBRegressor`` or ``xgb.XGBClassifier`` "
+        "with a non-supported objective\n\tis passed when initialising the class object an "
+        "error will be raised.",
+    )
 
     def __init__(self, model: Union[xgb.XGBRegressor, xgb.XGBClassifier]) -> None:
 
-        super().__init__()
-
         check_type(model, [xgb.XGBRegressor, xgb.XGBClassifier], "model")
+
+        super().__init__(model=model)
 
         self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABS_ERROR
 
         check_objective_supported(model.get_booster(), self.SUPPORTED_OBJECTIVES)
 
-        self.model = model
-
+    @docstrings.doc_inherit_kwargs(
+        AbsoluteErrorConformalPredictor.calibrate,
+        style=docstrings.str_format_merge_style,
+        description="",
+        data_type="np.ndarray or pd.DataFrame",
+        response_type="np.ndarray or pd.Series",
+    )
     def calibrate(
         self,
         data: Union[np.ndarray, pd.DataFrame],
         response: Union[np.ndarray, pd.Series],
         alpha: Union[int, float] = 0.95,
     ) -> None:
-        """Method to calibrate conformal intervals that will be applied
-        to new instances when calling predict_with_interval.
-
-        Calls the parent class calibrate method after extracting the
-        response from the data argument, if response is not passed
-        and data is an xgb.DMatrix object.
-
-        Parameters
-        ----------
-        data : np.ndarray or pd.DataFrame
-            Dataset to calibrate baselines on.
-
-        alpha : int or float, default = 0.95
-            Confidence level for the interval.
-
-        response : np.ndarray, pd.Series or None, default = None
-            The associated response values for every record in data.
-
-        """
 
         check_type(data, [np.ndarray, pd.DataFrame], "data")
 
         super().calibrate(data=data, alpha=alpha, response=response)
+
+    @docstrings.doc_inherit_kwargs(
+        AbsoluteErrorConformalPredictor.predict_with_interval,
+        style=docstrings.str_format_merge_style,
+        description="",
+        data_type="np.ndarray or pd.DataFrame",
+    )
+    def predict_with_interval(
+        self, data: Union[np.ndarray, pd.DataFrame]
+    ) -> np.ndarray:
+
+        check_type(data, [np.ndarray, pd.DataFrame], "data")
+
+        return super().predict_with_interval(data)
 
     def _generate_predictions(
         self, data: Union[np.ndarray, pd.DataFrame]
@@ -297,8 +237,6 @@ class XGBSklearnAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor)
 
         """
 
-        check_type(data, [np.ndarray, pd.DataFrame], "data")
-
         predictions = self.model.predict(
             data, ntree_limit=self.model.best_iteration + 1
         )
@@ -307,105 +245,49 @@ class XGBSklearnAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor)
 
 
 class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor):
-    """Conformal interval predictor for an underlying xgboost model
-    using scaled absolute error as the nonconformity measure.
-
-    Class implements inductive conformal intervals where a calibration
-    dataset is used to learn the information that is used when generating
-    intervals for new instances.
-
-    The predictor outputs varying width intervals for every new instance.
-    The scaling function uses the number of times that the leaf nodes were
-    visited for each tree in making the prediction, for that row, were
-    visited in the calibration dataset.
-
-    Intuitively, for rows that have higher leaf node counts from the calibration
-    set - the model will be more 'familiar' with hence the interval for
-    these rows will be shrunk. The inverse is true for rows that have lower
-    leaf node counts from the calibration set.
-
-    The currently supported xgboost objective functions (given the nonconformity
-    measure that is based on absolute error) are defined in the
-    SUPPORTED_OBJECTIVES attribute.
-
-    Parameters
-    ----------
-    model : xgb.Booster
-        Model to generate predictions with conformal intervals.
-
-    Attributes
-    ----------
-    model : xgb.Booster
-        Model passed in initialisation of the class.
-
-    leaf_node_counts : list
-        Counts of number of times each leaf node in each tree was visited when
-        making predictions on the calibration dataset. Attribute is set when the
-        calibrate method is run, which calls _calibrate_leaf_node_counts. The
-        length of the list corresponds to the number of trees.
-
-    baseline_interval : float
-        Default, baseline conformal interval width. Will be scaled for each
-        prediction generated. Attribute is set when the calibrate method is
-        run, which calls _calibrate_interval.
-
-    alpha : int or float
-        The confidence level of the conformal intervals that will be produced.
-        Attribute is set when the calibrate method is run, which calls
-        _calibrate_interval.
-
-    SUPPORTED_OBJECTIVES : list
-        Booster supported objectives. If an xgb.Booster object is passed using
-        a non-supported objective when initialising the class an an error
-        will be raised.
-
-    """
+    __doc__ = LeafNodeScaledConformalPredictor.__doc__.format(
+        model_type="``xgb.Booster``",
+        description="The currently supported xgboost objective functions, "
+        "given the nonconformity\n    measure that is based on absolute error, are defined "
+        "in the\n    SUPPORTED_OBJECTIVES attribute.",
+        parameters="",
+        attributes="SUPPORTED_OBJECTIVES : list\n"
+        "\tBooster supported objectives. If an ``xgb.Booster`` with a non-supported "
+        "objective\n\tis passed when initialising the class object an error will be raised.",
+        calibrate_method="pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.calibrate",
+    )
 
     def __init__(self, model: xgb.Booster) -> None:
 
         check_type(model, [xgb.Booster], "model")
 
+        super().__init__(model=model)
+
         self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABS_ERROR
 
         check_objective_supported(model, self.SUPPORTED_OBJECTIVES)
 
-        self.model = model
-
-        super().__init__()
-
+    @docstrings.doc_inherit_kwargs(
+        LeafNodeScaledConformalPredictor.calibrate,
+        style=docstrings.str_format_merge_style,
+        description="If ``response`` is not passed then the method will attempt to extract\n\t"
+        "the response values from ``data`` using the ``get_label`` method.",
+        predict_with_interval_method="pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
+        baseline_interval_attribute="baseline_interval",
+        data_type="xgb.DMatrix",
+        response_type="np.ndarray, pd.Series or None, default = None",
+        train_data_type="xgb.DMatrix or None, default = None",
+    )
     def calibrate(
         self,
         data: xgb.DMatrix,
         response: Optional[Union[np.ndarray, pd.Series]] = None,
         alpha: Union[int, float] = 0.95,
+        train_data: Optional[xgb.DMatrix] = None,
     ) -> None:
-        """Method to calibrate conformal intervals that will allow
-        prediction intervals that vary by row.
-
-        Method calls _calibrate_leaf_node_counts to record the number
-        of times each leaf node is visited across the whole of the
-        passed data.
-
-        Method calls _calibrate_interval to set the default interval that
-        will be scaled using the inverse of the noncomformity function
-        when making predictions. This allows intervals to vary by instance.
-
-        Parameters
-        ----------
-        data : xgb.DMatrix
-            Dataset to use to set baselines.
-
-        alpha : int or float, default = 0.95
-            Confidence level for the interval.
-
-        response : np.ndarray, pd.Series or None, default = None
-            The response values for the records in data. If passed as
-            None then the _calibrate_interval function will attempt to extract
-            the response from the data argument with get_label.
-
-        """
 
         check_type(data, [xgb.DMatrix], "data")
+        check_type(train_data, [xgb.DMatrix, type(None)], "train_data")
 
         if response is None:
 
@@ -414,54 +296,20 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
 
             response = data.get_label()
 
-        super().calibrate(data=data, response=response, alpha=alpha)
+        super().calibrate(
+            data=data, response=response, alpha=alpha, train_data=train_data
+        )
 
+    @docstrings.doc_inherit_kwargs(
+        LeafNodeScaledConformalPredictor.predict_with_interval,
+        style=docstrings.str_format_merge_style,
+        data_type="xgb.DMatrix",
+    )
     def predict_with_interval(self, data: xgb.DMatrix) -> np.ndarray:
-        """Method to generate predictions on data with conformal intervals.
-
-        This method runs the xgb.Booster.predict method twice, once to
-        generate predictions and once to produce the leaf node indexes.
-
-        Each prediction is produced with an associated conformal interval.
-        The default interval is of a fixed width and this is scaled
-        differently for each row. Scaling is done, for a given row, by
-        counting the number of times each leaf node, visited to make the
-        prediction, was visited in the calibration dataset. The counts of
-        leaf node visits in the calibration data are set by the
-        _calibrate_leaf_node_counts method.
-
-        The scaling factors, generated by _calculate_scaling_factors, are
-        multiploed by the baseline_interval value. The scaled nonconformity
-        function implements the inverse and divides the absolute error
-        by the scaling factors.
-
-        Parameters
-        ----------
-        data : xgb.DMatrix
-            Data to generate predictions with conformal intervals on.
-
-        Returns
-        -------
-        predictions_with_interval : np.ndarray
-            Array of predictions with intervals for each row in data.
-            Output array will have 3 columns where the first is the
-            lower interval, second are the predictions and the third
-            is the upper interval.
-
-        """
 
         check_type(data, [xgb.DMatrix], "data")
 
-        check_attribute(
-            self,
-            "leaf_node_counts",
-            "XGBoosterLeafNodeScaledConformalPredictor does not have leaf_node_counts"
-            " attribute, run calibrate first.",
-        )
-
-        predictions_with_interval = super().predict_with_interval(data=data)
-
-        return predictions_with_interval
+        return super().predict_with_interval(data=data)
 
     def _generate_predictions(self, data: xgb.DMatrix) -> np.ndarray:
         """Method to generate predictions from the xgboost model.
@@ -518,159 +366,66 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
 
 
 class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor):
-    """Conformal interval predictor for an underlying `xgboost.XGBRegressor`
-    or `xgboost.XGBClassifier` model using scaled absolute error as the
-    nonconformity measure.
-
-    Class implements inductive conformal intervals where a calibration
-    dataset is used to learn the information that is used when generating
-    intervals for new instances.
-
-    The predictor outputs varying width intervals for every new instance.
-    The scaling function uses the number of times that the leaf nodes were
-    visited for each tree in making the prediction, for that row, were
-    visited in the calibration dataset.
-
-    Intuitively, for rows that have higher leaf node counts from the calibration
-    set - the model will be more 'familiar' with hence the interval for
-    these rows will be shrunk. The inverse is true for rows that have lower
-    leaf node counts from the calibration set.
-
-    The currently supported xgboost objective functions (given the nonconformity
-    measure that is based on absolute error) are defined in the
-    SUPPORTED_OBJECTIVES attribute.
-
-    Parameters
-    ----------
-    model : xgb.XGBRegressor or xgb.XGBClassifier
-        Model to generate predictions with conformal intervals.
-
-    Attributes
-    ----------
-    model : xgb.XGBRegressor or xgb.XGBClassifier
-        Model passed in initialisation of the class.
-
-    leaf_node_counts : list
-        Counts of number of times each leaf node in each tree was visited when
-        making predictions on the calibration dataset. Attribute is set when the
-        calibrate method is run, which calls _calibrate_leaf_node_counts. The
-        length of the list corresponds to the number of trees.
-
-    baseline_interval : float
-        Default, baseline conformal interval width. Will be scaled for each
-        prediction generated. Attribute is set when the calibrate method is
-        run, which calls _calibrate_interval.
-
-    alpha : int or float
-        The confidence level of the conformal intervals that will be produced.
-        Attribute is set when the calibrate method is run, which calls
-        _calibrate_interval.
-
-    SUPPORTED_OBJECTIVES : list
-        Booster supported objectives, if an xgb.XGBRegressor or xgb.XGBClassifier
-        with a non-supported objective is passed when initialising an instance
-        of the class an error will be raised.
-
-    """
+    __doc__ = LeafNodeScaledConformalPredictor.__doc__.format(
+        model_type="``xgb.XGBRegressor`` or ``xgb.XGBClassifier``",
+        description="The currently supported xgboost objective functions, "
+        "given the nonconformity\n    measure that is based on absolute error, are defined "
+        "in the\n    SUPPORTED_OBJECTIVES attribute.",
+        parameters="",
+        attributes="SUPPORTED_OBJECTIVES : list\n"
+        "\tBooster supported objectives. If an ``xgb.XGBRegressor`` or ``xgb.XGBClassifier`` "
+        "with a non-supported objective\n\tis passed when initialising the class object an "
+        "error will be raised.",
+        calibrate_method="pitci.xgboost.XGBSklearnLeafNodeScaledConformalPredictor.calibrate",
+    )
 
     def __init__(self, model: Union[xgb.XGBRegressor, xgb.XGBClassifier]) -> None:
 
         check_type(model, [xgb.XGBRegressor, xgb.XGBClassifier], "model")
 
+        super().__init__(model=model)
+
         self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABS_ERROR
 
         check_objective_supported(model.get_booster(), self.SUPPORTED_OBJECTIVES)
 
-        self.model = model
-
-        LeafNodeScaledConformalPredictor.__init__(self)
-
+    @docstrings.doc_inherit_kwargs(
+        LeafNodeScaledConformalPredictor.calibrate,
+        style=docstrings.str_format_merge_style,
+        description="",
+        predict_with_interval_method="pitci.xgboost.XGBSklearnLeafNodeScaledConformalPredictor.predict_with_interval",
+        baseline_interval_attribute="baseline_interval",
+        data_type="np.ndarray or pd.DataFrame",
+        response_type="np.ndarray or pd.Series",
+        train_data_type="np.ndarray, pd.DataFrame or None, default = None",
+    )
     def calibrate(
         self,
         data: Union[np.ndarray, pd.DataFrame],
         response: Union[np.ndarray, pd.Series],
         alpha: Union[int, float] = 0.95,
+        train_data: Union[np.ndarray, pd.DataFrame] = None,
     ) -> None:
-        """Method to calibrate conformal intervals that will allow
-        prediction intervals that vary by row.
-
-        Method calls the LeafNodeScaledConformalPredictor.calibrate
-        method and skips the parent calibrate method.
-
-        Gradnparent calibrate method calls _calibrate_leaf_node_counts
-        to record the numberof times each leaf node is visited across
-        the whole of the passed data.
-
-        Gradnparent calibrate method calls _calibrate_interval to set the
-        default interval that will be scaled using the inverse of the
-        noncomformity function when making predictions. This allows
-        intervals to vary by instance.
-
-        Parameters
-        ----------
-        data : np.ndarray or pd.DataFrame
-            Dataset to use to set baselines.
-
-        alpha : int or float, default = 0.95
-            Confidence level for the interval.
-
-        response : np.ndarray or pd.Series
-            The response values for the records in data.
-
-        """
 
         check_type(data, [np.ndarray, pd.DataFrame], "data")
+        check_type(train_data, [np.ndarray, pd.DataFrame, type(None)], "train_data")
 
-        super().calibrate(data=data, response=response, alpha=alpha)
+        super().calibrate(
+            data=data, response=response, alpha=alpha, train_data=train_data
+        )
 
+    @docstrings.doc_inherit_kwargs(
+        LeafNodeScaledConformalPredictor.predict_with_interval,
+        style=docstrings.str_format_merge_style,
+        data_type="np.ndarray or pd.DataFrame",
+    )
     def predict_with_interval(
         self, data: Union[np.ndarray, pd.DataFrame]
     ) -> np.ndarray:
-        """Method to generate predictions on data with conformal intervals.
-
-        This method runs the underlying model's predict method twice, once to
-        generate predictions and once to produce the leaf node indexes.
-
-        Each prediction is produced with an associated conformal interval.
-        The default interval is of a fixed width and this is scaled
-        differently for each row. Scaling is done, for a given row, by
-        counting the number of times each leaf node, visited to make the
-        prediction, was visited in the calibration dataset. The counts of
-        leaf node visits in the calibration data are set by the
-        _calibrate_leaf_node_counts method.
-
-        The scaling factors, generated by _calculate_scaling_factors, are
-        multiploed by the baseline_interval value. The scaled nonconformity
-        function implements the inverse and divides the absolute error
-        by the scaling factors.
-
-        Parameters
-        ----------
-        data : np.ndarray or pd.DataFrame
-            Data to generate predictions with conformal intervals on.
-
-        Returns
-        -------
-        predictions_with_interval : np.ndarray
-            Array of predictions with intervals for each row in data.
-            Output array will have 3 columns where the first is the
-            lower interval, second are the predictions and the third
-            is the upper interval.
-
-        """
 
         check_type(data, [np.ndarray, pd.DataFrame], "data")
 
-        check_attribute(
-            self,
-            "leaf_node_counts",
-            "XGBSklearnLeafNodeScaledConformalPredictor does not have leaf_node_counts"
-            " attribute, run calibrate first.",
-        )
-
-        predictions_with_interval = super().predict_with_interval(data=data)
-
-        return predictions_with_interval
+        return super().predict_with_interval(data=data)
 
     def _generate_predictions(
         self, data: Union[np.ndarray, pd.DataFrame]
@@ -730,6 +485,58 @@ class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredicto
         return leaf_node_predictions
 
 
+class XGBoosterLeafNodeSplitConformalPredictor(
+    SplitConformalPredictor, XGBoosterLeafNodeScaledConformalPredictor
+):
+    __doc__ = SplitConformalPredictor.__doc__.format(
+        model_type="``xgb.Booster``",
+        description="The currently supported lgboost objective functions, "
+        "given the nonconformity\n    measure that is based on absolute error, are defined "
+        "in the\n    SUPPORTED_OBJECTIVES attribute.",
+        parameters="",
+        calibrate_link="``calibrate``",
+        attributes="SUPPORTED_OBJECTIVES : list\n"
+        "\tBooster supported objectives. If a model with a non-supported "
+        "objective\n\tis passed when initialising the class object an error will be raised.",
+    )
+
+    @docstrings.doc_inherit_kwargs(
+        LeafNodeScaledConformalPredictor.calibrate,
+        style=docstrings.str_format_merge_style,
+        description="If ``response`` is not passed then the method will attempt to extract\n\t"
+        "the response values from ``data`` using the ``get_label`` method.\n\n\t"
+        "The ``baseline_intervals`` are each calibrated to the required ``alpha``\n\t"
+        "level on the subsets of the data where the scaling factor values\n\t"
+        "fall into the range for that particular bucket.",
+        predict_with_interval_method="pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
+        baseline_interval_attribute="baseline_intervals",
+        data_type="xgb.DMatrix",
+        response_type="np.ndarray, pd.Series or None, default = None",
+        train_data_type="xgb.DMatrix or None, default = None",
+    )
+    def calibrate(
+        self,
+        data: xgb.DMatrix,
+        response: Optional[Union[np.ndarray, pd.Series]] = None,
+        alpha: Union[int, float] = 0.95,
+        train_data: Optional[xgb.DMatrix] = None,
+    ) -> None:
+
+        super().calibrate(
+            data=data, response=response, alpha=alpha, train_data=train_data
+        )
+
+    @docstrings.doc_inherit_kwargs(
+        SplitConformalPredictor.predict_with_interval,
+        style=docstrings.str_format_merge_style,
+        predict_with_interval_method="pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
+        data_type="xgb.DMatrix",
+    )
+    def predict_with_interval(self, data: xgb.DMatrix) -> np.ndarray:
+
+        return super().predict_with_interval(data=data)
+
+
 @get_absolute_error_conformal_predictor.register(xgb.Booster)
 def return_xgb_booster_absolute_error_confromal_predictor(
     model: xgb.Booster,
@@ -780,5 +587,18 @@ def return_xgb_sklearn_leaf_node_scaled_confromal_predictor(
     """
 
     confo_model = XGBSklearnLeafNodeScaledConformalPredictor(model=model)
+
+    return confo_model
+
+
+@get_leaf_node_split_conformal_predictor.register(xgb.Booster)
+def return_xgb_booster_leaf_node_split_confromal_predictor(
+    model: xgb.Booster, n_bins: int = 3
+) -> XGBoosterLeafNodeSplitConformalPredictor:
+    """Function to return an instance of XGBoosterLeafNodeSplitConformalPredictor
+    class the passed xgb.Booster object.
+    """
+
+    confo_model = XGBoosterLeafNodeSplitConformalPredictor(model=model, n_bins=n_bins)
 
     return confo_model
