@@ -125,172 +125,31 @@ class TestCalibrate:
                 data=np_2x1_with_label[0], train_data="abcd", response=np.array([1])
             )
 
-    def test_alpha_incorrect_type_error(
-        self, np_2x1_with_label, xgb_regressor_1_split_1_tree
-    ):
-        """Test an exception is raised if alpha is not an int or float."""
-
-        confo_model = XGBSklearnLeafNodeScaledConformalPredictor(
-            xgb_regressor_1_split_1_tree
-        )
-
-        with pytest.raises(
-            TypeError,
-            match=re.escape(
-                f"alpha is not in expected types {[int, float]}, got {str}"
-            ),
-        ):
-
-            confo_model.calibrate(
-                data=np_2x1_with_label[0], alpha="abc", response=np.array([0, 1])
-            )
-
-    def test_response_incorrect_type_error(
-        self, np_2x1_with_label, xgb_regressor_1_split_1_tree
-    ):
-        """Test an exception is raised if response is not a pd.Series or np.ndarray."""
-
-        confo_model = XGBSklearnLeafNodeScaledConformalPredictor(
-            xgb_regressor_1_split_1_tree
-        )
-
-        with pytest.raises(
-            TypeError,
-            match=re.escape(
-                f"response is not in expected types {[pd.Series, np.ndarray]}, got {bool}"
-            ),
-        ):
-
-            confo_model.calibrate(data=np_2x1_with_label[0], alpha=0.5, response=False)
-
-    @pytest.mark.parametrize("alpha", [(-0.0001), (-1), (1.0001), (2), (55)])
-    def test_alpha_value_error(
-        self, np_2x1_with_label, xgb_regressor_1_split_1_tree, alpha
-    ):
-        """Test an exception is raised if alpha is below 0 or greater than 1."""
-
-        confo_model = XGBSklearnLeafNodeScaledConformalPredictor(
-            xgb_regressor_1_split_1_tree
-        )
-
-        with pytest.raises(
-            ValueError, match=re.escape("alpha must be in range [0 ,1]")
-        ):
-
-            confo_model.calibrate(
-                data=np_2x1_with_label[0], alpha=alpha, response=np.array([0, 1])
-            )
-
-    def test_calibrate_leaf_node_counts_call_train_data_passed(
-        self,
-        mocker,
-        np_2x1_with_label,
-        np_4x2_with_label,
-        xgb_regressor_1_split_1_tree,
-    ):
-        """Test LeafNodeScaledConformalPredictor._calibrate_leaf_node_counts call when
-        train_data is passed.
-        """
-
-        confo_model = XGBSklearnLeafNodeScaledConformalPredictor(
-            xgb_regressor_1_split_1_tree
-        )
-
-        mocked = mocker.patch.object(
-            pitci.base.LeafNodeScaledConformalPredictor, "_calibrate_leaf_node_counts"
-        )
-
-        # mock out _calibrate_interval so it does nothing, prevents error
-        mocker.patch.object(
-            pitci.base.LeafNodeScaledConformalPredictor, "_calibrate_interval"
-        )
-
-        confo_model.calibrate(
-            data=np_2x1_with_label[0],
-            train_data=np_4x2_with_label[0],
-            response=np_2x1_with_label[1],
-        )
-
-        assert (
-            mocked.call_count == 1
-        ), "incorrect number of calls to LeafNodeScaledConformalPredictor._calibrate_leaf_node_counts"
-
-        call_args = mocked.call_args_list[0]
-        call_pos_args = call_args[0]
-        call_kwargs = call_args[1]
-
-        assert (
-            call_pos_args == ()
-        ), "positional args incorrect in call to LeafNodeScaledConformalPredictor._calibrate_leaf_node_counts"
-
-        assert list(call_kwargs.keys()) == [
-            "data"
-        ], "incorrect keyword args in call LeafNodeScaledConformalPredictor._calibrate_leaf_node_counts"
-
-        np.testing.assert_array_equal(call_kwargs["data"], np_4x2_with_label[0])
-
-    def test_calibrate_leaf_node_counts_call_train_data_not_passed(
+    def test_super_calibrate_call(
         self, mocker, np_2x1_with_label, xgb_regressor_1_split_1_tree
     ):
-        """Test LeafNodeScaledConformalPredictor._calibrate_leaf_node_counts call when
-        train_data is not passed.
-        """
+        """Test LeafNodeScaledConformalPredictor.calibrate call."""
 
         confo_model = XGBSklearnLeafNodeScaledConformalPredictor(
             xgb_regressor_1_split_1_tree
         )
 
         mocked = mocker.patch.object(
-            pitci.base.LeafNodeScaledConformalPredictor, "_calibrate_leaf_node_counts"
-        )
-
-        # mock out _calibrate_interval so it does nothing, prevents error
-        mocker.patch.object(
-            pitci.base.LeafNodeScaledConformalPredictor, "_calibrate_interval"
-        )
-
-        confo_model.calibrate(data=np_2x1_with_label[0], response=np_2x1_with_label[1])
-
-        assert (
-            mocked.call_count == 1
-        ), "incorrect number of calls to LeafNodeScaledConformalPredictor._calibrate_leaf_node_counts"
-
-        call_args = mocked.call_args_list[0]
-        call_pos_args = call_args[0]
-        call_kwargs = call_args[1]
-
-        assert (
-            call_pos_args == ()
-        ), "positional args incorrect in call to LeafNodeScaledConformalPredictor._calibrate_leaf_node_counts"
-
-        assert list(call_kwargs.keys()) == [
-            "data"
-        ], "incorrect keyword args in call LeafNodeScaledConformalPredictor._calibrate_leaf_node_counts"
-
-        np.testing.assert_array_equal(call_kwargs["data"], np_2x1_with_label[0])
-
-    def test_super_calibrate_interval_call(
-        self, mocker, np_2x1_with_label, xgb_regressor_1_split_1_tree
-    ):
-        """Test LeafNodeScaledConformalPredictor._calibrate_interval call."""
-
-        confo_model = XGBSklearnLeafNodeScaledConformalPredictor(
-            xgb_regressor_1_split_1_tree
-        )
-
-        mocked = mocker.patch.object(
-            pitci.base.LeafNodeScaledConformalPredictor, "_calibrate_interval"
+            pitci.base.LeafNodeScaledConformalPredictor, "calibrate"
         )
 
         response_array = np.array([4, 5])
 
         confo_model.calibrate(
-            data=np_2x1_with_label[0], alpha=0.5, response=response_array
+            data=np_2x1_with_label[0],
+            alpha=0.5,
+            response=response_array,
+            train_data=np_2x1_with_label[1],
         )
 
         assert (
             mocked.call_count == 1
-        ), "incorrect number of calls to LeafNodeScaledConformalPredictor._calibrate_interval"
+        ), "incorrect number of calls to LeafNodeScaledConformalPredictor.calibrate"
 
         call_args = mocked.call_args_list[0]
         call_pos_args = call_args[0]
@@ -298,15 +157,17 @@ class TestCalibrate:
 
         assert (
             call_pos_args == ()
-        ), "positional args incorrect in call to LeafNodeScaledConformalPredictor._calibrate_interval"
+        ), "positional args incorrect in call to LeafNodeScaledConformalPredictor.calibrate"
 
         assert (
             call_kwargs["alpha"] == 0.5
-        ), "alpha incorrect in call to LeafNodeScaledConformalPredictor._calibrate_interval"
+        ), "alpha incorrect in call to LeafNodeScaledConformalPredictor.calibrate"
 
         np.testing.assert_array_equal(call_kwargs["response"], response_array)
 
         np.testing.assert_array_equal(call_kwargs["data"], np_2x1_with_label[0])
+
+        np.testing.assert_array_equal(call_kwargs["train_data"], np_2x1_with_label[1])
 
 
 class TestPredictWithInterval:
