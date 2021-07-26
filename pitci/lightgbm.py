@@ -75,6 +75,7 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
         attributes="SUPPORTED_OBJECTIVES : list\n"
         "\tBooster supported objectives. If a model with a non-supported "
         "objective\n\tis passed when initialising the class object an error will be raised.",
+        calibrate_method="pitci.lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor.calibrate",
     )
 
     def __init__(self, model: lgb.Booster) -> None:

@@ -254,6 +254,7 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
         attributes="SUPPORTED_OBJECTIVES : list\n"
         "\tBooster supported objectives. If an ``xgb.Booster`` with a non-supported "
         "objective\n\tis passed when initialising the class object an error will be raised.",
+        calibrate_method="pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.calibrate",
     )
 
     def __init__(self, model: xgb.Booster) -> None:
@@ -375,6 +376,7 @@ class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredicto
         "\tBooster supported objectives. If an ``xgb.XGBRegressor`` or ``xgb.XGBClassifier`` "
         "with a non-supported objective\n\tis passed when initialising the class object an "
         "error will be raised.",
+        calibrate_method="pitci.xgboost.XGBSklearnLeafNodeScaledConformalPredictor.calibrate",
     )
 
     def __init__(self, model: Union[xgb.XGBRegressor, xgb.XGBClassifier]) -> None:

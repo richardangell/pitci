@@ -48,8 +48,9 @@ class AbsoluteErrorConformalPredictor(ABC):
         The underlying {model_type} model passed in initialising the object.
 
     baseline_interval : float
-        The default or baseline conformal half interval width. Will be scaled
-        for each prediction generated.
+        The default or baseline conformal half interval width. Will be applied
+        without modification to provide an interval for all new instances. Attribute
+        is set when the {calibrate_link} method is run.
 
     alpha : int or float
         The confidence level of the conformal intervals that will be produced.
@@ -205,15 +206,18 @@ class LeafNodeScaledConformalPredictor(ABC):
     dataset is used to learn the information that is used when generating
     intervals for new instances.
 
-    The predictor outputs varying width intervals for every new instance.
-    The scaling function uses the number of times that the leaf nodes were
-    visited for each tree in making the prediction, for that row, were
-    visited in the calibration dataset.
+    The predictor outputs varying width intervals for every new instance. This
+    is done by multiplying the ``baseline_interval`` by a scaling factor that
+    depends on the input ``data``. The scaling function uses the reciporcal of
+    the number of times that the leaf nodes using in making each prediction
+    were visited on the calibration dataset, or when the underlying model was
+    trained - see the ``train_data`` argument for the :func:`~{calibrate_method}`
+    method.
 
-    Intuitively, for rows that have higher leaf node counts from the calibration
-    set - the model will be more 'familiar' with hence the interval for
-    these rows will be shrunk. The inverse is true for rows that have lower
-    leaf node counts from the calibration set.
+    The intuition behind this is that for rows that have higher leaf node counts
+    from the calibration set - the model will be more 'familiar' with hence
+    the interval for these rows should be smaller. The inverse is true for rows
+    that have lower leaf node counts from the calibration set.
 
     {description}
 
@@ -246,7 +250,7 @@ class LeafNodeScaledConformalPredictor(ABC):
     alpha : int or float
         The confidence level of the conformal intervals that will be produced.
         Attribute is set when ``_calibrate_interval`` is called by the
-        :func:`~pitci.base.LeafNodeScaledConformalPredictor.calibrate` method.
+        :func:`~{calibrate_method}` method.
 
     {attributes}
 
@@ -280,12 +284,12 @@ class LeafNodeScaledConformalPredictor(ABC):
 
         The user has the option to specify the training sample that was used
         to buid the model in the ``train_data`` argument. This is to allow the
-        leaf node counts to be calibrated on the same data, as the underlying
+        ``leaf_node_counts`` to be calibrated on the same data, as the underlying
         model was built on, rather than a separate calibration set which is what
         will be passed in the ``data`` argument. The default interval width for a given
         ``alpha`` has to be set on a separate sample to what was used to build the model.
         If not, the errors will be smaller than they otherwise would be, on a sample
-        the underlying model has not seen before. However for the leaf node counts,
+        the underlying model has not seen before. However for the ``leaf_node_counts``,
         ideally we want counts from the train sample - we're not 'learning' anything
         new here, just recreating stats from when the model was built originally.
 
@@ -303,7 +307,7 @@ class LeafNodeScaledConformalPredictor(ABC):
             Confidence level for the intervals.
 
         train_data : {train_data_type}
-            Optional dataset that can be passed to set baseline leaf node counts
+            Optional dataset that can be passed to set baseline ``leaf_node_counts``
             from, separate to the ``data`` arg used to set ``{baseline_interval_attribute}``
             width.
 

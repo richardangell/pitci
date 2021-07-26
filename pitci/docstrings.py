@@ -73,6 +73,7 @@ def _format_leaf_node_scaled_absolute_error_conformal_predictor() -> None:
         description="",
         parameters="",
         attributes="",
+        calibrate_method="pitci.base.LeafNodeScaledConformalPredictor.calibrate",
     )
 
     _str_format_docstring(
