@@ -173,7 +173,7 @@ class TestGetLeafNodeSplitConformalPredictor:
         """
 
         confo_model = dispatchers.get_leaf_node_split_conformal_predictor(
-            xgboost_1_split_1_tree
+            xgboost_1_split_1_tree, 5
         )
 
         assert (
@@ -185,13 +185,18 @@ class TestGetLeafNodeSplitConformalPredictor:
             "from get_leaf_node_scaled_conformal_predictor"
         )
 
+        assert confo_model.n_bins == 5, (
+            "passed n_bins arg not set to n_bins attribute of object returned "
+            "from get_leaf_node_split_conformal_predictor"
+        )
+
     def test_lgb_booster(self, lgb_booster_1_split_1_tree):
         """Test an LGBMBoosterLeafNodeSplitConformalPredictor object is returned if
         and lgb.Booster is passed.
         """
 
         confo_model = dispatchers.get_leaf_node_split_conformal_predictor(
-            lgb_booster_1_split_1_tree
+            lgb_booster_1_split_1_tree, 8
         )
 
         assert (
@@ -200,6 +205,11 @@ class TestGetLeafNodeSplitConformalPredictor:
 
         assert confo_model.model is lgb_booster_1_split_1_tree, (
             "passed model arg not set to model attribute of object returned "
+            "from get_leaf_node_split_conformal_predictor"
+        )
+
+        assert confo_model.n_bins == 8, (
+            "passed n_bins arg not set to n_bins attribute of object returned "
             "from get_leaf_node_split_conformal_predictor"
         )
 
