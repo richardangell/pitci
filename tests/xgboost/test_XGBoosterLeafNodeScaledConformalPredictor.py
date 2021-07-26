@@ -113,48 +113,6 @@ class TestCalibrate:
 
             confo_model.calibrate(data=dmatrix_2x1_with_label, train_data="abcd")
 
-    def test_calibrate_leaf_node_counts_call_train_data_passed(
-        self,
-        mocker,
-        dmatrix_2x1_with_label,
-        dmatrix_4x2_with_label,
-        xgboost_1_split_1_tree,
-    ):
-        """Test LeafNodeScaledConformalPredictor._calibrate_leaf_node_counts call when
-        train_data is passed.
-        """
-
-        confo_model = XGBoosterLeafNodeScaledConformalPredictor(xgboost_1_split_1_tree)
-
-        mocked = mocker.patch.object(
-            pitci.base.LeafNodeScaledConformalPredictor, "_calibrate_leaf_node_counts"
-        )
-
-        # mock out _calibrate_interval so it does nothing, prevents error
-        mocker.patch.object(
-            pitci.base.LeafNodeScaledConformalPredictor, "_calibrate_interval"
-        )
-
-        confo_model.calibrate(
-            data=dmatrix_2x1_with_label, train_data=dmatrix_4x2_with_label
-        )
-
-        assert (
-            mocked.call_count == 1
-        ), "incorrect number of calls to XGBoosterLeafNodeScaledConformalPredictor._calibrate_leaf_node_counts"
-
-        call_args = mocked.call_args_list[0]
-        call_pos_args = call_args[0]
-        call_kwargs = call_args[1]
-
-        assert (
-            call_pos_args == ()
-        ), "positional args incorrect in call to XGBoosterLeafNodeScaledConformalPredictor._calibrate_leaf_node_counts"
-
-        assert call_kwargs == {
-            "data": dmatrix_4x2_with_label
-        }, "positional args incorrect in call to XGBoosterLeafNodeScaledConformalPredictor._calibrate_leaf_node_counts"
-
     def test_super_calibrate_call_no_response_passed(
         self,
         mocker,
