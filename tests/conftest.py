@@ -257,3 +257,53 @@ def breast_cancer_xgb_data(split_breast_cancer_data_into_4):
     """Create 4 xgb.DMatrix objects for the data samples created in split_breast_cancer_data_into_4."""
 
     return create_4_DMatrices(split_breast_cancer_data_into_4)
+
+
+@pytest.fixture(scope="session")
+def xgbooster_diabetes_model(diabetes_xgb_data):
+    """Build a non-trivial xgboost model on a sample of the diabetes dataset."""
+
+    model = xgb.train(
+        params={"max_depth": 5, "eta": 0.05, "seed": 0},
+        dtrain=diabetes_xgb_data[0],
+        num_boost_round=50,
+        verbose_eval=False,
+    )
+
+    return model
+
+
+@pytest.fixture(scope="session")
+def xgbregressor_diabetes_model(split_diabetes_data_into_4):
+    """Build a non-trivial xgboost (xgb.Regressor) model on a sample of the diabetes dataset."""
+
+    model = xgb.XGBRegressor(
+        max_depth=5, eta=0.05, n_estimators=50, seed=0, verbose_eval=False
+    )
+
+    model.fit(
+        X=split_diabetes_data_into_4[0],
+        y=split_diabetes_data_into_4[1],
+    )
+
+    return model
+
+
+@pytest.fixture(scope="session")
+def lgbmbooster_diabetes_model(diabetes_lgb_data):
+    """Build a non-trivial lightgbm model on a sample of the diabetes dataset."""
+
+    model = lgb.train(
+        params={
+            "objective": "regression",
+            "max_depth": 5,
+            "learning_rate": 0.1,
+            "seed": 0,
+            "verbosity": -1,
+        },
+        train_set=diabetes_lgb_data[0],
+        num_boost_round=50,
+        verbose_eval=False,
+    )
+
+    return model

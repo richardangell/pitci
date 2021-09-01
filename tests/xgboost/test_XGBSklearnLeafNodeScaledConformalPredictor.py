@@ -394,3 +394,63 @@ class TestGenerateLeafNodePredictions:
         )
 
         np.testing.assert_array_equal(results, expected_results)
+
+
+class TestConformalPredictionValues:
+    """Baseline tests of the conformal predictions from the
+    XGBSklearnLeafNodeScaledConformalPredictor class.
+    """
+
+    def test_conformal_predictions(
+        self, xgbregressor_diabetes_model, split_diabetes_data_into_4
+    ):
+        """Test that the conformal intervals are as expected."""
+
+        confo_model = pitci.get_leaf_node_scaled_conformal_predictor(
+            xgbregressor_diabetes_model
+        )
+
+        confo_model.calibrate(
+            data=split_diabetes_data_into_4[6],
+            alpha=0.8,
+            response=split_diabetes_data_into_4[7],
+        )
+
+        assert (
+            round(float(confo_model.baseline_interval), 7) == 40748.1420135
+        ), "baseline_interval not calculated as expected on diabetes dataset"
+
+        predictions_test = confo_model.predict_with_interval(
+            split_diabetes_data_into_4[6]
+        )
+
+        assert (
+            round(float(predictions_test[:, 1].mean()), 7) == 145.7608841
+        ), "mean test sample predicted value not calculated as expected on diabetes dataset"
+
+        expected_interval_distribution = {
+            0.0: 140.02797942800623,
+            0.05: 145.8006552442658,
+            0.1: 151.14593459541626,
+            0.2: 158.44710522148077,
+            0.3: 165.58360738740058,
+            0.4: 188.65287738029468,
+            0.5: 201.22539265950525,
+            0.6: 211.24333094728453,
+            0.7: 220.97846697124837,
+            0.8: 253.94202300019322,
+            0.9: 301.85483776649556,
+            0.95: 309.8718023844092,
+            1.0: 422.26053900051613,
+            "mean": 212.18189767837418,
+            "std": 62.11965233604742,
+            "iqr": 74.97402168228058,
+        }
+
+        actual_interval_distribution = pitci.helpers.check_interval_width(
+            intervals_with_predictions=predictions_test
+        ).to_dict()
+
+        assert (
+            expected_interval_distribution == actual_interval_distribution
+        ), "conformal interval distribution not calculated as expected"

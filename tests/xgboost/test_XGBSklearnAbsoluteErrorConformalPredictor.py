@@ -238,3 +238,63 @@ class TestGeneratePredictions:
         assert call_kwargs == {
             "ntree_limit": xgb_regressor_1_split_1_tree.best_iteration + 1
         }, "positional args incorrect in call to AbsoluteErrorConformalPredictor.calibrate"
+
+
+class TestConformalPredictionValues:
+    """Baseline tests of the conformal predictions from the
+    XGBSklearnAbsoluteErrorConformalPredictor class.
+    """
+
+    def test_conformal_predictions(
+        self, xgbregressor_diabetes_model, split_diabetes_data_into_4
+    ):
+        """Test that the conformal intervals are as expected."""
+
+        confo_model = pitci.get_absolute_error_conformal_predictor(
+            xgbregressor_diabetes_model
+        )
+
+        confo_model.calibrate(
+            data=split_diabetes_data_into_4[6],
+            alpha=0.8,
+            response=split_diabetes_data_into_4[7],
+        )
+
+        assert (
+            round(float(confo_model.baseline_interval), 7) == 89.2551117
+        ), "baseline_interval not calculated as expected on diabetes dataset"
+
+        predictions_test = confo_model.predict_with_interval(
+            split_diabetes_data_into_4[6]
+        )
+
+        assert (
+            round(float(predictions_test[:, 1].mean()), 7) == 145.7608795
+        ), "mean test sample predicted value not calculated as expected on diabetes dataset"
+
+        expected_interval_distribution = {
+            0.0: 178.5102081298828,
+            0.05: 178.5102081298828,
+            0.1: 178.51022338867188,
+            0.2: 178.51022338867188,
+            0.3: 178.51022338867188,
+            0.4: 178.51022338867188,
+            0.5: 178.51022338867188,
+            0.6: 178.51022338867188,
+            0.7: 178.51022338867188,
+            0.8: 178.51022338867188,
+            0.9: 178.51022644042968,
+            0.95: 178.51023864746094,
+            1.0: 178.51023864746094,
+            "mean": 178.51019287109375,
+            "std": 6.4099735936906654e-06,
+            "iqr": 0.0,
+        }
+
+        actual_interval_distribution = pitci.helpers.check_interval_width(
+            intervals_with_predictions=predictions_test
+        ).to_dict()
+
+        assert (
+            expected_interval_distribution == actual_interval_distribution
+        ), "conformal interval distribution not calculated as expected"
