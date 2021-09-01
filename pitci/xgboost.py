@@ -339,6 +339,7 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
     @docstrings.doc_inherit_kwargs(
         LeafNodeScaledConformalPredictor.predict_with_interval,
         style=docstrings.str_format_merge_style,
+        description="temp",
         data_type="xgb.DMatrix",
     )
     def predict_with_interval(self, data: xgb.DMatrix) -> np.ndarray:
@@ -453,6 +454,7 @@ class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredicto
     @docstrings.doc_inherit_kwargs(
         LeafNodeScaledConformalPredictor.predict_with_interval,
         style=docstrings.str_format_merge_style,
+        description="temp",
         data_type="np.ndarray or pd.DataFrame",
     )
     def predict_with_interval(
