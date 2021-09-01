@@ -261,7 +261,9 @@ class XGBSklearnAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor)
 
         return predictions
 
-    def _calculate_scaling_factors(self, data: xgb.DMatrix) -> np.ndarray:
+    def _calculate_scaling_factors(
+        self, data: Union[np.ndarray, pd.DataFrame]
+    ) -> np.ndarray:
         """Calculate scaling factors for input data.
 
         This class does not implement varying prediction intervals so
