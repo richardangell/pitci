@@ -19,46 +19,8 @@ from . import nonconformity
 from . import docstrings
 
 
-class AbsoluteErrorConformalPredictor(ABC):
-    """Conformal interval predictor for an underlying {model_type} model using absolute
-    error as the nonconformity measure.
-
-    Class implements inductive conformal intervals where a calibration
-    dataset is used to learn the information that is used when generating
-    intervals for new instances.
-
-    The predictor outputs fixed width intervals for every new instance,
-    there is no interval scaling implemented in this class.
-
-    {description}
-
-    Parameters
-    ----------
-    model : {model_type}
-        Underlying {model_type} model to generate prediction intervals with.
-
-    {parameters}
-
-    Attributes
-    ----------
-    __version__ : str
-        The version of the ``pitci`` package that generated the object.
-
-    model : {model_type}
-        The underlying {model_type} model passed in initialising the object.
-
-    baseline_interval : float
-        The default or baseline conformal half interval width. Will be applied
-        without modification to provide an interval for all new instances. Attribute
-        is set when the {calibrate_link} method is run.
-
-    alpha : int or float
-        The confidence level of the conformal intervals that will be produced.
-        Attribute is set when the {calibrate_link} method is run.
-
-    {attributes}
-
-    """
+class ConformalPredictor(ABC):
+    """Base class for all predictors in the package."""
 
     __doc__: str
 
@@ -133,8 +95,10 @@ class AbsoluteErrorConformalPredictor(ABC):
 
         n_preds = predictions.shape[0]
 
-        lower_interval = predictions - self.baseline_interval
-        upper_interval = predictions + self.baseline_interval
+        scaling_factors = self._calculate_scaling_factors(data)
+
+        lower_interval = predictions - (self.baseline_interval * scaling_factors)
+        upper_interval = predictions + (self.baseline_interval * scaling_factors)
 
         predictions_with_interval = np.concatenate(
             (
@@ -146,19 +110,6 @@ class AbsoluteErrorConformalPredictor(ABC):
         )
 
         return predictions_with_interval
-
-    @abstractmethod
-    def _generate_predictions(self, data: Any) -> np.ndarray:
-        """Generate predictions with underlying model.
-
-        Parameters
-        ----------
-        data : Any
-            Dataset to generate predictions for.
-
-        """
-
-        pass
 
     def _calibrate_interval(
         self,
@@ -189,13 +140,117 @@ class AbsoluteErrorConformalPredictor(ABC):
 
         predictions = self._generate_predictions(data)
 
-        nonconformity_values = nonconformity.absolute_error(
-            predictions=predictions, response=response
+        scaling_factors = self._calculate_scaling_factors(data)
+
+        nonconformity_values = self._calculate_nonconformity_scores(
+            predictions, response, scaling_factors
         )
 
         self.baseline_interval = nonconformity.nonconformity_at_alpha(
             nonconformity_values, alpha
         )
+
+    @abstractmethod
+    def _generate_predictions(self, data: Any) -> np.ndarray:
+        """Generate predictions with underlying model.
+
+        Parameters
+        ----------
+        data : Any
+            Dataset to generate predictions for.
+
+        """
+
+        # this method should be implemented within a grandchild class
+        # that specialises this class for a specific modelling library
+        # (e.g. XGBoosterAbsoluteErrorConformalPredictor)
+        pass
+
+    @abstractmethod
+    def _calculate_nonconformity_scores(self, predictions, response, scaling_factors):
+        """Calculate nonconformity scores between predictions and actual response."""
+
+        # this method should be implemented within a grandchild class
+        # that specialises this class for a specific modelling library
+        # (e.g. XGBoosterAbsoluteErrorConformalPredictor)
+        pass
+
+    @abstractmethod
+    def _calculate_scaling_factors(self, data: Any):
+        """Calculate scaling factors."""
+
+        # this method should be implemented within a child class
+        # that creates a specific type of conformal predictor
+        # base class (e.g. AbsoluteErrorConformalPredictor)
+        pass
+
+
+class AbsoluteErrorConformalPredictor(ConformalPredictor):
+    """Conformal interval predictor for an underlying {model_type} model using absolute
+    error as the nonconformity measure.
+
+    Class implements inductive conformal intervals where a calibration
+    dataset is used to learn the information that is used when generating
+    intervals for new instances.
+
+    The predictor outputs fixed width intervals for every new instance,
+    there is no interval scaling implemented in this class.
+
+    {description}
+
+    Parameters
+    ----------
+    model : {model_type}
+        Underlying {model_type} model to generate prediction intervals with.
+
+    {parameters}
+
+    Attributes
+    ----------
+    __version__ : str
+        The version of the ``pitci`` package that generated the object.
+
+    model : {model_type}
+        The underlying {model_type} model passed in initialising the object.
+
+    baseline_interval : float
+        The default or baseline conformal half interval width. Will be applied
+        without modification to provide an interval for all new instances. Attribute
+        is set when the {calibrate_link} method is run.
+
+    alpha : int or float
+        The confidence level of the conformal intervals that will be produced.
+        Attribute is set when the {calibrate_link} method is run.
+
+    {attributes}
+
+    """
+
+    def _calculate_nonconformity_scores(self, predictions, response, scaling_factors):
+        """Calculate scaled nonconformity scores for predictions and response.
+
+        This class does not implement varying prediction intervals so
+        the scaling factors returned from this method are constant
+        values of one for each record in ``data``.
+
+        Parameters
+        ----------
+        predictions : Any
+            Predictions for each value in ``response``.
+
+        response : Any
+            True response values.
+
+        scaling_factors : Any
+            Scaling factors associated with each prediction.
+
+        """
+
+        nonconformity_values = nonconformity.scaled_absolute_error(
+            predictions=predictions, response=response, scaling=scaling_factors
+        )
+
+        return nonconformity_values
 
 
 class LeafNodeScaledConformalPredictor(ABC):
