@@ -97,8 +97,10 @@ class ConformalPredictor(ABC):
 
         scaling_factors = self._calculate_scaling_factors(data)
 
-        lower_interval = predictions - (self.baseline_interval * scaling_factors)
-        upper_interval = predictions + (self.baseline_interval * scaling_factors)
+        baseline_interval = self._lookup_baseline_interval(scaling_factors)
+
+        lower_interval = predictions - (baseline_interval * scaling_factors)
+        upper_interval = predictions + (baseline_interval * scaling_factors)
 
         predictions_with_interval = np.concatenate(
             (
@@ -110,6 +112,35 @@ class ConformalPredictor(ABC):
         )
 
         return predictions_with_interval
+
+    def _lookup_baseline_interval(
+        self, scaling_factors: Any
+    ) -> Union[float, np.ndarray]:
+        """Return the baseline_interval value to form the basis
+        of the conformal interval about predicted values.
+
+        This is implemented so the split conformal predictor classes
+        can overwrite this method with their own version which looks
+        up the baseline interval value depending on each value passed
+        in ``scaling_factors``.
+
+        Parameters
+        ----------
+        scaling_factors : Any
+            The scaling factors for each data point being predicted.
+
+        Returns
+        -------
+        float or np.ndarray
+            The baseline interval value that will be used as the basis
+            of the conformal interval for all predictions. When this
+            method is overwritten for the split conformal predictor
+            classes, this method should return an array of baseline
+            intervals that depend on the scaling factors.
+
+        """
+
+        return self.baseline_interval
 
     def _calibrate_interval(
         self,
