@@ -271,7 +271,7 @@ class AbsoluteErrorConformalPredictor(ConformalPredictor):
         return 1
 
 
-class LeafNodeScaledConformalPredictor(ABC):
+class LeafNodeScaledConformalPredictor(ConformalPredictor):
     """Conformal interval predictor for an underlying {model_type} model using
     absolute error scaled by leaf node counts as the nonconformity measure.
 
@@ -331,12 +331,6 @@ class LeafNodeScaledConformalPredictor(ABC):
 
     leaf_node_counts: list
     __doc__: str
-
-    @abstractmethod
-    def __init__(self, model: Any) -> None:
-
-        self.__version__ = __version__
-        self.model = model
 
     def calibrate(
         self,
@@ -402,101 +396,6 @@ class LeafNodeScaledConformalPredictor(ABC):
             self._calibrate_leaf_node_counts(data=train_data)
 
         self._calibrate_interval(data=data, alpha=alpha, response=response)
-
-    def predict_with_interval(self, data: Any) -> np.ndarray:
-        """Generate predictions with conformal intervals for the passed ``data``.
-
-        Each prediction is produced with an associated conformal interval.
-        The default interval is of a fixed width (``baseline_interval`` attribute) and
-        this is scaled differently for each row. The scaling factors are calculated by
-        counting the number of times each leaf node, visited to make the prediction,
-        was visited in the calibration dataset - looking up values from the
-        ``leaf_node_counts`` list.
-
-        Parameters
-        ----------
-        data : {data_type}
-            Data to generate predictions with conformal intervals on.
-
-        Returns
-        -------
-        predictions_with_interval : np.ndarray
-            Array of predictions with intervals for each row in ``data``.
-            Output array will have 3 columns where the first is the
-            lower interval, second are the predictions and the third
-            is the upper interval.
-
-        """
-
-        check_attribute(
-            self,
-            "baseline_interval",
-            "LeafNodeScaledConformalPredictor does not have baseline_interval attribute, "
-            "run calibrate first.",
-        )
-
-        predictions = self._generate_predictions(data)
-
-        n_preds = predictions.shape[0]
-
-        scaling_factors = self._calculate_scaling_factors(data)
-
-        lower_interval = predictions - (self.baseline_interval * scaling_factors)
-        upper_interval = predictions + (self.baseline_interval * scaling_factors)
-
-        predictions_with_interval = np.concatenate(
-            (
-                lower_interval.reshape((n_preds, 1)),
-                predictions.reshape((n_preds, 1)),
-                upper_interval.reshape((n_preds, 1)),
-            ),
-            axis=1,
-        )
-
-        return predictions_with_interval
-
-    def _calibrate_interval(
-        self,
-        data: Any,
-        response: Union[np.ndarray, pd.Series],
-        alpha: Union[int, float] = 0.95,
-    ) -> None:
-        """Method to set the baseline conformal interval.
-
-        This is the default interval that will be scaled for differently
-        for each row.
-
-        Result is stored in the ``baseline_interval`` attribute.
-
-        The value passed in ``alpha`` is also stored in an attribute of the
-        same name.
-
-        Parameters
-        ----------
-        data : Any
-            Dataset to use to set baseline interval width.
-
-        alpha : int or float, default = 0.95
-            Confidence level for the interval.
-
-        response : np.ndarray or pd.Series
-            The response values for the records in data.
-
-        """
-
-        self.alpha = alpha
-
-        predictions = predictions = self._generate_predictions(data)
-
-        scaling_factors = self._calculate_scaling_factors(data)
-
-        nonconformity_values = nonconformity.scaled_absolute_error(
-            predictions=predictions, response=response, scaling=scaling_factors
-        )
-
-        self.baseline_interval = nonconformity.nonconformity_at_alpha(
-            nonconformity_values, alpha
-        )
 
     def _calculate_scaling_factors(self, data: Any) -> np.ndarray:
         """Calculate the scaling factors for a given dataset.
@@ -603,19 +502,6 @@ class LeafNodeScaledConformalPredictor(ABC):
             )
 
     @abstractmethod
-    def _generate_predictions(self, data: Any) -> np.ndarray:
-        """Generate predictions with underlying model.
-
-        Parameters
-        ----------
-        data : Any
-            Data to generate predictions on.
-
-        """
-
-        pass
-
-    @abstractmethod
     def _generate_leaf_node_predictions(self, data: Any) -> np.ndarray:
         """Generate leaf node predictions with underlying model.
 
@@ -631,6 +517,32 @@ class LeafNodeScaledConformalPredictor(ABC):
         """
 
         pass
+
+    def _calculate_nonconformity_scores(self, predictions, response, scaling_factors):
+        """Calculate scaled nonconformity scores for predictions and response.
+
+        This class does not implement varying prediction intervals so
+        the scaling factors returned from this method are constant
+        values of one for each record in ``data``.
+
+        Parameters
+        ----------
+        predictions : Any
+            Predictions for each value in ``response``.
+
+        response : Any
+            True response values.
+
+        scaling_factors : Any
+            Scaling factors associated with each prediction.
+
+        """
+
+        nonconformity_values = nonconformity.scaled_absolute_error(
+            predictions=predictions, response=response, scaling=scaling_factors
+        )
+
+        return nonconformity_values
 
 
 def _sum_dict_values(arr: np.ndarray, counts: List[Dict[int, int]]) -> int:
