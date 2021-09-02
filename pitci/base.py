@@ -252,6 +252,24 @@ class AbsoluteErrorConformalPredictor(ConformalPredictor):
 
         return nonconformity_values
 
+    def _calculate_scaling_factors(self, data: Any) -> int:
+        """Calculate scaling factors for input data.
+
+        This class does not implement varying prediction intervals so
+        the scaling factors returned from this method are a constant
+        value of one. It is not even neccessary to return an array of ones
+        as numpy will apply the half interval width to each prediction
+        in the ``predict_with_interval`` method.
+
+        Parameters
+        ----------
+        data : Any
+            Dataset to calculate scaling factors for.
+
+        """
+
+        return 1
+
 
 class LeafNodeScaledConformalPredictor(ABC):
     """Conformal interval predictor for an underlying {model_type} model using

@@ -144,24 +144,6 @@ class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
 
         return super().predict_with_interval(data)
 
-    def _calculate_scaling_factors(self, data: xgb.DMatrix) -> np.ndarray:
-        """Calculate scaling factors for input data.
-
-        This class does not implement varying prediction intervals so
-        the scaling factors returned from this method are constant
-        values of one for each record in ``data``.
-
-        Parameters
-        ----------
-        data : Any
-            Dataset to generate predictions for.
-
-        """
-
-        check_type(data, [xgb.DMatrix], "data")
-
-        return np.ones(data.num_row())
-
     def _generate_predictions(self, data: xgb.DMatrix) -> np.ndarray:
         """Generate predictions from the xgboost model.
 
@@ -260,26 +242,6 @@ class XGBSklearnAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor)
         )
 
         return predictions
-
-    def _calculate_scaling_factors(
-        self, data: Union[np.ndarray, pd.DataFrame]
-    ) -> np.ndarray:
-        """Calculate scaling factors for input data.
-
-        This class does not implement varying prediction intervals so
-        the scaling factors returned from this method are constant
-        values of one for each record in ``data``.
-
-        Parameters
-        ----------
-        data : Any
-            Dataset to generate predictions for.
-
-        """
-
-        check_type(data, [np.ndarray, pd.DataFrame], "data")
-
-        return np.ones(data.shape[0])
 
 
 class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor):
