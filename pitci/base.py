@@ -16,7 +16,6 @@ from .checks import (
     check_attribute,
 )
 from . import nonconformity
-from . import docstrings
 
 
 class ConformalPredictor(ABC):
@@ -626,7 +625,7 @@ def _sum_dict_values(arr: np.ndarray, counts: List[Dict[int, int]]) -> int:
     return total
 
 
-class SplitConformalPredictor(LeafNodeScaledConformalPredictor):
+class SplitConformalPredictorMixin:
     """Conformal interval predictor for an underlying {model_type} model using
     absolute error scaled by leaf node counts as the nonconformity measure.
     Intervals are also split into bins based off the scaling factors and
@@ -714,30 +713,6 @@ class SplitConformalPredictor(LeafNodeScaledConformalPredictor):
 
         super().__init__(model=model)
 
-    @docstrings.doc_inherit_kwargs(
-        LeafNodeScaledConformalPredictor.calibrate,
-        style=docstrings.str_format_merge_style,
-        description="The ``baseline_intervals`` are each calibrated to the required ``alpha``\n\t"
-        "level on the subsets of the data where the scaling factor values\n\t"
-        "fall into the range for that particular bucket.",
-        predict_with_interval_method=":func:`~pitci.base.LeafNodeScaledConformalPredictor.predict_with_interval`",
-        baseline_interval_attribute="baseline_intervals",
-        data_type="Any",
-        response_type="np.ndarray or pd.Series",
-        train_data_type="Any, default = None",
-    )
-    def calibrate(
-        self,
-        data: Any,
-        response: Union[np.ndarray, pd.Series],
-        alpha: Union[int, float] = 0.95,
-        train_data: Optional[Any] = None,
-    ) -> None:
-
-        super().calibrate(
-            data=data, response=response, alpha=alpha, train_data=train_data
-        )
-
     def _calibrate_interval(
         self,
         data: Any,
@@ -780,12 +755,12 @@ class SplitConformalPredictor(LeafNodeScaledConformalPredictor):
 
         self.alpha = alpha
 
-        predictions = predictions = self._generate_predictions(data)
+        predictions = self._generate_predictions(data)
 
         scaling_factors = self._calculate_scaling_factors(data)
 
-        nonconformity_values = nonconformity.scaled_absolute_error(
-            predictions=predictions, response=response, scaling=scaling_factors
+        nonconformity_values = self._calculate_nonconformity_scores(
+            predictions, response, scaling_factors
         )
 
         scaling_factor_cut_points = np.quantile(scaling_factors, self.bin_quantiles)
@@ -816,69 +791,9 @@ class SplitConformalPredictor(LeafNodeScaledConformalPredictor):
 
             baseline_intervals.append(bin_quantile)
 
-        self.baseline_intervals = np.array(baseline_intervals)
+        self.baseline_interval = np.array(baseline_intervals)
 
         self._check_interval_monotonicity()
-
-    def predict_with_interval(self, data: Any) -> np.ndarray:
-        """Generate predictions with conformal intervals for the passed ``data``.
-
-        Each prediction is produced with an associated conformal interval.
-        The default intervals are of a fixed width (``baseline_intervals`` attribute) and
-        this is scaled differently for each row. The scaling factors are calculated by
-        counting the number of times each leaf node, visited to make the prediction,
-        was visited in the calibration dataset - looking up values from the
-        ``leaf_node_counts`` list. For the ``SplitConformalPredictor`` class
-        the baseline intervals also depend on the sclaing factors - rather than
-        there being one interval as in the ``LeafNodeScaledConformalPredictor``
-        class.
-
-        The method is very similar to the :func:`~{predict_with_interval_method}`
-        method, with the only difference being that the baseline interval is looked up
-        from the possible values using the scaling factors for each row.
-
-        Parameters
-        ----------
-        data : {data_type}
-            Data to generate predictions with conformal intervals on.
-
-        Returns
-        -------
-        predictions_with_interval : np.ndarray
-            Array of predictions with intervals for each row in ``data``.
-            Output array will have 3 columns where the first is the
-            lower interval, second are the predictions and the third
-            is the upper interval.
-
-        """
-
-        check_attribute(
-            self,
-            "baseline_intervals",
-            "object does not have baseline_intervals attribute, run calibrate first.",
-        )
-
-        predictions = self._generate_predictions(data)
-
-        n_preds = predictions.shape[0]
-
-        scaling_factors = self._calculate_scaling_factors(data)
-
-        baseline_interval = self._lookup_baseline_interval(scaling_factors)
-
-        lower_interval = predictions - (baseline_interval * scaling_factors)
-        upper_interval = predictions + (baseline_interval * scaling_factors)
-
-        predictions_with_interval = np.concatenate(
-            (
-                lower_interval.reshape((n_preds, 1)),
-                predictions.reshape((n_preds, 1)),
-                upper_interval.reshape((n_preds, 1)),
-            ),
-            axis=1,
-        )
-
-        return predictions_with_interval
 
     def _lookup_baseline_interval(self, scaling_factors: Any) -> np.ndarray:
         """Lookup the baseline intervals to use given the scaling factor
@@ -902,7 +817,7 @@ class SplitConformalPredictor(LeafNodeScaledConformalPredictor):
 
         bin_index_lookup = np.clip(bin_index_lookup, a_min=1, a_max=self.n_bins)
 
-        interval_lookup = self.baseline_intervals[bin_index_lookup - 1]
+        interval_lookup = self.baseline_interval[bin_index_lookup - 1]
 
         return interval_lookup
 
@@ -914,9 +829,9 @@ class SplitConformalPredictor(LeafNodeScaledConformalPredictor):
 
         """
 
-        monotonically_increasing = np.all(np.diff(self.baseline_intervals) >= 0)
+        monotonically_increasing = np.all(np.diff(self.baseline_interval) >= 0)
 
-        monotonically_decreasing = np.all(np.diff(self.baseline_intervals) <= 0)
+        monotonically_decreasing = np.all(np.diff(self.baseline_interval) <= 0)
 
         if not monotonically_increasing and not monotonically_decreasing:
 
