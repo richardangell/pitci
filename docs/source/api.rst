@@ -11,7 +11,7 @@ base module
 
     base.AbsoluteErrorConformalPredictor
     base.LeafNodeScaledConformalPredictor
-    base.SplitConformalPredictor
+    base.SplitConformalPredictorMixin
     
 lightgbm module
 ------------------
@@ -20,7 +20,7 @@ lightgbm module
     :toctree: api/
 
     lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor
-    lightgbm.LGBMBoosterLeafNodeSplitConformalPredictor
+    lightgbm.LGBMBoosterSplitLeafNodeScaledConformalPredictor
          
 xgboost module
 ------------------
@@ -32,7 +32,7 @@ xgboost module
     xgboost.XGBSklearnAbsoluteErrorConformalPredictor
     xgboost.XGBoosterLeafNodeScaledConformalPredictor
     xgboost.XGBSklearnLeafNodeScaledConformalPredictor
-    xgboost.XGBoosterLeafNodeSplitConformalPredictor
+    xgboost.XGBoosterSplitLeafNodeScaledConformalPredictor
             
 dispatchers module
 ------------------
