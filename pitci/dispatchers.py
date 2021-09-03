@@ -31,11 +31,12 @@ def get_leaf_node_scaled_conformal_predictor(model):
 
 
 @singledispatch
-def get_leaf_node_split_conformal_predictor(model, n_bins=3):
-    """Function to return the appropriate child class of
-    SplitConformalPredictor depending on the type of the model arg.
+def get_split_leaf_node_scaled_conformal_predictor(model, n_bins=3):
+    """Function to return the appropriate child class inheriting from
+    SplitConformalPredictorMixin and a child class of LeafNodeScaledConformalPredictor
+    depending on the type of the model arg.
     """
 
     raise NotImplementedError(
-        f"model type not supported for SplitConformalPredictor children; {type(model)}"
+        f"model type not supported for SplitConformalPredictorMixin, LeafNodeScaledConformalPredictor children; {type(model)}"
     )

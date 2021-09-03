@@ -31,7 +31,7 @@ class TestConformalPredictionValues:
     def test_conformal_predictions(self, xgbooster_diabetes_model, diabetes_xgb_data):
         """Test that the conformal intervals are as expected."""
 
-        confo_model = pitci.get_leaf_node_split_conformal_predictor(
+        confo_model = pitci.get_split_leaf_node_scaled_conformal_predictor(
             xgbooster_diabetes_model
         )
 

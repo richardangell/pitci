@@ -19,7 +19,20 @@ from . import nonconformity
 
 
 class ConformalPredictor(ABC):
-    """Base class for all predictors in the package."""
+    """Base class for all conformal predictors in the ``pitci`` package.
+
+    This class contains the generic methods that all child classes can
+    inherit.
+
+    Attributes
+    ----------
+    __version__ : str
+        The version of the ``pitci`` package that generated the object.
+
+    model : Any
+        The underlying model passed in initialising the object.
+
+    """
 
     __doc__: str
 
@@ -37,6 +50,8 @@ class ConformalPredictor(ABC):
     ) -> None:
         """Calibrate conformal intervals that will be applied to new instances
         when calling ``predict_with_interval``.
+
+        The value passed in ``alpha`` is stored in an attribute of the same name.
 
         {description}
 
@@ -59,6 +74,8 @@ class ConformalPredictor(ABC):
         if not (alpha >= 0 and alpha <= 1):
 
             raise ValueError("alpha must be in range [0 ,1]")
+
+        self.alpha = alpha
 
         self._calibrate_interval(data=data, alpha=alpha, response=response)
 
@@ -150,9 +167,6 @@ class ConformalPredictor(ABC):
         """Set the baseline conformal interval. Result is stored in the
         ``baseline_interval`` attribute.
 
-        The value passed in ``alpha`` is also stored in an attribute of the
-        same name.
-
         Parameters
         ----------
         data : Any
@@ -165,8 +179,6 @@ class ConformalPredictor(ABC):
             Confidence level for the intervals.
 
         """
-
-        self.alpha = alpha
 
         predictions = self._generate_predictions(data)
 
@@ -181,15 +193,8 @@ class ConformalPredictor(ABC):
         )
 
     @abstractmethod
-    def _generate_predictions(self, data: Any) -> np.ndarray:
-        """Generate predictions with underlying model.
-
-        Parameters
-        ----------
-        data : Any
-            Dataset to generate predictions for.
-
-        """
+    def _generate_predictions(self, data: Any):
+        """Generate predictions with underlying model."""
 
         # this method should be implemented within a grandchild class
         # that specialises this class for a specific modelling library
@@ -197,12 +202,14 @@ class ConformalPredictor(ABC):
         pass
 
     @abstractmethod
-    def _calculate_nonconformity_scores(self, predictions, response, scaling_factors):
-        """Calculate nonconformity scores between predictions and actual response."""
+    def _calculate_nonconformity_scores(
+        self, predictions: Any, response: Any, scaling_factors: Any
+    ):
+        """Calculate scaled nonconformity scores between predictions and actual response."""
 
-        # this method should be implemented within a grandchild class
-        # that specialises this class for a specific modelling library
-        # (e.g. XGBoosterAbsoluteErrorConformalPredictor)
+        # this method should be implemented within a child class
+        # that creates a specific type of conformal predictor
+        # base class (e.g. AbsoluteErrorConformalPredictor)
         pass
 
     @abstractmethod
@@ -216,8 +223,8 @@ class ConformalPredictor(ABC):
 
 
 class AbsoluteErrorConformalPredictor(ConformalPredictor):
-    """Conformal interval predictor for an underlying {model_type} model using absolute
-    error as the nonconformity measure.
+    """Conformal interval predictor for an underlying {model_type} model using
+    non-scaled absolute error as the nonconformity measure.
 
     Class implements inductive conformal intervals where a calibration
     dataset is used to learn the information that is used when generating
@@ -256,22 +263,23 @@ class AbsoluteErrorConformalPredictor(ConformalPredictor):
 
     """
 
-    def _calculate_nonconformity_scores(self, predictions, response, scaling_factors):
+    def _calculate_nonconformity_scores(
+        self, predictions: np.ndarray, response: np.ndarray, scaling_factors: np.ndarray
+    ) -> np.ndarray:
         """Calculate scaled nonconformity scores for predictions and response.
 
-        This class does not implement varying prediction intervals so
-        the scaling factors returned from this method are constant
-        values of one for each record in ``data``.
+        Nonconformity scores for this class is defined as absolute error
+        between predictions and response, divided by the scaling factors.
 
         Parameters
         ----------
-        predictions : Any
+        predictions : np.ndarray
             Predictions for each value in ``response``.
 
-        response : Any
+        response : np.ndarray
             True response values.
 
-        scaling_factors : Any
+        scaling_factors : np.ndarray
             Scaling factors associated with each prediction.
 
         """
@@ -451,7 +459,18 @@ class LeafNodeScaledConformalPredictor(ConformalPredictor):
         leaf_node_counts : np.ndarray
             Array of same length as input data giving factor for each input row.
 
+        Raises
+        ------
+        AttributeError
+            If ``leaf_node_counts`` attribute not set when the method is run.
+
         """
+
+        check_attribute(
+            self,
+            "leaf_node_counts",
+            "leaf_node_counts attribute missing, run calibrate first.",
+        )
 
         leaf_node_predictions = self._generate_leaf_node_predictions(data)
 
@@ -472,22 +491,18 @@ class LeafNodeScaledConformalPredictor(ConformalPredictor):
 
         The function ``_sum_dict_values`` is applied to each row in
         ``leaf_node_predictions``, passing the ``leaf_node_counts`` attribute
-        in the ``counts`` arg.
+        in the ``counts`` argument.
 
         Parameters
         ----------
-        leaf_node_predictions : np.ndarray
-            Array output from the relevant underlying model predict method
-            which produces the leaf node visited in each tree for each
-            row of data scored.
+        leaf_node_counts : np.ndarray
+            Array with the same number of elements as the number of rows in
+            ``leaf_node_predictions``. Each element in the array contains the
+            total number of times the particular leaf nodes visited in making
+            the prediction for that particular row, were visited on the
+            calibration sample.
 
         """
-
-        check_attribute(
-            self,
-            "leaf_node_counts",
-            "leaf_node_counts attribute missing, run calibrate first.",
-        )
 
         leaf_node_counts = np.apply_along_axis(
             _sum_dict_values,
@@ -513,7 +528,7 @@ class LeafNodeScaledConformalPredictor(ConformalPredictor):
         Parameters
         ----------
         data : Any
-            Data to set baseline leaf node counts.
+            Data to set baseline leaf node counts with.
 
         """
 
@@ -523,7 +538,7 @@ class LeafNodeScaledConformalPredictor(ConformalPredictor):
 
         self.leaf_node_counts = []
 
-        for tree_no, column in enumerate(leaf_node_predictions_df.columns.values):
+        for tree_no, _ in enumerate(leaf_node_predictions_df.columns.values):
 
             # count the number of times each leaf node is visited in
             # each tree for predictions on data
@@ -728,11 +743,9 @@ class SplitConformalPredictorMixin:
         at these quantiles. Finally the ``alpha`` quantiles of the scaled
         nonconformity values are calculated for each bin.
 
-        Results are stored in the ``baseline_intervals`` attribute. The
+        Results are stored in the ``baseline_interval`` attribute. The
         edges for the bins are stored in the ``scaling_factor_cut_points``
         attribute.
-
-        The ``alpha`` value is also stored in an attribute of the same name.
 
         Parameters
         ----------
@@ -752,8 +765,6 @@ class SplitConformalPredictorMixin:
             "leaf_node_counts",
             "object does not have leaf_node_counts attribute, run calibrate first.",
         )
-
-        self.alpha = alpha
 
         predictions = self._generate_predictions(data)
 

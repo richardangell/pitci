@@ -10,7 +10,7 @@ from . import helpers
 from .dispatchers import (
     get_leaf_node_scaled_conformal_predictor,
     get_absolute_error_conformal_predictor,
-    get_leaf_node_split_conformal_predictor,
+    get_split_leaf_node_scaled_conformal_predictor,
 )
 
 from .docstrings import _format_base_class_docstrings

@@ -9,6 +9,7 @@ base module
 .. autosummary::
     :toctree: api/
 
+    base.ConformalPredictor
     base.AbsoluteErrorConformalPredictor
     base.LeafNodeScaledConformalPredictor
     base.SplitConformalPredictorMixin
@@ -42,7 +43,7 @@ dispatchers module
 
     dispatchers.get_absolute_error_conformal_predictor
     dispatchers.get_leaf_node_scaled_conformal_predictor
-    dispatchers.get_leaf_node_split_conformal_predictor
+    dispatchers.get_split_leaf_node_scaled_conformal_predictor
              
 helpers module
 ------------------

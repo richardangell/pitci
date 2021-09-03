@@ -33,7 +33,7 @@ class TestConformalPredictionValues:
     ):
         """Test that the conformal intervals are as expected."""
 
-        confo_model = pitci.get_leaf_node_split_conformal_predictor(
+        confo_model = pitci.get_split_leaf_node_scaled_conformal_predictor(
             lgbmbooster_diabetes_model
         )
 

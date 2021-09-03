@@ -25,7 +25,7 @@ from .checks import check_type, check_allowed_value
 from .dispatchers import (
     get_leaf_node_scaled_conformal_predictor,
     get_absolute_error_conformal_predictor,
-    get_leaf_node_split_conformal_predictor,
+    get_split_leaf_node_scaled_conformal_predictor,
 )
 from . import docstrings
 
@@ -79,18 +79,25 @@ SUPPORTED_OBJECTIVES_ABS_ERROR = [
     "count:poisson",
 ]
 
+SUPPORTED_OBJECTIVES_DESCRIPTION = (
+    "The currently supported xgboost objective functions, given the nonconformity\n"
+)
+"    measure that is based on absolute error, are defined in the\n"
+"    ``SUPPORTED_OBJECTIVES`` attribute.",
+
+SUPPORTED_OBJECTIVES_ATTRIBUTE = "SUPPORTED_OBJECTIVES : list\n"
+"\tBooster supported objectives. If an {model_type} with a non-supported objective\n"
+"\tis passed when initialising the class object an error will be raised."
+
 
 class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
+
     __doc__ = AbsoluteErrorConformalPredictor.__doc__.format(
         model_type="``xgb.Booster``",
-        description="The currently supported xgboost objective functions, "
-        "given the nonconformity\n    measure that is based on absolute error, are defined "
-        "in the\n    SUPPORTED_OBJECTIVES attribute.",
+        description=SUPPORTED_OBJECTIVES_DESCRIPTION,
         parameters="",
         calibrate_link=":func:`~pitci.xgboost.XGBoosterAbsoluteErrorConformalPredictor.calibrate`",
-        attributes="SUPPORTED_OBJECTIVES : list\n"
-        "\tBooster supported objectives. If an ``xgb.Booster`` with a non-supported "
-        "objective\n\tis passed when initialising the class object an error will be raised.",
+        attributes=SUPPORTED_OBJECTIVES_ATTRIBUTE.format(model_type="``xgb.Booster``"),
     )
 
     def __init__(self, model: xgb.Booster) -> None:
@@ -107,10 +114,9 @@ class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
         AbsoluteErrorConformalPredictor.calibrate,
         style=docstrings.str_format_merge_style,
         description="Calls the parent class "
-        ":func:`~pitci.base.AbsoluteErrorConformalPredictor.calibrate` "
-        "method after extracting the\n\t"
-        "response from the data argument, if response is not passed\n\t"
-        "and data is an xgb.DMatrix object.",
+        ":func:`~pitci.base.AbsoluteErrorConformalPredictor.calibrate` method after extracting the\n"
+        "\tresponse from the data argument, if response is not passed\n"
+        "\tand data is an xgb.DMatrix object.",
         data_type="xgb.DMatrix, np.ndarray or pd.DataFrame",
         response_type="np.ndarray, pd.Series or None, default = None",
     )
@@ -167,17 +173,15 @@ class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
 
 
 class XGBSklearnAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
+
     __doc__ = AbsoluteErrorConformalPredictor.__doc__.format(
         model_type="``xgb.XGBRegressor`` or ``xgb.XGBClassifier``",
-        description="The currently supported xgboost objective functions, "
-        "given the nonconformity\n    measure that is based on absolute error, are defined "
-        "in the\n    SUPPORTED_OBJECTIVES attribute.",
+        description=SUPPORTED_OBJECTIVES_DESCRIPTION,
         parameters="",
         calibrate_link=":func:`~pitci.xgboost.XGBSklearnAbsoluteErrorConformalPredictor.calibrate`",
-        attributes="SUPPORTED_OBJECTIVES : list\n"
-        "\tBooster supported objectives. If an ``xgb.XGBRegressor`` or ``xgb.XGBClassifier`` "
-        "with a non-supported objective\n\tis passed when initialising the class object an "
-        "error will be raised.",
+        attributes=SUPPORTED_OBJECTIVES_ATTRIBUTE.format(
+            model_type="``xgb.XGBRegressor`` or ``xgb.XGBClassifier``"
+        ),
     )
 
     def __init__(self, model: Union[xgb.XGBRegressor, xgb.XGBClassifier]) -> None:
@@ -245,15 +249,12 @@ class XGBSklearnAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor)
 
 
 class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor):
+
     __doc__ = LeafNodeScaledConformalPredictor.__doc__.format(
         model_type="``xgb.Booster``",
-        description="The currently supported xgboost objective functions, "
-        "given the nonconformity\n    measure that is based on absolute error, are defined "
-        "in the\n    SUPPORTED_OBJECTIVES attribute.",
+        description=SUPPORTED_OBJECTIVES_DESCRIPTION,
         parameters="",
-        attributes="SUPPORTED_OBJECTIVES : list\n"
-        "\tBooster supported objectives. If an ``xgb.Booster`` with a non-supported "
-        "objective\n\tis passed when initialising the class object an error will be raised.",
+        attributes=SUPPORTED_OBJECTIVES_ATTRIBUTE.format(model_type="``xgb.Booster``"),
         calibrate_method="pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.calibrate",
     )
 
@@ -270,8 +271,8 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
     @docstrings.doc_inherit_kwargs(
         LeafNodeScaledConformalPredictor.calibrate,
         style=docstrings.str_format_merge_style,
-        description="If ``response`` is not passed then the method will attempt to extract\n\t"
-        "the response values from ``data`` using the ``get_label`` method.",
+        description="If ``response`` is not passed then the method will attempt to extract\n"
+        "\tthe response values from ``data`` using the ``get_label`` method.",
         predict_with_interval_method="pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
         baseline_interval_attribute="baseline_interval",
         data_type="xgb.DMatrix",
@@ -303,7 +304,7 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
     @docstrings.doc_inherit_kwargs(
         LeafNodeScaledConformalPredictor.predict_with_interval,
         style=docstrings.str_format_merge_style,
-        description="temp",
+        description="",
         data_type="xgb.DMatrix",
     )
     def predict_with_interval(self, data: xgb.DMatrix) -> np.ndarray:
@@ -367,16 +368,14 @@ class XGBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor
 
 
 class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor):
+
     __doc__ = LeafNodeScaledConformalPredictor.__doc__.format(
         model_type="``xgb.XGBRegressor`` or ``xgb.XGBClassifier``",
-        description="The currently supported xgboost objective functions, "
-        "given the nonconformity\n    measure that is based on absolute error, are defined "
-        "in the\n    SUPPORTED_OBJECTIVES attribute.",
+        description=SUPPORTED_OBJECTIVES_DESCRIPTION,
         parameters="",
         attributes="SUPPORTED_OBJECTIVES : list\n"
-        "\tBooster supported objectives. If an ``xgb.XGBRegressor`` or ``xgb.XGBClassifier`` "
-        "with a non-supported objective\n\tis passed when initialising the class object an "
-        "error will be raised.",
+        "\tBooster supported objectives. If an ``xgb.XGBRegressor`` or ``xgb.XGBClassifier`` with a non-supported objective\n"
+        "\tis passed when initialising the class object an error will be raised.",
         calibrate_method="pitci.xgboost.XGBSklearnLeafNodeScaledConformalPredictor.calibrate",
     )
 
@@ -418,7 +417,7 @@ class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredicto
     @docstrings.doc_inherit_kwargs(
         LeafNodeScaledConformalPredictor.predict_with_interval,
         style=docstrings.str_format_merge_style,
-        description="temp",
+        description="",
         data_type="np.ndarray or pd.DataFrame",
     )
     def predict_with_interval(
@@ -490,26 +489,23 @@ class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredicto
 class XGBoosterSplitLeafNodeScaledConformalPredictor(
     SplitConformalPredictorMixin, XGBoosterLeafNodeScaledConformalPredictor
 ):
+
     __doc__ = SplitConformalPredictorMixin.__doc__.format(
         model_type="``xgb.Booster``",
-        description="The currently supported lgboost objective functions, "
-        "given the nonconformity\n    measure that is based on absolute error, are defined "
-        "in the\n    SUPPORTED_OBJECTIVES attribute.",
+        description=SUPPORTED_OBJECTIVES_DESCRIPTION,
         parameters="",
         calibrate_link="``calibrate``",
-        attributes="SUPPORTED_OBJECTIVES : list\n"
-        "\tBooster supported objectives. If a model with a non-supported "
-        "objective\n\tis passed when initialising the class object an error will be raised.",
+        attributes=SUPPORTED_OBJECTIVES_ATTRIBUTE.format(model_type="``xgb.Booster``"),
     )
 
     @docstrings.doc_inherit_kwargs(
         LeafNodeScaledConformalPredictor.calibrate,
         style=docstrings.str_format_merge_style,
-        description="If ``response`` is not passed then the method will attempt to extract\n\t"
-        "the response values from ``data`` using the ``get_label`` method.\n\n\t"
-        "The ``baseline_intervals`` are each calibrated to the required ``alpha``\n\t"
-        "level on the subsets of the data where the scaling factor values\n\t"
-        "fall into the range for that particular bucket.",
+        description="If ``response`` is not passed then the method will attempt to extract\n"
+        "\tthe response values from ``data`` using the ``get_label`` method.\n\n"
+        "\tThe ``baseline_interval``s are each calibrated to the required ``alpha``\n"
+        "\tlevel on the subsets of the data where the scaling factor values\n"
+        "\tfall into the range for that particular bucket.",
         predict_with_interval_method="pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
         baseline_interval_attribute="baseline_intervals",
         data_type="xgb.DMatrix",
@@ -593,7 +589,7 @@ def return_xgb_sklearn_leaf_node_scaled_confromal_predictor(
     return confo_model
 
 
-@get_leaf_node_split_conformal_predictor.register(xgb.Booster)
+@get_split_leaf_node_scaled_conformal_predictor.register(xgb.Booster)
 def return_xgb_booster_leaf_node_split_confromal_predictor(
     model: xgb.Booster, n_bins: int = 3
 ) -> XGBoosterSplitLeafNodeScaledConformalPredictor:
