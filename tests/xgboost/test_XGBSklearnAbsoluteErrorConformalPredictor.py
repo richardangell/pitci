@@ -56,7 +56,7 @@ class TestInit:
 
         assert (
             confo_model.SUPPORTED_OBJECTIVES
-            == pitci.xgboost.SUPPORTED_OBJECTIVES_ABS_ERROR
+            == pitci.xgboost.SUPPORTED_OBJECTIVES_ABSOLUTE_ERROR
         ), "SUPPORTED_OBJECTIVES attribute incorrect"
 
     def test_check_objective_supported_called(
@@ -78,7 +78,7 @@ class TestInit:
 
         assert call_pos_args == (
             xgb_regressor_1_split_1_tree.get_booster(),
-            pitci.xgboost.SUPPORTED_OBJECTIVES_ABS_ERROR,
+            pitci.xgboost.SUPPORTED_OBJECTIVES_ABSOLUTE_ERROR,
         ), "positional args in check_objective_supported call not correct"
 
         assert (

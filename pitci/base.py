@@ -140,6 +140,10 @@ class ConformalPredictor(ABC):
         up the baseline interval value depending on each value passed
         in ``scaling_factors``.
 
+        For all the other conformal predictor classes that do not
+        implement ``baseline_interval`` that depends on the scaling
+        factors, we simply return the ``baseline_interval`` attribute.
+
         Parameters
         ----------
         scaling_factors : Any
@@ -149,10 +153,7 @@ class ConformalPredictor(ABC):
         -------
         float or np.ndarray
             The baseline interval value that will be used as the basis
-            of the conformal interval for all predictions. When this
-            method is overwritten for the split conformal predictor
-            classes, this method should return an array of baseline
-            intervals that depend on the scaling factors.
+            of the conformal interval for all predictions.
 
         """
 
@@ -164,8 +165,9 @@ class ConformalPredictor(ABC):
         response: Union[np.ndarray, pd.Series],
         alpha: Union[int, float] = 0.95,
     ) -> None:
-        """Set the baseline conformal interval. Result is stored in the
-        ``baseline_interval`` attribute.
+        """Set the baseline conformal interval.
+
+        Result is stored in the ``baseline_interval`` attribute.
 
         Parameters
         ----------
@@ -270,6 +272,9 @@ class AbsoluteErrorConformalPredictor(ConformalPredictor):
 
         Nonconformity scores for this class is defined as absolute error
         between predictions and response, divided by the scaling factors.
+        However, as can be seen from the ``_calculate_scaling_factors``
+        method the scaling factors for this call are all unit values so
+        all intervals will be the same width.
 
         Parameters
         ----------
@@ -320,10 +325,10 @@ class LeafNodeScaledConformalPredictor(ConformalPredictor):
     The predictor outputs varying width intervals for every new instance. This
     is done by multiplying the ``baseline_interval`` by a scaling factor that
     depends on the input ``data``. The scaling function uses the reciporcal of
-    the number of times that the leaf nodes using in making each prediction
+    the number of times that the leaf nodes used in making each prediction
     were visited on the calibration dataset, or when the underlying model was
     trained - see the ``train_data`` argument for the :func:`~{calibrate_method}`
-    method.
+    method for more information.
 
     The intuition behind this is that for rows that have higher leaf node counts
     from the calibration set - the model will be more 'familiar' with hence
@@ -360,8 +365,7 @@ class LeafNodeScaledConformalPredictor(ConformalPredictor):
 
     alpha : int or float
         The confidence level of the conformal intervals that will be produced.
-        Attribute is set when ``_calibrate_interval`` is called by the
-        :func:`~{calibrate_method}` method.
+        Attribute is set when the :func:`~{calibrate_method}` method is run.
 
     {attributes}
 
@@ -385,11 +389,11 @@ class LeafNodeScaledConformalPredictor(ConformalPredictor):
 
         There are 2 items to be calibrated; the leaf node counts stored
         in the ``leaf_node_counts`` attribute and the half interval width
-        stored in the ``{baseline_interval_attribute}`` attribute.
+        stored in the ``baseline_interval`` attribute.
 
         The user has the option to specify the training sample that was used
         to buid the model in the ``train_data`` argument. This is to allow the
-        ``leaf_node_counts`` to be calibrated on the same data, as the underlying
+        ``leaf_node_counts`` to be calibrated on the same data the underlying
         model was built on, rather than a separate calibration set which is what
         will be passed in the ``data`` argument. The default interval width for a given
         ``alpha`` has to be set on a separate sample to what was used to build the model.
@@ -413,7 +417,7 @@ class LeafNodeScaledConformalPredictor(ConformalPredictor):
 
         train_data : {train_data_type}
             Optional dataset that can be passed to set baseline ``leaf_node_counts``
-            from, separate to the ``data`` arg used to set ``{baseline_interval_attribute}``
+            from, separate to the ``data`` argument used to set ``baseline_interval``
             width.
 
         """
@@ -446,8 +450,8 @@ class LeafNodeScaledConformalPredictor(ConformalPredictor):
         counts the total number of times each leaf node index was visited
         in the calibration dataset.
 
-        1 / leaf node counts are returned from this method so that the scaling
-        factor is inverted i.e. smaller values are better.
+        The reciprocal of the leaf node counts are returned from this method
+        so that the scaling factor is inverted i.e. smaller values are better.
 
         Parameters
         ----------
@@ -490,8 +494,7 @@ class LeafNodeScaledConformalPredictor(ConformalPredictor):
         tree in the calibration dataset.
 
         The function ``_sum_dict_values`` is applied to each row in
-        ``leaf_node_predictions``, passing the ``leaf_node_counts`` attribute
-        in the ``counts`` argument.
+        ``leaf_node_predictions``.
 
         Parameters
         ----------
@@ -518,7 +521,7 @@ class LeafNodeScaledConformalPredictor(ConformalPredictor):
 
         First the ``_generate_leaf_node_predictions`` method is called to
         get the leaf node indexes that were visted in every tree for
-        every row in the passed ``data`` arg.
+        every row in the passed ``data`` argument.
 
         Then each column in the output from ``_generate_leaf_node_predictions``
         (representing a single tree in the model) is the tabulated to
@@ -564,11 +567,10 @@ class LeafNodeScaledConformalPredictor(ConformalPredictor):
         pass
 
     def _calculate_nonconformity_scores(self, predictions, response, scaling_factors):
-        """Calculate scaled nonconformity scores for predictions and response.
+        """Calculate scaled nonconformity scores for predictions, response and
+        scaling factors.
 
-        This class does not implement varying prediction intervals so
-        the scaling factors returned from this method are constant
-        values of one for each record in ``data``.
+        Scaled absolute error is the nonconformity measure used by this class.
 
         Parameters
         ----------
@@ -641,68 +643,27 @@ def _sum_dict_values(arr: np.ndarray, counts: List[Dict[int, int]]) -> int:
 
 
 class SplitConformalPredictorMixin:
-    """Conformal interval predictor for an underlying {model_type} model using
-    absolute error scaled by leaf node counts as the nonconformity measure.
-    Intervals are also split into bins based off the scaling factors and
-    calibrated separately for each bin.
+    """Mixin class to provide functionality to allow conformal predictors
+    where the intervals are calibrated to different subsets of the data
+    depending on the scaling factor values.
 
-    Class implements inductive conformal intervals where a calibration
-    dataset is used to learn the information that is used when generating
-    intervals for new instances.
-
-    The predictor outputs varying width intervals for every new instance.
-    The scaling function uses the number of times that the leaf nodes were
-    visited for each tree in making the prediction, for that row, were
-    visited in the calibration dataset.
-
-    Intuitively, for rows that have higher leaf node counts from the calibration
-    set - the model will be more 'familiar' with hence the interval for
-    these rows will be shrunk. The inverse is true for rows that have lower
-    leaf node counts from the calibration set.
-
-    Intervals are split into bins, using the scaling factors, where each bin
-    is calibrated at the required confidence level. This addresses the
-    situation where the leaf node scaled conformal predictors are not well
-    calibrated on subsets of the data, despite being calibrated at the
-    required ``alpha`` confidence level overall.
-
-    {description}
+    This class should be used with the model specific conformal predictor
+    classes e.g. ``XGBoosterLeafNodeScaledConformalPredictor`` to create
+    a new class that include the split conformal predictor functionality.
+    ``SplitConformalPredictorMixin`` should the first class in the mulitple
+    inheritance when creating split conformal predictor classes for
+    specific modelling libraries.
 
     Parameters
     ----------
-    model : {model_type}
-        Underlying {model_type} model to generate prediction intervals with.
+    model : Any
+        Underlying ``Any`` model to generate prediction intervals with.
 
     n_bins : int
         Number of bins to split data into based on the scaling factors.
 
-    {parameters}
-
     Attributes
     ----------
-    __version__ : str
-        The version of the ``pitci`` package that generated the object.
-
-    model : {model_type}
-        The underlying {model_type} model passed in initialising the object.
-
-    leaf_node_counts : list
-        The number of times each leaf node in each tree was visited when
-        making predictions on the calibration dataset. Each item in the list
-        is a ``dict`` giving a mapping between leaf node index and counts
-        for a given tree. The length of the list corresponds to the number
-        of trees in ``model``.
-
-    baseline_intervals : list
-        The default or baseline conformal half interval widths that depend
-        on the scaling factor values. When making prediction intervals
-        the correct interval will be looked up based off the scaling factor
-        values, this is then multiplied by the scaling factor.
-
-    alpha : int or float
-        The confidence level of the conformal intervals that will be produced.
-        Attribute is set when the {calibrate_link} method is run.
-
     n_bins : int
         Number of bins to split data into based off the scaling factors.
 
@@ -711,7 +672,14 @@ class SplitConformalPredictorMixin:
         the limits of the bins. Attribute is set when the {calibrate_link}
         method is run.
 
-    {attributes}
+    baseline_interval : list
+        Baseline intervals calibrated for each of the ``n_bins`` subsets
+        of the data. Set by the ``_calibrate_interval`` method.
+
+    scaling_factor_cut_points : np.ndarray
+        The edges of the scaling factor bins that define the data subsets
+        that each of the values in ``baseline_interval`` are calibrated
+        on. Set by the ``_calibrate_interval`` method.
 
     """
 
@@ -750,10 +718,10 @@ class SplitConformalPredictorMixin:
         Parameters
         ----------
         data : Any
-            Dataset to use to set baseline interval width.
+            Dataset to use to set ``baseline_interval``.
 
         response : np.ndarray or pd.Series
-            The response values for the records in ``data``ß.
+            The response values for the records in ``data``.
 
         alpha : int or float, default = 0.95
             Confidence level for the intervals.
@@ -774,18 +742,18 @@ class SplitConformalPredictorMixin:
             predictions, response, scaling_factors
         )
 
-        scaling_factor_cut_points = np.quantile(scaling_factors, self.bin_quantiles)
-
-        self.scaling_factor_cut_points = scaling_factor_cut_points
+        self.scaling_factor_cut_points = np.quantile(
+            scaling_factors, self.bin_quantiles
+        )
 
         # bins will be of the form; bin[i-1] < x <= bin[i]
         # meaning the top bin will have only 1 observation in it,
         # the maximum value in the dataset
         scaling_factor_bins = np.digitize(
-            x=scaling_factors, bins=scaling_factor_cut_points, right=True
+            x=scaling_factors, bins=self.scaling_factor_cut_points, right=True
         )
 
-        n_bins = len(scaling_factor_cut_points) - 1
+        n_bins = len(self.scaling_factor_cut_points) - 1
         self.n_bins = n_bins
 
         # with right = True specified in np.digitize any values equal
@@ -806,7 +774,7 @@ class SplitConformalPredictorMixin:
 
         self._check_interval_monotonicity()
 
-    def _lookup_baseline_interval(self, scaling_factors: Any) -> np.ndarray:
+    def _lookup_baseline_interval(self, scaling_factors: np.ndarray) -> np.ndarray:
         """Lookup the baseline intervals to use given the scaling factor
         values passed.
 

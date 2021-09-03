@@ -29,6 +29,15 @@ def check_objective_supported(
 ) -> None:
     """Function to check that the booster objective parameter is in the
     supported_objectives list and raise and exception if not.
+
+    Parameters
+    ----------
+    booster : lgb.Booster
+        Model to check objective is supported.
+
+    supported_objectives : list
+        List of lightgbm supported objectives.
+
     """
 
     check_type(booster, [lgb.basic.Booster], "booster")
@@ -45,7 +54,7 @@ def check_objective_supported(
     )
 
 
-SUPPORTED_OBJECTIVES_ABS_ERROR = [
+SUPPORTED_OBJECTIVES_ABSOLUTE_ERROR = [
     "regression",
     "regression_l1",
     "huber",
@@ -66,13 +75,23 @@ SUPPORTED_OBJECTIVES_ABS_ERROR = [
 
 SUPPORTED_OBJECTIVES_DESCRIPTION = (
     "The currently supported lightgbm objective functions, given the nonconformity\n"
+    "    measure that is based on absolute error, are defined in the\n"
+    "    ``SUPPORTED_OBJECTIVES`` attribute."
 )
-"    measure that is based on absolute error, are defined in the\n"
-"    ``SUPPORTED_OBJECTIVES`` attribute."
 
-SUPPORTED_OBJECTIVES_ATTRIBUTE = "SUPPORTED_OBJECTIVES : list\n"
-"\tBooster supported objectives. If a lgb.Booster with a non-supported objective\n"
-"\tis passed when initialising the class object an error will be raised."
+SUPPORTED_OBJECTIVES_ATTRIBUTE = (
+    "SUPPORTED_OBJECTIVES : list\n"
+    "\tBooster supported objectives. If a lgb.Booster with a non-supported objective\n"
+    "\tis passed when initialising the class object an error will be raised."
+)
+
+
+SPLIT_CONFORMAL_PREDICTOR_DESCRIPTION = (
+    "Intervals are split into bins, using the scaling factors, where each bin is calibrated "
+    "at the required confidence level. This addresses the situation where the leaf node "
+    "scaled conformal predictors are not well calibrated on subsets of the data, despite "
+    "being calibrated at the required ``alpha`` confidence level overall."
+)
 
 
 class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor):
@@ -91,7 +110,7 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
 
         super().__init__(model=model)
 
-        self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABS_ERROR
+        self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABSOLUTE_ERROR
 
         check_objective_supported(model, self.SUPPORTED_OBJECTIVES)
 
@@ -100,7 +119,6 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
         style=docstrings.str_format_merge_style,
         description="",
         predict_with_interval_method="pitci.lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
-        baseline_interval_attribute="baseline_interval",
         data_type="np.ndarray or pd.DataFrame",
         response_type="np.ndarray or pd.Series",
         train_data_type="np.ndarray, pd.DataFrame or None, default = None",
@@ -228,22 +246,20 @@ class LGBMBoosterSplitLeafNodeScaledConformalPredictor(
     SplitConformalPredictorMixin, LGBMBoosterLeafNodeScaledConformalPredictor
 ):
 
-    __doc__ = SplitConformalPredictorMixin.__doc__.format(
-        model_type="``lgb.Booster``",
-        description=SUPPORTED_OBJECTIVES_DESCRIPTION,
-        parameters="",
-        calibrate_link="``calibrate``",
-        attributes=SUPPORTED_OBJECTIVES_ATTRIBUTE,
+    __doc__ = LGBMBoosterLeafNodeScaledConformalPredictor.__doc__.replace(
+        SUPPORTED_OBJECTIVES_DESCRIPTION,
+        SPLIT_CONFORMAL_PREDICTOR_DESCRIPTION
+        + "\n\n"
+        + SUPPORTED_OBJECTIVES_DESCRIPTION,
     )
 
     @docstrings.doc_inherit_kwargs(
         LeafNodeScaledConformalPredictor.calibrate,
         style=docstrings.str_format_merge_style,
-        description="The ``baseline_intervals`` are each calibrated to the required ``alpha``\n\t"
-        "level on the subsets of the data where the scaling factor values\n\t"
-        "fall into the range for that particular bucket.",
+        description="The ``baseline_interval`` values are each calibrated to the required ``alpha``\n"
+        "\tlevel on the subsets of the data where the scaling factor values\n"
+        "\tfall into the range for that particular bucket.",
         predict_with_interval_method="pitci.lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
-        baseline_interval_attribute="baseline_intervals",
         data_type="np.ndarray or pd.DataFrame",
         response_type="np.ndarray or pd.Series",
         train_data_type="np.ndarray, pd.DataFrame or None, default = None",

@@ -31,8 +31,6 @@ def _format_base_class_docstrings() -> None:
 
     _format_leaf_node_scaled_absolute_error_conformal_predictor()
 
-    _format_leaf_node_split_absolute_error_conformal_predictor()
-
 
 def _format_absolute_error_conformal_predictor() -> None:
     """Format the class docstring and user facing methods docstrings
@@ -79,7 +77,6 @@ def _format_leaf_node_scaled_absolute_error_conformal_predictor() -> None:
     _str_format_docstring(
         base.LeafNodeScaledConformalPredictor.calibrate,
         predict_with_interval_method="pitci.base.LeafNodeScaledConformalPredictor.predict_with_interval",
-        baseline_interval_attribute="baseline_interval",
         data_type="``Any``",
         response_type="np.ndarray or pd.Series",
         train_data_type="Any, default = None",
@@ -89,21 +86,6 @@ def _format_leaf_node_scaled_absolute_error_conformal_predictor() -> None:
     _str_format_docstring(
         base.LeafNodeScaledConformalPredictor.predict_with_interval,
         data_type="``Any``",
-    )
-
-
-def _format_leaf_node_split_absolute_error_conformal_predictor() -> None:
-    """Format the class docstring and user facing methods docstrings
-    in the SplitConformalPredictor class.
-    """
-
-    _str_format_docstring(
-        base.SplitConformalPredictorMixin,
-        model_type="``Any``",
-        description="",
-        parameters="",
-        calibrate_link="``calibrate``",
-        attributes="",
     )
 
 
