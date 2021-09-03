@@ -15,7 +15,7 @@ except ModuleNotFoundError as err:
 
 from typing import List, Union, Any
 
-from .base import LeafNodeScaledConformalPredictor, SplitConformalPredictor
+from .base import LeafNodeScaledConformalPredictor, SplitConformalPredictorMixin
 from .checks import check_type, check_allowed_value
 from .dispatchers import (
     get_leaf_node_scaled_conformal_predictor,
@@ -217,10 +217,10 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
         return leaf_node_predictions
 
 
-class LGBMBoosterLeafNodeSplitConformalPredictor(
-    SplitConformalPredictor, LGBMBoosterLeafNodeScaledConformalPredictor
+class LGBMBoosterSplitLeafNodeScaledConformalPredictor(
+    SplitConformalPredictorMixin, LGBMBoosterLeafNodeScaledConformalPredictor
 ):
-    __doc__ = SplitConformalPredictor.__doc__.format(
+    __doc__ = SplitConformalPredictorMixin.__doc__.format(
         model_type="``lgb.Booster``",
         description="The currently supported lgboost objective functions, "
         "given the nonconformity\n    measure that is based on absolute error, are defined "
@@ -257,7 +257,7 @@ class LGBMBoosterLeafNodeSplitConformalPredictor(
         )
 
     @docstrings.doc_inherit_kwargs(
-        SplitConformalPredictor.predict_with_interval,
+        LGBMBoosterLeafNodeScaledConformalPredictor.predict_with_interval,
         style=docstrings.str_format_merge_style,
         predict_with_interval_method="pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
         data_type="pd.DataFrame of np.ndarray",
@@ -285,11 +285,13 @@ def return_lgb_booster_leaf_node_scaled_confromal_predictor(
 @get_leaf_node_split_conformal_predictor.register(lgb.basic.Booster)
 def return_lgb_booster_leaf_node_split_confromal_predictor(
     model: lgb.Booster, n_bins: int = 3
-) -> LGBMBoosterLeafNodeSplitConformalPredictor:
-    """Function to return an instance of LGBMBoosterLeafNodeSplitConformalPredictor
+) -> LGBMBoosterSplitLeafNodeScaledConformalPredictor:
+    """Function to return an instance of LGBMBoosterSplitLeafNodeScaledConformalPredictor
     class the passed lgb.Booster object.
     """
 
-    confo_model = LGBMBoosterLeafNodeSplitConformalPredictor(model=model, n_bins=n_bins)
+    confo_model = LGBMBoosterSplitLeafNodeScaledConformalPredictor(
+        model=model, n_bins=n_bins
+    )
 
     return confo_model

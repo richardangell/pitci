@@ -1,6 +1,6 @@
 import abc
 
-from pitci.xgboost import XGBoosterLeafNodeSplitConformalPredictor
+from pitci.xgboost import XGBoosterSplitLeafNodeScaledConformalPredictor
 import pitci
 
 
@@ -9,7 +9,7 @@ def test_mro():
 
     expected_mro = tuple(
         [
-            pitci.xgboost.XGBoosterLeafNodeSplitConformalPredictor,
+            pitci.xgboost.XGBoosterSplitLeafNodeScaledConformalPredictor,
             pitci.base.SplitConformalPredictor,
             pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor,
             pitci.base.LeafNodeScaledConformalPredictor,
@@ -19,8 +19,8 @@ def test_mro():
     )
 
     assert (
-        XGBoosterLeafNodeSplitConformalPredictor.__mro__ == expected_mro
-    ), "mro not correct for XGBoosterLeafNodeSplitConformalPredictor"
+        XGBoosterSplitLeafNodeScaledConformalPredictor.__mro__ == expected_mro
+    ), "mro not correct for XGBoosterSplitLeafNodeScaledConformalPredictor"
 
 
 class TestConformalPredictionValues:
@@ -37,7 +37,7 @@ class TestConformalPredictionValues:
 
         confo_model.calibrate(data=diabetes_xgb_data[3], alpha=0.8)
 
-        assert confo_model.baseline_intervals.tolist() == [
+        assert confo_model.baseline_interval.tolist() == [
             52449.67460632324,
             35938.095474243164,
             30433.527114868164,

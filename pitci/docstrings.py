@@ -98,18 +98,12 @@ def _format_leaf_node_split_absolute_error_conformal_predictor() -> None:
     """
 
     _str_format_docstring(
-        base.SplitConformalPredictor,
+        base.SplitConformalPredictorMixin,
         model_type="``Any``",
         description="",
         parameters="",
         calibrate_link="``calibrate``",
         attributes="",
-    )
-
-    _str_format_docstring(
-        base.SplitConformalPredictor.predict_with_interval,
-        predict_with_interval_method="pitci.base.LeafNodeScaledConformalPredictor.predict_with_interval",
-        data_type="``Any``",
     )
 
 

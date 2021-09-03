@@ -168,7 +168,7 @@ class TestGetLeafNodeSplitConformalPredictor:
     """Tests for the get_leaf_node_split_conformal_predictor function."""
 
     def test_xgb_booster(self, xgboost_1_split_1_tree):
-        """Test an XGBoosterLeafNodeSplitConformalPredictor object is returned if
+        """Test an XGBoosterSplitLeafNodeScaledConformalPredictor object is returned if
         and xgb.Booster is passed.
         """
 
@@ -177,7 +177,8 @@ class TestGetLeafNodeSplitConformalPredictor:
         )
 
         assert (
-            type(confo_model) is pitci_xgb.XGBoosterLeafNodeSplitConformalPredictor
+            type(confo_model)
+            is pitci_xgb.XGBoosterSplitLeafNodeScaledConformalPredictor
         ), "incorrect type returned from get_leaf_node_split_conformal_predictor"
 
         assert confo_model.model is xgboost_1_split_1_tree, (
@@ -191,7 +192,7 @@ class TestGetLeafNodeSplitConformalPredictor:
         )
 
     def test_lgb_booster(self, lgb_booster_1_split_1_tree):
-        """Test an LGBMBoosterLeafNodeSplitConformalPredictor object is returned if
+        """Test an LGBMBoosterSplitLeafNodeScaledConformalPredictor object is returned if
         and lgb.Booster is passed.
         """
 
@@ -200,7 +201,8 @@ class TestGetLeafNodeSplitConformalPredictor:
         )
 
         assert (
-            type(confo_model) is pitci_lgb.LGBMBoosterLeafNodeSplitConformalPredictor
+            type(confo_model)
+            is pitci_lgb.LGBMBoosterSplitLeafNodeScaledConformalPredictor
         ), "incorrect type returned from get_leaf_node_split_conformal_predictor"
 
         assert confo_model.model is lgb_booster_1_split_1_tree, (

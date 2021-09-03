@@ -19,7 +19,7 @@ from typing import Union, Optional, List, cast
 from .base import (
     AbsoluteErrorConformalPredictor,
     LeafNodeScaledConformalPredictor,
-    SplitConformalPredictor,
+    SplitConformalPredictorMixin,
 )
 from .checks import check_type, check_allowed_value
 from .dispatchers import (
@@ -487,10 +487,10 @@ class XGBSklearnLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredicto
         return leaf_node_predictions
 
 
-class XGBoosterLeafNodeSplitConformalPredictor(
-    SplitConformalPredictor, XGBoosterLeafNodeScaledConformalPredictor
+class XGBoosterSplitLeafNodeScaledConformalPredictor(
+    SplitConformalPredictorMixin, XGBoosterLeafNodeScaledConformalPredictor
 ):
-    __doc__ = SplitConformalPredictor.__doc__.format(
+    __doc__ = SplitConformalPredictorMixin.__doc__.format(
         model_type="``xgb.Booster``",
         description="The currently supported lgboost objective functions, "
         "given the nonconformity\n    measure that is based on absolute error, are defined "
@@ -529,7 +529,7 @@ class XGBoosterLeafNodeSplitConformalPredictor(
         )
 
     @docstrings.doc_inherit_kwargs(
-        SplitConformalPredictor.predict_with_interval,
+        XGBoosterLeafNodeScaledConformalPredictor.predict_with_interval,
         style=docstrings.str_format_merge_style,
         predict_with_interval_method="pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
         data_type="xgb.DMatrix",
@@ -596,11 +596,13 @@ def return_xgb_sklearn_leaf_node_scaled_confromal_predictor(
 @get_leaf_node_split_conformal_predictor.register(xgb.Booster)
 def return_xgb_booster_leaf_node_split_confromal_predictor(
     model: xgb.Booster, n_bins: int = 3
-) -> XGBoosterLeafNodeSplitConformalPredictor:
-    """Function to return an instance of XGBoosterLeafNodeSplitConformalPredictor
+) -> XGBoosterSplitLeafNodeScaledConformalPredictor:
+    """Function to return an instance of XGBoosterSplitLeafNodeScaledConformalPredictor
     class the passed xgb.Booster object.
     """
 
-    confo_model = XGBoosterLeafNodeSplitConformalPredictor(model=model, n_bins=n_bins)
+    confo_model = XGBoosterSplitLeafNodeScaledConformalPredictor(
+        model=model, n_bins=n_bins
+    )
 
     return confo_model

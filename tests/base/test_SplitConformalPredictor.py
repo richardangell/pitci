@@ -1,19 +1,19 @@
 import numpy as np
 import re
 
-from pitci.base import SplitConformalPredictor
+from pitci.base import SplitConformalPredictorMixin
 import pitci
 
 import pytest
 
 
-class DummySplitConformalPredictor(SplitConformalPredictor):
-    """Dummy class inheriting from SplitConformalPredictor so it's
+class DummySplitConformalPredictorMixin(SplitConformalPredictorMixin):
+    """Dummy class inheriting from SplitConformalPredictorMixin so it's
     functionality can be tested.
     """
 
     def __init__(self, model="abcd", n_bins=3):
-        """Dummy init method that only calls SplitConformalPredictor
+        """Dummy init method that only calls SplitConformalPredictorMixin
         init method.
         """
 
@@ -26,17 +26,17 @@ class DummySplitConformalPredictor(SplitConformalPredictor):
 
     def _generate_leaf_node_predictions(self, data):
         """Dummy function for returning leaf node index predictions, not implemented in
-        DummySplitConformalPredictor so it has to be implemented specifically in
+        DummySplitConformalPredictorMixin so it has to be implemented specifically in
         each test requiring it.
         """
 
         raise NotImplementedError(
-            "_generate_leaf_node_predictions not implemented in SplitConformalPredictor"
+            "_generate_leaf_node_predictions not implemented in SplitConformalPredictorMixin"
         )
 
 
 class TestInit:
-    """Tests for the SplitConformalPredictor.__init__ method."""
+    """Tests for the SplitConformalPredictorMixin.__init__ method."""
 
     def test_n_bins_not_int_error(self):
         """Test an exception is raised if n_bins is not an int."""
@@ -46,19 +46,19 @@ class TestInit:
             match=re.escape(f"n_bins is not in expected types {[int]}, got {str}"),
         ):
 
-            DummySplitConformalPredictor(n_bins="a")
+            DummySplitConformalPredictorMixin(n_bins="a")
 
     def test_n_bins_not_greater_than_one_error(self):
         """Test an exception is raised if n_bins is not greater than 1."""
 
         with pytest.raises(ValueError, match="n_bins should be greater than 1"):
 
-            DummySplitConformalPredictor(n_bins=1)
+            DummySplitConformalPredictorMixin(n_bins=1)
 
     def test_bin_attributes_set(self):
         """Test that n_bins and bin_quantiles attributes are set in init."""
 
-        dummy_confo_model = DummySplitConformalPredictor(n_bins=15)
+        dummy_confo_model = DummySplitConformalPredictorMixin(n_bins=15)
 
         assert dummy_confo_model.n_bins == 15, "n_bins attribute not set correctly"
 
@@ -68,12 +68,12 @@ class TestInit:
 
 
 class TestCalibrateInterval:
-    """Tests for the SplitConformalPredictor._calibrate_interval method."""
+    """Tests for the SplitConformalPredictorMixin._calibrate_interval method."""
 
     def test_exception_no_leaf_node_counts(self):
         """Test an exception is raised if no leaf_node_counts atttibute is present."""
 
-        dummy_confo_model = DummySplitConformalPredictor(n_bins=5)
+        dummy_confo_model = DummySplitConformalPredictorMixin(n_bins=5)
 
         assert not hasattr(dummy_confo_model, "leaf_node_counts")
 
@@ -101,7 +101,7 @@ class TestCalibrateInterval:
     ):
         """Test that scaling_factor_cut_points attribute is calculated as expected."""
 
-        dummy_confo_model = DummySplitConformalPredictor(n_bins=n_bins)
+        dummy_confo_model = DummySplitConformalPredictorMixin(n_bins=n_bins)
         dummy_confo_model.leaf_node_counts = {}
 
         data = np.array([1, 0])
@@ -110,14 +110,14 @@ class TestCalibrateInterval:
 
         # set return value from _generate_predictions
         mocker.patch.object(
-            DummySplitConformalPredictor,
+            DummySplitConformalPredictorMixin,
             "_generate_predictions",
             return_value=predictions,
         )
 
         # set return value from _calculate_scaling_factors
         mocker.patch.object(
-            DummySplitConformalPredictor,
+            DummySplitConformalPredictorMixin,
             "_calculate_scaling_factors",
             return_value=scaling_factors,
         )
@@ -132,7 +132,7 @@ class TestCalibrateInterval:
     def test_baseline_intervals_expected(self, mocker):
         """Test that baseline_intervals attribute is calculated as expected."""
 
-        dummy_confo_model = DummySplitConformalPredictor(n_bins=5)
+        dummy_confo_model = DummySplitConformalPredictorMixin(n_bins=5)
         dummy_confo_model.leaf_node_counts = {}
 
         scaling_factors = np.array([i for i in range(101)])
@@ -145,14 +145,14 @@ class TestCalibrateInterval:
 
         # set return value from _generate_predictions
         mocker.patch.object(
-            DummySplitConformalPredictor,
+            DummySplitConformalPredictorMixin,
             "_generate_predictions",
             return_value=predictions,
         )
 
         # set return value from _calculate_scaling_factors
         mocker.patch.object(
-            DummySplitConformalPredictor,
+            DummySplitConformalPredictorMixin,
             "_calculate_scaling_factors",
             return_value=scaling_factors,
         )
@@ -193,7 +193,7 @@ class TestPredictWithInterval:
     def test_exception_no_baseline_interval(self):
         """Test an exception is raised if no baseline_intervals atttibute is present."""
 
-        dummy_confo_model = DummySplitConformalPredictor(n_bins=5)
+        dummy_confo_model = DummySplitConformalPredictorMixin(n_bins=5)
 
         assert not hasattr(dummy_confo_model, "baseline_intervals")
 
@@ -209,27 +209,27 @@ class TestPredictWithInterval:
         (scaling factor * baseline interval).
         """
 
-        dummy_confo_model = DummySplitConformalPredictor()
+        dummy_confo_model = DummySplitConformalPredictorMixin()
 
         dummy_confo_model.baseline_intervals = 2
 
         # set return value from _generate_predictions
         mocker.patch.object(
-            DummySplitConformalPredictor,
+            DummySplitConformalPredictorMixin,
             "_generate_predictions",
             return_value=np.array([-4, 0, 1, 4]),
         )
 
         # set return value from _generate_predictions
         mocker.patch.object(
-            DummySplitConformalPredictor,
+            DummySplitConformalPredictorMixin,
             "_calculate_scaling_factors",
             return_value=np.array([0.5, 1, 2, -2]),
         )
 
         # set return value from _lookup_baseline_interval
         mocker.patch.object(
-            DummySplitConformalPredictor,
+            DummySplitConformalPredictorMixin,
             "_lookup_baseline_interval",
             return_value=np.array([0, 0.5, 4, 10]),
         )
@@ -244,12 +244,12 @@ class TestPredictWithInterval:
 
 
 class TestLookupBaselineInterval:
-    """Tests for the SplitConformalPredictor._lookup_baseline_interval method."""
+    """Tests for the SplitConformalPredictorMixin._lookup_baseline_interval method."""
 
     def test_correct_interval_lookuped_up(self):
         """Test that the correct value from baseline_intervals is returned."""
 
-        dummy_confo_model = DummySplitConformalPredictor(n_bins=4)
+        dummy_confo_model = DummySplitConformalPredictorMixin(n_bins=4)
 
         dummy_confo_model.baseline_intervals = np.array([2, 4, 6, 8])
         dummy_confo_model.scaling_factor_cut_points = np.array([-10, 0, 10, 20, 30])
@@ -294,7 +294,7 @@ class TestLookupBaselineInterval:
 
 
 class TestCheckIntervalMonotonicity:
-    """Tests for the SplitConformalPredictor._check_interval_monotonicity method."""
+    """Tests for the SplitConformalPredictorMixin._check_interval_monotonicity method."""
 
     @pytest.mark.parametrize(
         "baseline_intervals",
@@ -303,7 +303,7 @@ class TestCheckIntervalMonotonicity:
     def test_warning_raised(self, baseline_intervals):
         """Test the correct warning is raised if baseline_intervals are not monotonic."""
 
-        dummy_confo_model = DummySplitConformalPredictor(n_bins=4)
+        dummy_confo_model = DummySplitConformalPredictorMixin(n_bins=4)
 
         dummy_confo_model.baseline_intervals = baseline_intervals
 
@@ -321,7 +321,7 @@ class TestCheckIntervalMonotonicity:
     def test_no_warnings_when_monotonic(self, baseline_intervals):
         """Test no warnings are raised when baseline_intervals are monotonic."""
 
-        dummy_confo_model = DummySplitConformalPredictor(n_bins=6)
+        dummy_confo_model = DummySplitConformalPredictorMixin(n_bins=6)
 
         dummy_confo_model.baseline_intervals = baseline_intervals
 
