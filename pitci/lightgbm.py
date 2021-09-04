@@ -86,14 +86,6 @@ SUPPORTED_OBJECTIVES_ATTRIBUTE = (
 )
 
 
-SPLIT_CONFORMAL_PREDICTOR_DESCRIPTION = (
-    "Intervals are split into bins, using the scaling factors, where each bin is calibrated "
-    "at the required confidence level. This addresses the situation where the leaf node "
-    "scaled conformal predictors are not well calibrated on subsets of the data, despite "
-    "being calibrated at the required ``alpha`` confidence level overall."
-)
-
-
 class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor):
 
     __doc__ = LeafNodeScaledConformalPredictor.__doc__.format(
@@ -246,11 +238,8 @@ class LGBMBoosterSplitLeafNodeScaledConformalPredictor(
     SplitConformalPredictorMixin, LGBMBoosterLeafNodeScaledConformalPredictor
 ):
 
-    __doc__ = LGBMBoosterLeafNodeScaledConformalPredictor.__doc__.replace(
-        SUPPORTED_OBJECTIVES_DESCRIPTION,
-        SPLIT_CONFORMAL_PREDICTOR_DESCRIPTION
-        + "\n\n"
-        + SUPPORTED_OBJECTIVES_DESCRIPTION,
+    __doc__ = docstrings.combine_split_mixin_docs(
+        SplitConformalPredictorMixin, LGBMBoosterLeafNodeScaledConformalPredictor
     )
 
     @docstrings.doc_inherit_kwargs(

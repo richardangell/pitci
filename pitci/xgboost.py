@@ -100,13 +100,6 @@ SUPPORTED_OBJECTIVES_ATTRIBUTE = (
     "\tis passed when initialising the class object an error will be raised."
 )
 
-SPLIT_CONFORMAL_PREDICTOR_DESCRIPTION = (
-    "Intervals are split into bins, using the scaling factors, where each bin is calibrated "
-    "at the required confidence level. This addresses the situation where the leaf node "
-    "scaled conformal predictors are not well calibrated on subsets of the data, despite "
-    "being calibrated at the required ``alpha`` confidence level overall."
-)
-
 
 class XGBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
 
@@ -506,11 +499,8 @@ class XGBoosterSplitLeafNodeScaledConformalPredictor(
     SplitConformalPredictorMixin, XGBoosterLeafNodeScaledConformalPredictor
 ):
 
-    __doc__ = XGBoosterLeafNodeScaledConformalPredictor.__doc__.replace(
-        SUPPORTED_OBJECTIVES_DESCRIPTION,
-        SPLIT_CONFORMAL_PREDICTOR_DESCRIPTION
-        + "\n\n    "
-        + SUPPORTED_OBJECTIVES_DESCRIPTION,
+    __doc__ = docstrings.combine_split_mixin_docs(
+        SplitConformalPredictorMixin, XGBoosterLeafNodeScaledConformalPredictor
     )
 
     @docstrings.doc_inherit_kwargs(
