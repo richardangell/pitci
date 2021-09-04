@@ -10,9 +10,10 @@ def test_mro():
     expected_mro = tuple(
         [
             pitci.lightgbm.LGBMBoosterSplitLeafNodeScaledConformalPredictor,
-            pitci.base.SplitConformalPredictor,
+            pitci.base.SplitConformalPredictorMixin,
             pitci.lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor,
             pitci.base.LeafNodeScaledConformalPredictor,
+            pitci.base.ConformalPredictor,
             abc.ABC,
             object,
         ]
