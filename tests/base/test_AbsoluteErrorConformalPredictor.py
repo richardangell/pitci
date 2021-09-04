@@ -1,7 +1,5 @@
 import numpy as np
-import pandas as pd
 import xgboost as xgb
-import re
 
 from pitci.base import AbsoluteErrorConformalPredictor
 import pitci
@@ -15,200 +13,102 @@ class DummyAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
     """
 
     def __init__(self, model="abc"):
-        """Dummy init method that only calls AbsoluteErrorConformalPredictor
-        init method.
-        """
 
         super().__init__(model=model)
 
     def _generate_predictions(self, data):
         """Dummy function that returns 0s of shape (n,) where data has n rows."""
 
-        return np.zeros(data.shape[0])
+        return np.zeros(data.num_row())
 
 
-class TestInit:
-    """Tests for the AbsoluteErrorConformalPredictor._init__ method."""
+def test_inheritance():
+    """Test AbsoluteErrorConformalPredictor inherits from ConformalPredictor."""
 
-    def test_version_attribute_set(self):
-        """Test that the version attribute is set in init."""
+    dummy_confo_model = DummyAbsoluteErrorConformalPredictor()
 
-        dummy_confo_model = DummyAbsoluteErrorConformalPredictor()
-
-        assert (
-            dummy_confo_model.__version__ == pitci.__version__
-        ), "version attribute not set correctly"
-
-    def test_model_attribute_set(self):
-        """Test that the model attribute is set in init."""
-
-        dummy_confo_model = DummyAbsoluteErrorConformalPredictor(model=456)
-
-        assert dummy_confo_model.model == 456, "model attribute not set correctly"
+    assert isinstance(
+        dummy_confo_model, pitci.base.ConformalPredictor
+    ), "AbsoluteErrorConformalPredictor not inheriting from ConformalPredictor"
 
 
-class TestCalibrate:
-    """Tests for the AbsoluteErrorConformalPredictor.calibrate method."""
+class TestCalculateNonconformityScores:
+    """Tests for the AbsoluteErrorConformalPredictor._calculate_nonconformity_scores method."""
 
-    @pytest.mark.parametrize("alpha", [(-0.0001), (-1), (1.0001), (2), (55)])
-    def test_alpha_value_error(self, dmatrix_2x1_with_label, alpha):
-        """Test an exception is raised if alpha is below 0 or greater than 1."""
+    def test_scaled_absolute_error_call(self, mocker):
+        """Test the nonconformity.scaled_absolute_error function is called correctly."""
 
         dummy_confo_model = DummyAbsoluteErrorConformalPredictor()
 
-        with pytest.raises(
-            ValueError, match=re.escape("alpha must be in range [0 ,1]")
-        ):
+        nonconformity_scores_return_value = 1234
+        predictions_value = 1
+        response_value = 2
+        scaling_factors_value = 3
 
-            dummy_confo_model.calibrate(
-                data=dmatrix_2x1_with_label, alpha=alpha, response=np.array([0, 1])
-            )
-
-    def test_alpha_incorrect_type_error(self, dmatrix_2x1_with_label):
-        """Test an exception is raised if alpha is not an int or float."""
-
-        dummy_confo_model = DummyAbsoluteErrorConformalPredictor()
-
-        with pytest.raises(
-            TypeError,
-            match=re.escape(
-                f"alpha is not in expected types {[int, float]}, got {str}"
-            ),
-        ):
-
-            dummy_confo_model.calibrate(
-                data=dmatrix_2x1_with_label, alpha="abc", response=np.array([0, 1])
-            )
-
-    def test_response_incorrect_type_error(self, dmatrix_2x1_with_label):
-        """Test an exception is raised if response is not a pd.Series or np.ndarray."""
-
-        dummy_confo_model = DummyAbsoluteErrorConformalPredictor()
-
-        with pytest.raises(
-            TypeError,
-            match=re.escape(
-                f"response is not in expected types {[np.ndarray, pd.Series]}, got {bool}"
-            ),
-        ):
-
-            dummy_confo_model.calibrate(
-                data=dmatrix_2x1_with_label, alpha=0.5, response=False
-            )
-
-    def test_calibrate_interval_call(self, mocker, dmatrix_2x1_with_label):
-        """Test the call to the _calibrate_interval method."""
-
-        dummy_confo_model = DummyAbsoluteErrorConformalPredictor()
-
-        mocked = mocker.patch.object(
-            pitci.base.AbsoluteErrorConformalPredictor, "_calibrate_interval"
-        )
-
-        dummy_confo_model.calibrate(
-            data=dmatrix_2x1_with_label,
-            alpha=0.1,
-            response=dmatrix_2x1_with_label.get_label(),
-        )
-
-        assert (
-            mocked.call_count == 1
-        ), "incorrect number of calls to _calibrate_interval"
-
-        call_args = mocked.call_args_list[0]
-        call_pos_args = call_args[0]
-        call_kwargs = call_args[1]
-
-        assert (
-            call_pos_args == ()
-        ), "positional args incorrect in _calibrate_interval call"
-
-        np.testing.assert_array_equal(
-            call_kwargs["response"], dmatrix_2x1_with_label.get_label()
-        )
-
-        assert (
-            call_kwargs["alpha"] == 0.1
-        ), "alpha arg incorrect in _calibrate_interval call"
-
-        assert (
-            call_kwargs["data"] == dmatrix_2x1_with_label
-        ), "data arg incorrect in _calibrate_interval call"
-
-
-class TestPredictWithInterval:
-    """Tests for the AbsoluteErrorConformalPredictor.predict_with_interval method."""
-
-    def test_exception_no_baseline_interval(self):
-        """Test an exception is raised if no baseline_interval atttibute is present."""
-
-        dummy_confo_model = DummyAbsoluteErrorConformalPredictor()
-
-        assert not hasattr(dummy_confo_model, "baseline_interval")
-
-        with pytest.raises(
-            AttributeError,
-            match="AbsoluteErrorConformalPredictor does not have baseline_interval attribute, "
-            "run calibrate first.",
-        ):
-
-            dummy_confo_model.predict_with_interval(np.array([1, 0]))
-
-    def test_expected_output(self):
-        """Test the intervals returned are as expected."""
-
-        dummy_confo_model = DummyAbsoluteErrorConformalPredictor()
-
-        dummy_confo_model.baseline_interval = 5
-
-        results = dummy_confo_model.predict_with_interval(np.array([1, 0, -1]))
-
-        expected_results = np.array([[-5, 0, 5], [-5, 0, 5], [-5, 0, 5]])
-
-        np.testing.assert_array_equal(results, expected_results)
-
-    def test_expected_output2(self, mocker):
-        """Test the intervals returned are as expected."""
-
-        dummy_confo_model = DummyAbsoluteErrorConformalPredictor()
-
-        dummy_confo_model.baseline_interval = 3
-
-        #  set return value from _generate_predictions
         mocker.patch.object(
-            DummyAbsoluteErrorConformalPredictor,
-            "_generate_predictions",
-            return_value=np.array([1, 2, 3, 4]),
+            pitci.nonconformity,
+            "scaled_absolute_error",
+            return_value=nonconformity_scores_return_value,
         )
 
-        results = dummy_confo_model.predict_with_interval(np.array([1, 0, -1]))
+        result = dummy_confo_model._calculate_nonconformity_scores(
+            predictions_value, response_value, scaling_factors_value
+        )
 
-        expected_results = np.array([[-2, 1, 4], [-1, 2, 5], [0, 3, 6], [1, 4, 7]])
+        assert (
+            pitci.nonconformity.scaled_absolute_error.call_count == 1
+        ), "nonconformity.scaled_absolute_error function not called the correct number of times"
 
-        np.testing.assert_array_equal(results, expected_results)
+        assert (
+            pitci.nonconformity.scaled_absolute_error.call_args_list[0][0] == ()
+        ), "positional arguments in nonconformity.scaled_absolute_error call incorrect"
+
+        expected_call_kwargs = {
+            "predictions": predictions_value,
+            "response": response_value,
+            "scaling": scaling_factors_value,
+        }
+
+        assert (
+            pitci.nonconformity.scaled_absolute_error.call_args_list[0][1]
+            == expected_call_kwargs
+        ), "keyword arguments in nonconformity.scaled_absolute_error call incorrect"
+
+        assert result == nonconformity_scores_return_value, (
+            "return value from _calculate_nonconformity_scores is not the output from "
+            "nonconformity.scaled_absolute_error function"
+        )
+
+
+class TestCalculateScalingFactors:
+    """Tests for the AbsoluteErrorConformalPredictor._calculate_scaling_factors method."""
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            (np.array([3])),
+            (np.array([3, 9])),
+            (np.ones((5, 6))),
+        ],
+    )
+    def test_return_value(self, data):
+        """Test 1 is always returned from the method."""
+
+        dummy_confo_model = DummyAbsoluteErrorConformalPredictor()
+
+        result = dummy_confo_model._calculate_scaling_factors(data)
+
+        assert result == 1, "output from _calculate_scaling_factors not correct"
 
 
 class TestCalibrateInterval:
-    """Tests for the AbsoluteErrorConformalPredictor._calibrate_interval method."""
+    """Tests for the AbsoluteErrorConformalPredictor._calibrate_interval method.
 
-    def test_alpha_attribute_set(self, dmatrix_2x1_with_label, xgboost_1_split_1_tree):
-        """Test that the alpha attribute is set with the passed value."""
+    Note, AbsoluteErrorConformalPredictor implements the _calculate_nonconformity_scores
+    method so these tests are tests that the baseline_interval is calculated
+    correctly given some inputs.
 
-        dummy_confo_model = DummyAbsoluteErrorConformalPredictor()
-
-        alpha_value = 0.789
-
-        assert not hasattr(
-            dummy_confo_model, "alpha"
-        ), "confo model already has alpha attribute"
-
-        dummy_confo_model._calibrate_interval(
-            data=np.array([0, 1]), alpha=alpha_value, response=np.array([0, 1])
-        )
-
-        assert (
-            dummy_confo_model.alpha == alpha_value
-        ), "alpha attribute not set to expected value"
+    """
 
     @pytest.mark.parametrize(
         "response, predictions, quantile, expected_baseline_interval",
