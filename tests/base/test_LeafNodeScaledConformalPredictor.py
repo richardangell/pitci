@@ -381,7 +381,9 @@ class TestCountLeafNodeVisitsFromCalibration:
         leaf_node_predictions args.
         """
 
-        mocked = mocker.patch.object(pitci.base, "_sum_dict_values")
+        mocked = mocker.patch.object(
+            LeafNodeScaledConformalPredictor, "_sum_dict_values"
+        )
 
         dummy_confo_model = DummyLeafNodeScaledConformalPredictor()
 
@@ -423,7 +425,9 @@ class TestCountLeafNodeVisitsFromCalibration:
         sum_dict_values_return_values = [-2, 1, 0]
 
         mocker.patch.object(
-            pitci.base, "_sum_dict_values", side_effect=sum_dict_values_return_values
+            LeafNodeScaledConformalPredictor,
+            "_sum_dict_values",
+            side_effect=sum_dict_values_return_values,
         )
 
         dummy_confo_model = DummyLeafNodeScaledConformalPredictor()
@@ -477,7 +481,7 @@ class TestCalibrateLeafNodeCounts:
 
 
 class TestSumDictValues:
-    """Tests for the base._sum_dict_values function."""
+    """Tests for the LeafNodeScaledConformalPredictor._sum_dict_values method."""
 
     @pytest.mark.parametrize(
         "arr, counts, expected_output",
@@ -498,7 +502,7 @@ class TestSumDictValues:
     def test_expected_output(self, arr, counts, expected_output):
         """Test the correct values are summed in function."""
 
-        output = pitci.base._sum_dict_values(arr, counts)
+        output = LeafNodeScaledConformalPredictor._sum_dict_values(arr, counts)
 
         assert output == expected_output, "_sum_dict_values produced incorrect output"
 
