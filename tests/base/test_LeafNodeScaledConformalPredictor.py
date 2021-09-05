@@ -15,9 +15,6 @@ class DummyLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor):
     """
 
     def __init__(self, model="abcd"):
-        """Dummy init method that only calls LeafNodeScaledConformalPredictor
-        init method.
-        """
 
         super().__init__(model=model)
 
@@ -35,26 +32,6 @@ class DummyLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor):
         raise NotImplementedError(
             "_generate_leaf_node_predictions not implemented in DummyLeafNodeScaledConformalPredictor"
         )
-
-
-class TestInit:
-    """Tests for the LeafNodeScaledConformalPredictor._init__ method."""
-
-    def test_version_attribute_set(self):
-        """Test that the version attribute is set in init."""
-
-        dummy_confo_model = DummyLeafNodeScaledConformalPredictor()
-
-        assert (
-            dummy_confo_model.__version__ == pitci.__version__
-        ), "version attribute not set correctly"
-
-    def test_model_attribute_set(self):
-        """Test that the object passed in the model arg is set to the model attribute."""
-
-        dummy_confo_model = DummyLeafNodeScaledConformalPredictor(model=1)
-
-        assert dummy_confo_model.model == 1, "model attribute not set correctly"
 
 
 class TestCalibrate:
@@ -275,56 +252,24 @@ class TestCalibrate:
         ), "data arg incorrect in _calibrate_interval call"
 
 
-class TestPredictWithInterval:
-    """Tests for the LeafNodeScaledConformalPredictor.predict_with_interval method."""
+class TestCalculateScalingFactors:
+    """Tests for the LeafNodeScaledConformalPredictor._calculate_scaling_factors method."""
 
-    def test_exception_no_baseline_interval(self):
-        """Test an exception is raised if no baseline_interval atttibute is present."""
+    def test_leaf_node_counts_exception(self):
+        """Test an exception is raised if the leaf_node_counts attribute does not exist."""
 
         dummy_confo_model = DummyLeafNodeScaledConformalPredictor()
 
-        assert not hasattr(dummy_confo_model, "baseline_interval")
+        assert not hasattr(
+            dummy_confo_model, "leaf_node_counts"
+        ), "dummy_confo_model already has leaf_node_counts attribute"
 
         with pytest.raises(
             AttributeError,
-            match="LeafNodeScaledConformalPredictor does not have baseline_interval attribute, "
-            "run calibrate first.",
+            match="leaf_node_counts attribute missing, run calibrate first.",
         ):
 
-            dummy_confo_model.predict_with_interval(np.array([1, 0]))
-
-    def test_expected_output(self, mocker):
-        """Test the intervals returned are calculated as predictions +-
-        (scaling factor * baseline interval).
-        """
-
-        dummy_confo_model = DummyLeafNodeScaledConformalPredictor()
-
-        dummy_confo_model.baseline_interval = 2
-
-        # set return value from _generate_predictions
-        mocker.patch.object(
-            DummyLeafNodeScaledConformalPredictor,
-            "_generate_predictions",
-            return_value=np.array([-4, 0, 1, 4]),
-        )
-
-        # set return value from _generate_predictions
-        mocker.patch.object(
-            DummyLeafNodeScaledConformalPredictor,
-            "_calculate_scaling_factors",
-            return_value=np.array([0.5, 1, 2, -2]),
-        )
-
-        results = dummy_confo_model.predict_with_interval(np.array([1, 0, -1]))
-
-        expected_results = np.array([[-5, -4, -3], [-2, 0, 2], [-3, 1, 5], [8, 4, 0]])
-
-        np.testing.assert_array_equal(results, expected_results)
-
-
-class TestCalculateScalingFactors:
-    """Tests for the LeafNodeScaledConformalPredictor._calculate_scaling_factors method."""
+            dummy_confo_model._calculate_scaling_factors(np.array([0, 1, 3, -9]))
 
     def test_generate_leaf_node_predictions(self, mocker):
         """Test _generate_leaf_node_predictions is called with the data arg and the output
@@ -347,7 +292,10 @@ class TestCalculateScalingFactors:
             return_value=np.array([1]),
         )
 
+        # set a dummy value for leaf_node_counts attribute as
+        # _count_leaf_node_visits_from_calibration is mocked
         dummy_confo_model = DummyLeafNodeScaledConformalPredictor()
+        dummy_confo_model.leaf_node_counts = 1234
 
         data_arg = np.array([0, 1, 3, -9])
 
@@ -415,7 +363,10 @@ class TestCalculateScalingFactors:
 
         expected_results = 1 / count_leaf_nodes_return_value
 
+        # set a dummy value for leaf_node_counts attribute as
+        # _count_leaf_node_visits_from_calibration is mocked
         dummy_confo_model = DummyLeafNodeScaledConformalPredictor()
+        dummy_confo_model.leaf_node_counts = 1234
 
         results = dummy_confo_model._calculate_scaling_factors(np.array([0]))
 
@@ -424,22 +375,6 @@ class TestCalculateScalingFactors:
 
 class TestCountLeafNodeVisitsFromCalibration:
     """Tests for the LeafNodeScaledConformalPredictor._count_leaf_node_visits_from_calibration method."""
-
-    def test_no_leaf_node_counts_attribute_error(self):
-        """Test an exception is raised if leaf_node_counts attribute is not set."""
-
-        dummy_confo_model = DummyLeafNodeScaledConformalPredictor()
-
-        leaf_node_predictions_value = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-
-        with pytest.raises(
-            AttributeError,
-            match="leaf_node_counts attribute missing, run calibrate first.",
-        ):
-
-            dummy_confo_model._count_leaf_node_visits_from_calibration(
-                leaf_node_predictions_value
-            )
 
     def test_sum_dict_values(self, mocker):
         """Test that _sum_dict_values is applied to every row in the passed
@@ -566,3 +501,51 @@ class TestSumDictValues:
         output = pitci.base._sum_dict_values(arr, counts)
 
         assert output == expected_output, "_sum_dict_values produced incorrect output"
+
+
+class TestCalculateNonconformityScores:
+    """Tests for the LeafNodeScaledConformalPredictor._calculate_nonconformity_scores method."""
+
+    def test_scaled_absolute_error_call(self, mocker):
+        """Test the nonconformity.scaled_absolute_error function is called correctly."""
+
+        dummy_confo_model = DummyLeafNodeScaledConformalPredictor()
+
+        nonconformity_scores_return_value = 1234
+        predictions_value = 1
+        response_value = 2
+        scaling_factors_value = 3
+
+        mocker.patch.object(
+            pitci.nonconformity,
+            "scaled_absolute_error",
+            return_value=nonconformity_scores_return_value,
+        )
+
+        result = dummy_confo_model._calculate_nonconformity_scores(
+            predictions_value, response_value, scaling_factors_value
+        )
+
+        assert (
+            pitci.nonconformity.scaled_absolute_error.call_count == 1
+        ), "nonconformity.scaled_absolute_error function not called the correct number of times"
+
+        assert (
+            pitci.nonconformity.scaled_absolute_error.call_args_list[0][0] == ()
+        ), "positional arguments in nonconformity.scaled_absolute_error call incorrect"
+
+        expected_call_kwargs = {
+            "predictions": predictions_value,
+            "response": response_value,
+            "scaling": scaling_factors_value,
+        }
+
+        assert (
+            pitci.nonconformity.scaled_absolute_error.call_args_list[0][1]
+            == expected_call_kwargs
+        ), "keyword arguments in nonconformity.scaled_absolute_error call incorrect"
+
+        assert result == nonconformity_scores_return_value, (
+            "return value from _calculate_nonconformity_scores is not the output from "
+            "nonconformity.scaled_absolute_error function"
+        )
