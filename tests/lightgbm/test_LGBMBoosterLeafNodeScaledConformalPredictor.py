@@ -211,9 +211,7 @@ class TestPredictWithInterval:
 
             confo_model.predict_with_interval(1)
 
-    def test_super_predict_with_interval_call(
-        self, mocker, dmatrix_2x1_with_label, lgb_booster_1_split_1_tree
-    ):
+    def test_super_predict_with_interval_call(self, mocker, lgb_booster_1_split_1_tree):
         """Test that LeafNodeScaledConformalPredictor.predict_with_interval is called and the
         outputs of this are returned from the method.
         """

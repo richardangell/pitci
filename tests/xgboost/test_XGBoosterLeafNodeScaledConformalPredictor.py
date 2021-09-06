@@ -405,7 +405,7 @@ class TestGenerateLeafNodePredictions:
 
 
 class TestCalibrateLeafNodeCounts:
-    """Tests that _calibrate_leaf_node_counts calculate the correct values."""
+    """Tests that _calibrate_leaf_node_counts calculates the correct values for specific models."""
 
     def test_leaf_node_counts_correct_1(
         self, xgboost_2_split_1_tree, dmatrix_4x2_with_label
