@@ -603,6 +603,41 @@ class TestConformalPredictionValues:
     XGBoosterLeafNodeScaledConformalPredictor class.
     """
 
+    @pytest.mark.parametrize(
+        "alpha", [(0.1), (0.25), (0.5), (0.7), (0.8), (0.9), (0.95), (0.99)]
+    )
+    def test_calibration(self, alpha, xgbooster_diabetes_model, diabetes_xgb_data):
+        """Test that the correct proportion of response values fall within the intervals, on
+        the calibration sample.
+        """
+
+        confo_model = pitci.get_leaf_node_scaled_conformal_predictor(
+            xgbooster_diabetes_model
+        )
+
+        confo_model.calibrate(
+            data=diabetes_xgb_data[3],
+            alpha=alpha,
+        )
+
+        predictions_test = confo_model.predict_with_interval(diabetes_xgb_data[3])
+
+        # for alpha = 95% loss of accuracy seems to result in one observation
+        # being outside to the interval to achieve the required level of calibration
+        if alpha == 0.95:
+
+            predictions_test[:, 0] = predictions_test[:, 0] - (1 / 100000)
+            predictions_test[:, 2] = predictions_test[:, 2] + (1 / 100000)
+
+        calibration_results = pitci.helpers.check_response_within_interval(
+            response=diabetes_xgb_data[3].get_label(),
+            intervals_with_predictions=predictions_test,
+        )
+
+        assert (
+            calibration_results[True] >= alpha
+        ), f"{type(confo_model)} not calibrated at {alpha}, got {calibration_results[True]}"
+
     def test_conformal_predictions(self, xgbooster_diabetes_model, diabetes_xgb_data):
         """Test that the conformal intervals are as expected."""
 

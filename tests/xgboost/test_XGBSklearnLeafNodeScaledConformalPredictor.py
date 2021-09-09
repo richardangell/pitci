@@ -401,6 +401,39 @@ class TestConformalPredictionValues:
     XGBSklearnLeafNodeScaledConformalPredictor class.
     """
 
+    @pytest.mark.parametrize(
+        "alpha", [(0.1), (0.25), (0.5), (0.7), (0.8), (0.9), (0.95), (0.99)]
+    )
+    def test_calibration(
+        self, alpha, xgbregressor_diabetes_model, split_diabetes_data_into_4
+    ):
+        """Test that the correct proportion of response values fall within the intervals, on
+        the calibration sample.
+        """
+
+        confo_model = pitci.get_leaf_node_scaled_conformal_predictor(
+            xgbregressor_diabetes_model
+        )
+
+        confo_model.calibrate(
+            data=split_diabetes_data_into_4[6],
+            alpha=alpha,
+            response=split_diabetes_data_into_4[7],
+        )
+
+        predictions_test = confo_model.predict_with_interval(
+            split_diabetes_data_into_4[6]
+        )
+
+        calibration_results = pitci.helpers.check_response_within_interval(
+            response=split_diabetes_data_into_4[7],
+            intervals_with_predictions=predictions_test,
+        )
+
+        assert (
+            calibration_results[True] >= alpha
+        ), f"{type(confo_model)} not calibrated at {alpha}, got {calibration_results[True]}"
+
     def test_conformal_predictions(
         self, xgbregressor_diabetes_model, split_diabetes_data_into_4
     ):
