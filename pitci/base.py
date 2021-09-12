@@ -8,7 +8,8 @@ import numpy as np
 import warnings
 from abc import ABC, abstractmethod
 
-from typing import Union, Any, List, Dict, Optional
+from typing import Callable, Union, Any, List, Dict, Optional
+
 
 from ._version import __version__
 from .checks import (
@@ -683,6 +684,13 @@ class SplitConformalPredictorMixin:
 
     """
 
+    # temporary solution to stop mypy complaining about mixin class
+    # declare some attributes that will be present when an object is initialised,
+    # inheriting from both this class and a subclass of ConformalPredictor
+    _generate_predictions: Callable
+    _calculate_nonconformity_scores: Callable
+    _calculate_scaling_factors: Callable
+
     def __init__(self, model: Any, n_bins: int = 3) -> None:
 
         check_type(n_bins, [int], "n_bins")
@@ -694,7 +702,7 @@ class SplitConformalPredictorMixin:
         self.n_bins = n_bins
         self.bin_quantiles = np.linspace(0, 1, self.n_bins + 1)
 
-        super().__init__(model=model)
+        super().__init__(model=model)  # type: ignore
 
     def _calibrate_interval(
         self,
@@ -780,7 +788,7 @@ class SplitConformalPredictorMixin:
 
         Parameters
         ----------
-        scaling_factors : Any
+        scaling_factors : np.ndarray
             The scaling factors to lookup the baseline intervals for.
 
         Returns
@@ -794,9 +802,9 @@ class SplitConformalPredictorMixin:
             a=self.scaling_factor_cut_points, v=scaling_factors, side="left"
         )
 
-        bin_index_lookup = np.clip(bin_index_lookup, a_min=1, a_max=self.n_bins)
+        bin_index_lookup_capped = np.clip(bin_index_lookup, a_min=1, a_max=self.n_bins)
 
-        interval_lookup = self.baseline_interval[bin_index_lookup - 1]
+        interval_lookup = self.baseline_interval[bin_index_lookup_capped - 1]
 
         return interval_lookup
 
