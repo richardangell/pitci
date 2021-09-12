@@ -54,7 +54,7 @@ class TestInit:
 
         assert (
             confo_model.SUPPORTED_OBJECTIVES
-            == pitci.lightgbm.SUPPORTED_OBJECTIVES_ABS_ERROR
+            == pitci.lightgbm.SUPPORTED_OBJECTIVES_ABSOLUTE_ERROR
         ), "SUPPORTED_OBJECTIVES attribute incorrect"
 
     def test_check_objective_supported_called(self, mocker, lgb_booster_1_split_1_tree):
@@ -74,7 +74,7 @@ class TestInit:
 
         assert call_pos_args == (
             lgb_booster_1_split_1_tree,
-            pitci.lightgbm.SUPPORTED_OBJECTIVES_ABS_ERROR,
+            pitci.lightgbm.SUPPORTED_OBJECTIVES_ABSOLUTE_ERROR,
         ), "positional args in check_objective_supported call not correct"
 
         assert (
@@ -211,9 +211,7 @@ class TestPredictWithInterval:
 
             confo_model.predict_with_interval(1)
 
-    def test_super_predict_with_interval_call(
-        self, mocker, dmatrix_2x1_with_label, lgb_booster_1_split_1_tree
-    ):
+    def test_super_predict_with_interval_call(self, mocker, lgb_booster_1_split_1_tree):
         """Test that LeafNodeScaledConformalPredictor.predict_with_interval is called and the
         outputs of this are returned from the method.
         """
@@ -423,3 +421,96 @@ class TestGenerateLeafNodePredictions:
         )
 
         np.testing.assert_array_equal(results, expected_results)
+
+
+class TestConformalPredictionValues:
+    """Baseline tests of the conformal predictions from the
+    LGBMBoosterLeafNodeScaledConformalPredictor class.
+    """
+
+    @pytest.mark.parametrize(
+        "alpha", [(0.1), (0.25), (0.5), (0.7), (0.8), (0.9), (0.95), (0.99)]
+    )
+    def test_calibration(
+        self, alpha, lgbmbooster_diabetes_model, split_diabetes_data_into_4
+    ):
+        """Test that the correct proportion of response values fall within the intervals, on
+        the calibration sample.
+        """
+
+        confo_model = pitci.get_leaf_node_scaled_conformal_predictor(
+            lgbmbooster_diabetes_model
+        )
+
+        confo_model.calibrate(
+            data=split_diabetes_data_into_4[6],
+            alpha=alpha,
+            response=split_diabetes_data_into_4[7],
+        )
+
+        predictions_test = confo_model.predict_with_interval(
+            split_diabetes_data_into_4[6]
+        )
+
+        calibration_results = pitci.helpers.check_response_within_interval(
+            response=split_diabetes_data_into_4[7],
+            intervals_with_predictions=predictions_test,
+        )
+
+        assert (
+            calibration_results[True] >= alpha
+        ), f"{type(confo_model)} not calibrated at {alpha}, got {calibration_results[True]}"
+
+    def test_conformal_predictions(
+        self, lgbmbooster_diabetes_model, split_diabetes_data_into_4
+    ):
+        """Test that the conformal intervals are as expected."""
+
+        confo_model = pitci.get_leaf_node_scaled_conformal_predictor(
+            lgbmbooster_diabetes_model
+        )
+
+        confo_model.calibrate(
+            data=split_diabetes_data_into_4[6],
+            alpha=0.8,
+            response=split_diabetes_data_into_4[7],
+        )
+
+        assert (
+            round(float(confo_model.baseline_interval), 7) == 137606.1022249
+        ), "baseline_interval not calculated as expected on diabetes dataset"
+
+        predictions_test = confo_model.predict_with_interval(
+            split_diabetes_data_into_4[6]
+        )
+
+        assert (
+            round(float(predictions_test[:, 1].mean()), 7) == 158.5720143
+        ), "mean test sample predicted value not calculated as expected on diabetes dataset"
+
+        expected_interval_distribution = {
+            0.0: 164.20775921826493,
+            0.05: 169.67460200358323,
+            0.1: 171.2583724018743,
+            0.2: 175.62999645808043,
+            0.3: 177.1221848176186,
+            0.4: 179.31514137967736,
+            0.5: 180.82273616939028,
+            0.6: 182.62288534774035,
+            0.7: 184.88021033962121,
+            0.8: 189.36173459799565,
+            0.9: 193.54035959671634,
+            0.95: 196.1039176153644,
+            1.0: 200.73829646229905,
+            "mean": 181.81080100039432,
+            "std": 8.357026505108546,
+            "iqr": 10.1530693870383,
+        }
+
+        actual_interval_distribution = pitci.helpers.check_interval_width(
+            intervals_with_predictions=predictions_test
+        ).to_dict()
+
+        assert (
+            expected_interval_distribution == actual_interval_distribution
+        ), "conformal interval distribution not calculated as expected"

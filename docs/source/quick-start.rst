@@ -94,7 +94,7 @@ For ``Split Leaf Node Scaled Absolute Error`` conformal predictors;
 
    .. code::
 
-     pitci.get_leaf_node_split_conformal_predictor(model)
+     pitci.get_split_leaf_node_scaled_conformal_predictor(model)
 
 where ``model`` is the underlying model that the user has built using 
 one of the supported libraries.

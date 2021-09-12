@@ -24,26 +24,31 @@ jobs:
         python -m pip install --upgrade pip
         pip install "flit>=2,<4"
         flit install --deps=all
+
     - name: Lint with flake8
+      if: always()    
       run: |
         flake8 .
 
     - name: mypy
+      if: always()    
       run: |
         mypy pitci/
 
     - name: Lint with black
+      if: always()    
       run: |
         black --version
         black --check .
         
     - name: Test with pytest
+      if: always()
       run: |
         pytest . --cov=pitci/ --cov-report=html --cov-config=.coveragerc
       
     - name: Upload coverage pytest html test results
+      if: always()    
       uses: actions/upload-artifact@v2
       with:
         name: coverage-html-pytest-results
         path: htmlcov
-      if: ${{ always() }}

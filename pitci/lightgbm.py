@@ -15,11 +15,11 @@ except ModuleNotFoundError as err:
 
 from typing import List, Union, Any
 
-from .base import LeafNodeScaledConformalPredictor, SplitConformalPredictor
+from .base import LeafNodeScaledConformalPredictor, SplitConformalPredictorMixin
 from .checks import check_type, check_allowed_value
 from .dispatchers import (
     get_leaf_node_scaled_conformal_predictor,
-    get_leaf_node_split_conformal_predictor,
+    get_split_leaf_node_scaled_conformal_predictor,
 )
 from . import docstrings
 
@@ -29,6 +29,15 @@ def check_objective_supported(
 ) -> None:
     """Function to check that the booster objective parameter is in the
     supported_objectives list and raise and exception if not.
+
+    Parameters
+    ----------
+    booster : lgb.Booster
+        Model to check objective is supported.
+
+    supported_objectives : list
+        List of lightgbm supported objectives.
+
     """
 
     check_type(booster, [lgb.basic.Booster], "booster")
@@ -45,7 +54,7 @@ def check_objective_supported(
     )
 
 
-SUPPORTED_OBJECTIVES_ABS_ERROR = [
+SUPPORTED_OBJECTIVES_ABSOLUTE_ERROR = [
     "regression",
     "regression_l1",
     "huber",
@@ -64,17 +73,26 @@ SUPPORTED_OBJECTIVES_ABS_ERROR = [
     # "rank_xendcg"
 ]
 
+SUPPORTED_OBJECTIVES_DESCRIPTION = (
+    "The currently supported lightgbm objective functions, given the nonconformity\n"
+    "    measure that is based on absolute error, are defined in the\n"
+    "    ``SUPPORTED_OBJECTIVES`` attribute."
+)
+
+SUPPORTED_OBJECTIVES_ATTRIBUTE = (
+    "SUPPORTED_OBJECTIVES : list\n"
+    "\tBooster supported objectives. If a lgb.Booster with a non-supported objective\n"
+    "\tis passed when initialising the class object an error will be raised."
+)
+
 
 class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor):
+
     __doc__ = LeafNodeScaledConformalPredictor.__doc__.format(
         model_type="``lgb.Booster``",
-        description="The currently supported lgboost objective functions, "
-        "given the nonconformity\n    measure that is based on absolute error, are defined "
-        "in the\n    SUPPORTED_OBJECTIVES attribute.",
+        description=SUPPORTED_OBJECTIVES_DESCRIPTION,
         parameters="",
-        attributes="SUPPORTED_OBJECTIVES : list\n"
-        "\tBooster supported objectives. If a model with a non-supported "
-        "objective\n\tis passed when initialising the class object an error will be raised.",
+        attributes=SUPPORTED_OBJECTIVES_ATTRIBUTE,
         calibrate_method="pitci.lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor.calibrate",
     )
 
@@ -84,7 +102,7 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
 
         super().__init__(model=model)
 
-        self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABS_ERROR
+        self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABSOLUTE_ERROR
 
         check_objective_supported(model, self.SUPPORTED_OBJECTIVES)
 
@@ -93,7 +111,6 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
         style=docstrings.str_format_merge_style,
         description="",
         predict_with_interval_method="pitci.lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
-        baseline_interval_attribute="baseline_interval",
         data_type="np.ndarray or pd.DataFrame",
         response_type="np.ndarray or pd.Series",
         train_data_type="np.ndarray, pd.DataFrame or None, default = None",
@@ -116,6 +133,7 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
     @docstrings.doc_inherit_kwargs(
         LeafNodeScaledConformalPredictor.predict_with_interval,
         style=docstrings.str_format_merge_style,
+        description="",
         data_type="np.ndarray or pd.DataFrame",
     )
     def predict_with_interval(
@@ -216,29 +234,21 @@ class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredict
         return leaf_node_predictions
 
 
-class LGBMBoosterLeafNodeSplitConformalPredictor(
-    SplitConformalPredictor, LGBMBoosterLeafNodeScaledConformalPredictor
+class LGBMBoosterSplitLeafNodeScaledConformalPredictor(
+    SplitConformalPredictorMixin, LGBMBoosterLeafNodeScaledConformalPredictor
 ):
-    __doc__ = SplitConformalPredictor.__doc__.format(
-        model_type="``lgb.Booster``",
-        description="The currently supported lgboost objective functions, "
-        "given the nonconformity\n    measure that is based on absolute error, are defined "
-        "in the\n    SUPPORTED_OBJECTIVES attribute.",
-        parameters="",
-        calibrate_link="``calibrate``",
-        attributes="SUPPORTED_OBJECTIVES : list\n"
-        "\tBooster supported objectives. If a model with a non-supported "
-        "objective\n\tis passed when initialising the class object an error will be raised.",
+
+    __doc__ = docstrings.combine_split_mixin_docs(
+        SplitConformalPredictorMixin, LGBMBoosterLeafNodeScaledConformalPredictor
     )
 
     @docstrings.doc_inherit_kwargs(
         LeafNodeScaledConformalPredictor.calibrate,
         style=docstrings.str_format_merge_style,
-        description="The ``baseline_intervals`` are each calibrated to the required ``alpha``\n\t"
-        "level on the subsets of the data where the scaling factor values\n\t"
-        "fall into the range for that particular bucket.",
+        description="The ``baseline_interval`` values are each calibrated to the required ``alpha``\n"
+        "\tlevel on the subsets of the data where the scaling factor values\n"
+        "\tfall into the range for that particular bucket.",
         predict_with_interval_method="pitci.lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
-        baseline_interval_attribute="baseline_intervals",
         data_type="np.ndarray or pd.DataFrame",
         response_type="np.ndarray or pd.Series",
         train_data_type="np.ndarray, pd.DataFrame or None, default = None",
@@ -256,7 +266,7 @@ class LGBMBoosterLeafNodeSplitConformalPredictor(
         )
 
     @docstrings.doc_inherit_kwargs(
-        SplitConformalPredictor.predict_with_interval,
+        LGBMBoosterLeafNodeScaledConformalPredictor.predict_with_interval,
         style=docstrings.str_format_merge_style,
         predict_with_interval_method="pitci.xgboost.XGBoosterLeafNodeScaledConformalPredictor.predict_with_interval",
         data_type="pd.DataFrame of np.ndarray",
@@ -281,14 +291,16 @@ def return_lgb_booster_leaf_node_scaled_confromal_predictor(
     return confo_model
 
 
-@get_leaf_node_split_conformal_predictor.register(lgb.basic.Booster)
+@get_split_leaf_node_scaled_conformal_predictor.register(lgb.basic.Booster)
 def return_lgb_booster_leaf_node_split_confromal_predictor(
     model: lgb.Booster, n_bins: int = 3
-) -> LGBMBoosterLeafNodeSplitConformalPredictor:
-    """Function to return an instance of LGBMBoosterLeafNodeSplitConformalPredictor
+) -> LGBMBoosterSplitLeafNodeScaledConformalPredictor:
+    """Function to return an instance of LGBMBoosterSplitLeafNodeScaledConformalPredictor
     class the passed lgb.Booster object.
     """
 
-    confo_model = LGBMBoosterLeafNodeSplitConformalPredictor(model=model, n_bins=n_bins)
+    confo_model = LGBMBoosterSplitLeafNodeScaledConformalPredictor(
+        model=model, n_bins=n_bins
+    )
 
     return confo_model

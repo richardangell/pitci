@@ -165,20 +165,21 @@ class TestGetLeafNodeScaledConformalPredictor:
 
 
 class TestGetLeafNodeSplitConformalPredictor:
-    """Tests for the get_leaf_node_split_conformal_predictor function."""
+    """Tests for the get_split_leaf_node_scaled_conformal_predictor function."""
 
     def test_xgb_booster(self, xgboost_1_split_1_tree):
-        """Test an XGBoosterLeafNodeSplitConformalPredictor object is returned if
+        """Test an XGBoosterSplitLeafNodeScaledConformalPredictor object is returned if
         and xgb.Booster is passed.
         """
 
-        confo_model = dispatchers.get_leaf_node_split_conformal_predictor(
+        confo_model = dispatchers.get_split_leaf_node_scaled_conformal_predictor(
             xgboost_1_split_1_tree, 5
         )
 
         assert (
-            type(confo_model) is pitci_xgb.XGBoosterLeafNodeSplitConformalPredictor
-        ), "incorrect type returned from get_leaf_node_split_conformal_predictor"
+            type(confo_model)
+            is pitci_xgb.XGBoosterSplitLeafNodeScaledConformalPredictor
+        ), "incorrect type returned from get_split_leaf_node_scaled_conformal_predictor"
 
         assert confo_model.model is xgboost_1_split_1_tree, (
             "passed model arg not set to model attribute of object returned "
@@ -187,30 +188,31 @@ class TestGetLeafNodeSplitConformalPredictor:
 
         assert confo_model.n_bins == 5, (
             "passed n_bins arg not set to n_bins attribute of object returned "
-            "from get_leaf_node_split_conformal_predictor"
+            "from get_split_leaf_node_scaled_conformal_predictor"
         )
 
     def test_lgb_booster(self, lgb_booster_1_split_1_tree):
-        """Test an LGBMBoosterLeafNodeSplitConformalPredictor object is returned if
+        """Test an LGBMBoosterSplitLeafNodeScaledConformalPredictor object is returned if
         and lgb.Booster is passed.
         """
 
-        confo_model = dispatchers.get_leaf_node_split_conformal_predictor(
+        confo_model = dispatchers.get_split_leaf_node_scaled_conformal_predictor(
             lgb_booster_1_split_1_tree, 8
         )
 
         assert (
-            type(confo_model) is pitci_lgb.LGBMBoosterLeafNodeSplitConformalPredictor
-        ), "incorrect type returned from get_leaf_node_split_conformal_predictor"
+            type(confo_model)
+            is pitci_lgb.LGBMBoosterSplitLeafNodeScaledConformalPredictor
+        ), "incorrect type returned from get_split_leaf_node_scaled_conformal_predictor"
 
         assert confo_model.model is lgb_booster_1_split_1_tree, (
             "passed model arg not set to model attribute of object returned "
-            "from get_leaf_node_split_conformal_predictor"
+            "from get_split_leaf_node_scaled_conformal_predictor"
         )
 
         assert confo_model.n_bins == 8, (
             "passed n_bins arg not set to n_bins attribute of object returned "
-            "from get_leaf_node_split_conformal_predictor"
+            "from get_split_leaf_node_scaled_conformal_predictor"
         )
 
     def test_other_type_exception(self):
@@ -219,8 +221,8 @@ class TestGetLeafNodeSplitConformalPredictor:
         with pytest.raises(
             NotImplementedError,
             match=re.escape(
-                f"model type not supported for SplitConformalPredictor children; {float}"
+                f"model type not supported for SplitConformalPredictorMixin, LeafNodeScaledConformalPredictor children; {float}"
             ),
         ):
 
-            dispatchers.get_leaf_node_split_conformal_predictor(1.1)
+            dispatchers.get_split_leaf_node_scaled_conformal_predictor(1.1)

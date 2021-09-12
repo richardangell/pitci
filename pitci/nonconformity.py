@@ -20,13 +20,6 @@ def nonconformity_at_alpha(nonconformity_scores, alpha):
     alpha.
     """
 
-    n = nonconformity_scores.shape[0]
-
-    # note, -1 is for 0 based indexing
-    alpha_index = int(np.floor(alpha * (n + 1))) - 1
-
-    alpha_index = np.clip(alpha_index, a_min=0, a_max=n - 1)
-
-    selected_score = np.sort(nonconformity_scores)[alpha_index]
+    selected_score = np.quantile(nonconformity_scores, alpha, interpolation="higher")
 
     return selected_score

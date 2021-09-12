@@ -14,6 +14,7 @@ from . import base
 
 from functools import partial
 import custom_inherit
+from custom_inherit._doc_parse_tools.numpy_parse_tools import parse_numpy_doc
 
 from typing import Any, Union, Callable
 
@@ -30,8 +31,6 @@ def _format_base_class_docstrings() -> None:
     _format_absolute_error_conformal_predictor()
 
     _format_leaf_node_scaled_absolute_error_conformal_predictor()
-
-    _format_leaf_node_split_absolute_error_conformal_predictor()
 
 
 def _format_absolute_error_conformal_predictor() -> None:
@@ -79,7 +78,6 @@ def _format_leaf_node_scaled_absolute_error_conformal_predictor() -> None:
     _str_format_docstring(
         base.LeafNodeScaledConformalPredictor.calibrate,
         predict_with_interval_method="pitci.base.LeafNodeScaledConformalPredictor.predict_with_interval",
-        baseline_interval_attribute="baseline_interval",
         data_type="``Any``",
         response_type="np.ndarray or pd.Series",
         train_data_type="Any, default = None",
@@ -88,27 +86,6 @@ def _format_leaf_node_scaled_absolute_error_conformal_predictor() -> None:
 
     _str_format_docstring(
         base.LeafNodeScaledConformalPredictor.predict_with_interval,
-        data_type="``Any``",
-    )
-
-
-def _format_leaf_node_split_absolute_error_conformal_predictor() -> None:
-    """Format the class docstring and user facing methods docstrings
-    in the SplitConformalPredictor class.
-    """
-
-    _str_format_docstring(
-        base.SplitConformalPredictor,
-        model_type="``Any``",
-        description="",
-        parameters="",
-        calibrate_link="``calibrate``",
-        attributes="",
-    )
-
-    _str_format_docstring(
-        base.SplitConformalPredictor.predict_with_interval,
-        predict_with_interval_method="pitci.base.LeafNodeScaledConformalPredictor.predict_with_interval",
         data_type="``Any``",
     )
 
@@ -125,10 +102,122 @@ def _str_format_docstring(obj: Any, **kwargs) -> None:
     obj.__doc__ = obj.__doc__.format(**kwargs)
 
 
+def combine_split_mixin_docs(mixin_class, main_class):
+    """Function to combine docstrings to produce a composite
+    docstring for a model specific SplitLeafNodeScaledConformalPredictor
+    child class.
+
+    The specific classes this function should be used with are a
+    model specific LeafNodeScaledConformalPredictor child class and
+    the SplitConformalPredictorMixin class.
+
+    """
+
+    SPLIT_CONFORMAL_PREDICTOR_DESCRIPTION = (
+        "Intervals are split into bins, using the scaling factors, where each bin is calibrated "
+        "at the required confidence level. This addresses the situation where the leaf node "
+        "scaled conformal predictors are not well calibrated on subsets of the data, despite "
+        "being calibrated at the required ``alpha`` confidence level overall."
+    )
+
+    main_docs_split = parse_numpy_doc(main_class.__doc__)
+
+    mixin_docs_split = parse_numpy_doc(mixin_class.__doc__)
+
+    combined_docs = (
+        main_docs_split["Short Summary"]
+        + "\n\n"
+        + SPLIT_CONFORMAL_PREDICTOR_DESCRIPTION
+        + "\n\n"
+        + "Parameters\n----------"
+        + "\n\n"
+        + main_docs_split["Parameters"]
+        + "\n\n"
+        + remove_key_from_numpy_docstring_section(
+            mixin_docs_split["Parameters"], "model"
+        )
+        + "\n\n"
+        + "Attributes\n----------"
+        + "\n\n"
+        + remove_key_from_numpy_docstring_section(
+            main_docs_split["Attributes"], "baseline_interval"
+        )
+        + "\n\n"
+        + mixin_docs_split["Attributes"]
+    )
+
+    return combined_docs
+
+
+def remove_key_from_numpy_docstring_section(numpy_docstring_section, key):
+    """Function to remove a specific key from a section of a numpy docstring.
+
+    For example when combining docstrings with ``combine_split_mixin_docs``
+    both docstrings may have a particular attribute listed so it is
+    neccessary to remove one when merging the two.
+
+    """
+
+    docstring_section_split = numpy_docstring_section.split("\n")
+
+    key_location = -1
+
+    # first find the location of the list element containing "key :"
+    for docstring_section_single_no, docstring_section_single in enumerate(
+        docstring_section_split
+    ):
+
+        key_location_section_single = docstring_section_single.find(f"{key} :")
+
+        if key_location_section_single >= 0:
+
+            if key_location >= 0:
+
+                raise ValueError(
+                    f"key (specifically '{key } :') found twice in numpy_docstring_section"
+                )
+
+            else:
+
+                key_location = docstring_section_single_no
+
+    if key_location < 0:
+
+        raise ValueError(
+            f"key (specifically '{key } :') is not present in numpy_docstring_section"
+        )
+
+    delete_keys = []
+
+    # next find the elements after the "key :" element which are the description
+    # for the key
+    # note, this can be multiple elements as the description can be split over
+    # multiple lines
+    # search from key_location until the next "" value or end of the list
+    for docstring_section_single_no in range(
+        key_location, len(docstring_section_split) - 1
+    ):
+
+        delete_keys.append(docstring_section_single_no)
+
+        if docstring_section_split[docstring_section_single_no] == "":
+
+            break
+
+    # delete the key name and the key description lines
+    for delete_key in reversed(delete_keys):
+
+        del docstring_section_split[delete_key]
+
+    modified_docstring_section = "\n".join(docstring_section_split)
+
+    return modified_docstring_section
+
+
 def doc_inherit_kwargs(
     parent: Union[str, Any],
     style: Union[Any, Callable[[str, str], str]] = "parent",
-    **kwargs
+    **kwargs,
 ) -> custom_inherit._decorator_base.DocInheritDecorator:
     """This function is a slight modification of the `doc_inherit` decorator
     function from the `custom_inherit` package to allow keyword arguments to
