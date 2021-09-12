@@ -203,9 +203,9 @@ class TestCalibrateInterval:
         # in terms of bins that the nonconformity_values fall into
         # the first bin will contain values [100:120], the second [121:140]
         # the third [141:160] and so on up to 5 bins
-        # each bin has the 80th percentile calculated which give
-        # the values below
-        expected_baseline_intervals = np.array([116, 136, 156, 176, 196])
+        # each bin has the 80th percentile (with interpolation up to the
+        # higher value if required) calculated which give the values below;
+        expected_baseline_intervals = np.array([116, 137, 157, 177, 197])
 
         np.testing.assert_array_equal(
             dummy_confo_model.baseline_interval, expected_baseline_intervals
