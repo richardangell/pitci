@@ -22,13 +22,13 @@ Each individual change should have a link to the pull request after the descript
 Changed
 ^^^^^^^
 
-- Update changelog to follow structure recommendations from https://keepachangelog.com/
-- Change file type of chaneglog to ``.rst``
+- Update changelog to follow structure recommendations from https://keepachangelog.com/ `#11 <https://github.com/richardangell/pitci/pull/11>`_
+- Change file type of chaneglog to ``.rst`` `#11 <https://github.com/richardangell/pitci/pull/11>`_
 
 Added
 ^^^^^
 
-- Add changelog into sphinx docs
+- Add changelog into sphinx docs `#11 <https://github.com/richardangell/pitci/pull/11>`_
 
 0.3.0.dev0 (unreleased) 
 -----------------------
