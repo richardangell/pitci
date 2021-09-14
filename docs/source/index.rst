@@ -12,6 +12,7 @@ Welcome to pitci's documentation!
 
    Quick Start <quick-start>
    API Documentation <api>
+   Changelog <changelog>
 
 Indices and tables
 ==================
