@@ -1,4 +1,8 @@
-# `pitci`: Prediction Intervals for Trees using Conformal Intervals
+<p align="center">
+  <img src="logo.png">
+</p>
+
+# Prediction Intervals for Trees using Conformal Intervals
 
 ## Introduction
 
