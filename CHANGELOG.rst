@@ -22,7 +22,7 @@ Each individual change should have a link to the pull request after the descript
 Added
 ^^^^^
 
-- Added logos; |logo|, |logo_no_tree| to ``README`` and docs.
+- Added logos; |logo|, |logo_no_tree| to ``README`` and docs `#12 <https://github.com/richardangell/pitci/pull/12>`_
 
 .. |logo| image:: ../../logo.png
   :width: 100
