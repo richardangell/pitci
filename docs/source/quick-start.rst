@@ -1,6 +1,8 @@
 Quick Start
 ====================
 
+.. image:: ../../logo.png
+
 Welcome to the quick start guide for ``pitci``!
 
 Installation

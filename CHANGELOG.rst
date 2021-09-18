@@ -16,6 +16,20 @@ Subsections for each version can be one of the following;
 
 Each individual change should have a link to the pull request after the description of the change.
 
+0.3.0.dev2 (unreleased)
+-----------------------
+
+Added
+^^^^^
+
+- Added logos; |logo|, |logo_no_tree| to ``README`` and docs `#12 <https://github.com/richardangell/pitci/pull/12>`_
+
+.. |logo| image:: ../../logo.png
+  :width: 100
+
+.. |logo_no_tree| image:: ../../logo_no-tree.png
+  :width: 80
+
 0.3.0.dev1 (unreleased)
 -----------------------
 
