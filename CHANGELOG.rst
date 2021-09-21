@@ -22,8 +22,12 @@ Each individual change should have a link to the pull request after the descript
 Changed
 ^^^^^^^
 
-- Changed logo to; |old_logo| `#14 <https://github.com/richardangell/pitci/pull/14>`_
+- Changed logo to; |logo| `#14 <https://github.com/richardangell/pitci/pull/14>`_
 
+
+.. |logo| image:: ../../logo.png
+  :width: 100
+  
 
 0.3.0 (2021-09-19)
 ------------------
@@ -42,7 +46,6 @@ Added
 
 .. |old_logo| image:: https://github.com/richardangell/pitci/blob/73f72c09472bd9a8a401a3dfdda1c82d636adf45/logo.png
   :width: 100
-  :alt: logo
 
 .. |old_logo_no_tree| image:: https://github.com/richardangell/pitci/blob/73f72c09472bd9a8a401a3dfdda1c82d636adf45/logo_no-tree.png
   :width: 80
