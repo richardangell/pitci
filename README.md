@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo.png">
+  <img src="https://github.com/richardangell/pitci/raw/master/logo.png">
 </p>
 
 # Prediction Intervals for Trees using Conformal Intervals
