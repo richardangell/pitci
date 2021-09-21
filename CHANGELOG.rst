@@ -16,40 +16,23 @@ Subsections for each version can be one of the following;
 
 Each individual change should have a link to the pull request after the description of the change.
 
-0.3.0.dev2 (unreleased)
------------------------
-
-Added
-^^^^^
-
-- Added logos; |logo|, |logo_no_tree| to ``README`` and docs `#12 <https://github.com/richardangell/pitci/pull/12>`_
-
-.. |logo| image:: ../../logo.png
-  :width: 100
-
-.. |logo_no_tree| image:: ../../logo_no-tree.png
-  :width: 80
-
-0.3.0.dev1 (unreleased)
+0.3.1.dev0 (unreleased)
 -----------------------
 
 Changed
 ^^^^^^^
 
-- Update changelog to follow structure recommendations from https://keepachangelog.com/ `#11 <https://github.com/richardangell/pitci/pull/11>`_
-- Change file type of chaneglog to ``.rst`` `#11 <https://github.com/richardangell/pitci/pull/11>`_
+- Changed logo to; |old_logo| `#14 <https://github.com/richardangell/pitci/pull/14>`_
+
+
+0.3.0 (2021-09-19)
+------------------
 
 Added
 ^^^^^
 
+- Add logos; |old_logo|, |old_logo_no_tree| to ``README`` and docs `#12 <https://github.com/richardangell/pitci/pull/12>`_
 - Add changelog into sphinx docs `#11 <https://github.com/richardangell/pitci/pull/11>`_
-
-0.3.0.dev0 (unreleased) 
------------------------
-
-Added
-^^^^^
-
 - Add new ``ConformalPredictor`` abstract base class that all other conformal predictor classes will inherit from `#9 <https://github.com/richardangell/pitci/pull/9>`_
     - Add `_lookup_baseline_interval`` method in ``ConformalPredictor`` which returns the ``baseline_interval`` attribute but which can be overridden by the split conformal predictor classes or future classes where the baseline interval is not a constant value
 - Add new tests; ``TestConformalPredictionValues`` for the model type specific ``ConformalPredictor`` subclasses that test (when using a non-trivial model) `#9 <https://github.com/richardangell/pitci/pull/9>`_
@@ -57,9 +40,18 @@ Added
     - The conformal predictor gives the expected intervals
 - Add new ``docstrings.combine_split_mixin_docs`` function to combine docstring for ``SplitConformalPredictorMixin`` and the model specific classes it will be jointly inherited with `#9 <https://github.com/richardangell/pitci/pull/9>`_
 
+.. |old_logo| image:: https://github.com/richardangell/pitci/blob/73f72c09472bd9a8a401a3dfdda1c82d636adf45/logo.png
+  :width: 100
+  :alt: logo
+
+.. |old_logo_no_tree| image:: https://github.com/richardangell/pitci/blob/73f72c09472bd9a8a401a3dfdda1c82d636adf45/logo_no-tree.png
+  :width: 80
+
 Changed
 ^^^^^^^
 
+- Update changelog to follow structure recommendations from https://keepachangelog.com/ `#11 <https://github.com/richardangell/pitci/pull/11>`_
+- Change file type of chaneglog to ``.rst`` `#11 <https://github.com/richardangell/pitci/pull/11>`_
 - Update ``AbsoluteErrorConformalPredictor`` and ``LeafNodeScaledConformalPredictor`` classes to inherit from ``ConformalPredictor`` `#9 <https://github.com/richardangell/pitci/pull/9>`_
 - Remove ``predict_with_interval`` and `_calibrate_interval`` methods from ``LeafNodeScaledConformalPredictor`` class, these are now in the ``ConformalPredictor`` class `#9 <https://github.com/richardangell/pitci/pull/9>`_
 - Refactor ``SplitConformalPredictor`` into ``SplitConformalPredictorMixin`` that does not inherit from ``LeafNodeScaledConformalPredictor`` `#9 <https://github.com/richardangell/pitci/pull/9>`_
