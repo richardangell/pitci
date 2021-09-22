@@ -1,0 +1,15 @@
+name: Check 
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  version_check:
+    runs-on: ubuntu-latest
+    name: Checks _version.py and CHANGELOG.rst files for updates.
+    steps:
+    - name: Version check action
+      uses: mwcodebase/versioning-checker@v2.2
+      with:
+        tracked_files: '_version.py,CHANGELOG.rst'
