@@ -12,4 +12,4 @@ jobs:
     - name: Version check action
       uses: mwcodebase/versioning-checker@v2.2
       with:
-        tracked_files: '_version.py,CHANGELOG.rst'
+        tracked_files: 'pitci/_version.py,CHANGELOG.rst'
