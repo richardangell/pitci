@@ -8,6 +8,8 @@
 ![GitHub](https://img.shields.io/github/license/richardangell/pitci)
 ![Read the Docs](https://img.shields.io/readthedocs/pitci)
 ![GitHub issues](https://img.shields.io/github/issues/richardangell/pitci)
+![Codacy branch coverage](https://img.shields.io/codacy/coverage/ad3366715574484ab0773e703855b97b/master)
+![GitHub last commit](https://img.shields.io/github/last-commit/richardangell/pitci)
 ![Build](https://github.com/richardangell/pitci/actions/workflows/python-package.yml/badge.svg?branch=master)
 
 ## Introduction
