@@ -1,0 +1,15 @@
+name: Check version updated
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  version_check:
+    runs-on: ubuntu-latest
+    name: Checks _version.py and CHANGELOG.rst files have been updated
+    steps:
+    - name: Version check action
+      uses: richardangell/versioning-checker@v2.3
+      with:
+        tracked_files: '_version.py,CHANGELOG.rst'

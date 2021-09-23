@@ -4,9 +4,8 @@
 name: Python package build and test
 
 on:
-  push:
   pull_request:
-    branches: [ master, develop ]
+    branches: [ master ]
 
 jobs:
   build:
