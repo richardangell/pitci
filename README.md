@@ -4,9 +4,11 @@
 
 # Prediction Intervals for Trees using Conformal Intervals
 
-![PyPI](https://img.shields.io/pypi/v/pitci?color=success&style=plastic)
-![Build](https://github.com/richardangell/pitci/actions/workflows/python-package.yml/badge.svg?branch=master)
+![PyPI](https://img.shields.io/pypi/v/pitci?color=success&style=flat)
 ![GitHub](https://img.shields.io/github/license/richardangell/pitci)
+![Read the Docs](https://img.shields.io/readthedocs/pitci)
+![GitHub issues](https://img.shields.io/github/issues/richardangell/pitci)
+![Build](https://github.com/richardangell/pitci/actions/workflows/python-package.yml/badge.svg?branch=master)
 
 ## Introduction
 
