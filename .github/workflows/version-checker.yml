@@ -10,6 +10,6 @@ jobs:
     name: Checks _version.py and CHANGELOG.rst files have been updated
     steps:
     - name: Version check action
-      uses: mwcodebase/versioning-checker@v2.2
+      uses: richardangell/versioning-checker@v2.3
       with:
-        tracked_files: 'pitci/_version.py,CHANGELOG.rst'
+        tracked_files: '_version.py,CHANGELOG.rst'
