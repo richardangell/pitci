@@ -16,18 +16,29 @@ Subsections for each version can be one of the following;
 
 Each individual change should have a link to the pull request after the description of the change.
 
+0.3.1.dev1 (unreleased)
+-----------------------
+
+Added
+^^^^^
+
+- Add new github action to check that ``_version.py`` and ``CHANGELOG.rst`` files are modified in pull requests to the master branch. This workflow is a slightly modified version of `mwcodebase/versioning-checker <https://github.com/marketplace/actions/versioning-checker>`_ (`source code <https://github.com/mwcodebase/versioning-checker>`_ )
+
+Changed
+^^^^^^^
+
+- Change ``Python package build and test`` workflow to only trigger on pull requests to master
+
 0.3.1.dev0 (unreleased)
 -----------------------
 
 Changed
 ^^^^^^^
 
-- Changed logo to; |logo| `#14 <https://github.com/richardangell/pitci/pull/14>`_
-
+- Change logo to; |logo| `#14 <https://github.com/richardangell/pitci/pull/14>`_
 
 .. |logo| image:: ../../logo.png
-  :width: 100
-  
+  :width: 100  
 
 0.3.0 (2021-09-19)
 ------------------
