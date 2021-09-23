@@ -16,6 +16,14 @@ Subsections for each version can be one of the following;
 
 Each individual change should have a link to the pull request after the description of the change.
 
+0.3.1.dev2 (unreleased)
+-----------------------
+
+Added
+^^^^^
+
+- Add badges to ``README``
+
 0.3.1.dev1 (unreleased)
 -----------------------
 

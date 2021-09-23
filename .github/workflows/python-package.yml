@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
 
@@ -43,11 +43,17 @@ jobs:
     - name: Test with pytest
       if: always()
       run: |
-        pytest . --cov=pitci/ --cov-report=html --cov-config=.coveragerc
+        pytest . --cov=pitci/ --cov-report=html --cov-report=xml --cov-config=.coveragerc
       
-    - name: Upload coverage pytest html test results
+    - name: Upload coverage pytest html test results to github
       if: always()    
       uses: actions/upload-artifact@v2
       with:
         name: coverage-html-pytest-results
         path: htmlcov
+
+    - name: Upload coverage pytest html test results to codacy
+      if: always()
+      run: |
+        export CODACY_PROJECT_TOKEN=${{secrets.CODACY_PROJECT_TOKEN}}
+        bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r coverage.xml
