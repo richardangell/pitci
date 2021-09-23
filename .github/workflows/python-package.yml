@@ -55,5 +55,5 @@ jobs:
     - name: Upload coverage pytest html test results to codacy
       if: always()
       run: |
-        export CODACY_PROJECT_TOKEN=${{secret.CODACY_PROJECT_TOKEN}}
+        export CODACY_PROJECT_TOKEN=${{secrets.CODACY_PROJECT_TOKEN}}
         bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r htmlcov/
