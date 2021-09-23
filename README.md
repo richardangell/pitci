@@ -4,6 +4,10 @@
 
 # Prediction Intervals for Trees using Conformal Intervals
 
+![PyPI](https://img.shields.io/pypi/v/pitci?color=success&style=plastic)
+![Build](https://github.com/richardangell/pitci/actions/workflows/python-package.yml/badge.svg?branch=master)
+![GitHub](https://img.shields.io/github/license/richardangell/pitci)
+
 ## Introduction
 
 The basic idea of inductive conformal intervals is to use a calibration set to learn a given quantile of the error distribution on that set. This quantile is used as the basis for prediction intervals on new data.
