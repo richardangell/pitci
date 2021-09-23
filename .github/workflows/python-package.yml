@@ -43,7 +43,7 @@ jobs:
     - name: Test with pytest
       if: always()
       run: |
-        pytest . --cov=pitci/ --cov-report=html --cov-config=.coveragerc
+        pytest . --cov=pitci/ --cov-report=html --cov-report=xml --cov-config=.coveragerc
       
     - name: Upload coverage pytest html test results to github
       if: always()    
@@ -56,4 +56,4 @@ jobs:
       if: always()
       run: |
         export CODACY_PROJECT_TOKEN=${{secrets.CODACY_PROJECT_TOKEN}}
-        bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r htmlcov/
+        bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r coverage.xml
