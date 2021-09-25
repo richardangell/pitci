@@ -16,6 +16,21 @@ Subsections for each version can be one of the following;
 
 Each individual change should have a link to the pull request after the description of the change.
 
+0.3.1.dev3 (unreleased)
+-----------------------
+
+Added
+^^^^^
+
+- Add bandit into build and test github action
+- Add bandit to test dependencies in ``pyproject.toml``
+
+Changed
+^^^^^^^
+
+- Rename .github/workflows/python-package.yml to .github/workflows/build-test.yml
+- Change build-test github action to also run on pushes to master
+
 0.3.1.dev2 (unreleased)
 -----------------------
 
