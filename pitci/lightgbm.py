@@ -22,6 +22,7 @@ from .base import (
 )
 from .checks import check_type, check_allowed_value
 from .dispatchers import (
+    get_absolute_error_conformal_predictor,
     get_leaf_node_scaled_conformal_predictor,
     get_split_leaf_node_scaled_conformal_predictor,
 )
@@ -353,6 +354,19 @@ class LGBMBoosterSplitLeafNodeScaledConformalPredictor(
     ) -> np.ndarray:
 
         return super().predict_with_interval(data=data)
+
+
+@get_absolute_error_conformal_predictor.register(lgb.basic.Booster)
+def return_xgb_booster_absolute_error_confromal_predictor(
+    model: lgb.Booster,
+) -> LGBMBoosterAbsoluteErrorConformalPredictor:
+    """Function to return an instance of LGBMBoosterAbsoluteErrorConformalPredictor
+    class the passed lightgbm model object.
+    """
+
+    confo_model = LGBMBoosterAbsoluteErrorConformalPredictor(model=model)
+
+    return confo_model
 
 
 @get_leaf_node_scaled_conformal_predictor.register(lgb.basic.Booster)
