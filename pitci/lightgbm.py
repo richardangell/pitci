@@ -15,9 +15,14 @@ except ModuleNotFoundError as err:
 
 from typing import List, Union, Any
 
-from .base import LeafNodeScaledConformalPredictor, SplitConformalPredictorMixin
+from .base import (
+    AbsoluteErrorConformalPredictor,
+    LeafNodeScaledConformalPredictor,
+    SplitConformalPredictorMixin,
+)
 from .checks import check_type, check_allowed_value
 from .dispatchers import (
+    get_absolute_error_conformal_predictor,
     get_leaf_node_scaled_conformal_predictor,
     get_split_leaf_node_scaled_conformal_predictor,
 )
@@ -84,6 +89,79 @@ SUPPORTED_OBJECTIVES_ATTRIBUTE = (
     "\tBooster supported objectives. If a lgb.Booster with a non-supported objective\n"
     "\tis passed when initialising the class object an error will be raised."
 )
+
+
+class LGBMBoosterAbsoluteErrorConformalPredictor(AbsoluteErrorConformalPredictor):
+
+    __doc__ = AbsoluteErrorConformalPredictor.__doc__.format(
+        model_type="``lgb.Booster``",
+        description=SUPPORTED_OBJECTIVES_DESCRIPTION,
+        parameters="",
+        calibrate_link=":func:`~pitci.lightgbm.LGBMBoosterAbsoluteErrorConformalPredictor.calibrate`",
+        attributes=SUPPORTED_OBJECTIVES_ATTRIBUTE.format(model_type="``lgb.Booster``"),
+    )
+
+    def __init__(self, model: lgb.Booster) -> None:
+
+        check_type(model, [lgb.basic.Booster], "model")
+
+        super().__init__(model=model)
+
+        self.SUPPORTED_OBJECTIVES = SUPPORTED_OBJECTIVES_ABSOLUTE_ERROR
+
+        check_objective_supported(model, self.SUPPORTED_OBJECTIVES)
+
+    @docstrings.doc_inherit_kwargs(
+        AbsoluteErrorConformalPredictor.calibrate,
+        style=docstrings.str_format_merge_style,
+        description="",
+        data_type="np.ndarray or pd.DataFrame",
+        response_type="np.ndarray or pd.Series",
+    )
+    def calibrate(
+        self,
+        data: Union[np.ndarray, pd.DataFrame],
+        response: Union[np.ndarray, pd.Series],
+        alpha: Union[int, float] = 0.95,
+    ) -> None:
+
+        check_type(data, [np.ndarray, pd.DataFrame], "data")
+
+        super().calibrate(data=data, alpha=alpha, response=response)
+
+    @docstrings.doc_inherit_kwargs(
+        AbsoluteErrorConformalPredictor.predict_with_interval,
+        style=docstrings.str_format_merge_style,
+        description="",
+        data_type="np.ndarray or pd.DataFrame",
+    )
+    def predict_with_interval(
+        self, data: Union[np.ndarray, pd.DataFrame]
+    ) -> np.ndarray:
+
+        check_type(data, [np.ndarray, pd.DataFrame], "data")
+
+        return super().predict_with_interval(data)
+
+    def _generate_predictions(
+        self, data: Union[pd.DataFrame, np.ndarray]
+    ) -> np.ndarray:
+        """Method to generate predictions from the lgboost model.
+
+        The number of trees to predict with is not specified, defaulting to lightgbm's
+        default behaviour for the `num_iteration` argument;
+        https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.Booster.html#lightgbm.Booster.predict.
+
+        Parameters
+        ----------
+        data : lgb.Dataset
+            Data to generate predictions on.
+
+        """
+
+        predictions = self.model.predict(data)
+
+        return predictions
 
 
 class LGBMBoosterLeafNodeScaledConformalPredictor(LeafNodeScaledConformalPredictor):
@@ -276,6 +354,19 @@ class LGBMBoosterSplitLeafNodeScaledConformalPredictor(
     ) -> np.ndarray:
 
         return super().predict_with_interval(data=data)
+
+
+@get_absolute_error_conformal_predictor.register(lgb.basic.Booster)
+def return_xgb_booster_absolute_error_confromal_predictor(
+    model: lgb.Booster,
+) -> LGBMBoosterAbsoluteErrorConformalPredictor:
+    """Function to return an instance of LGBMBoosterAbsoluteErrorConformalPredictor
+    class the passed lightgbm model object.
+    """
+
+    confo_model = LGBMBoosterAbsoluteErrorConformalPredictor(model=model)
+
+    return confo_model
 
 
 @get_leaf_node_scaled_conformal_predictor.register(lgb.basic.Booster)

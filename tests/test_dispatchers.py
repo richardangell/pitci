@@ -63,6 +63,24 @@ class TestGetAbsoluteErrorConformalPredictor:
             "from get_absolute_error_conformal_predictor"
         )
 
+    def test_lgb_booster(self, lgb_booster_1_split_1_tree):
+        """Test an LGBMBoosterAbsoluteErrorConformalPredictor object is returned if
+        and lgb.Booster is passed.
+        """
+
+        confo_model = dispatchers.get_absolute_error_conformal_predictor(
+            lgb_booster_1_split_1_tree
+        )
+
+        assert (
+            type(confo_model) is pitci_lgb.LGBMBoosterAbsoluteErrorConformalPredictor
+        ), "incorrect type returned from get_absolute_error_conformal_predictor"
+
+        assert confo_model.model is lgb_booster_1_split_1_tree, (
+            "passed model arg not set to model attribute of object returned "
+            "from get_leaf_node_scaled_conformal_predictor"
+        )
+
     def test_other_type_exception(self):
         """Test an exception is raised if a non-implemented type is passed."""
 

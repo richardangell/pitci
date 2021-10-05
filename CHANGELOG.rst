@@ -16,48 +16,24 @@ Subsections for each version can be one of the following;
 
 Each individual change should have a link to the pull request after the description of the change.
 
-0.3.1.dev3 (unreleased)
+0.3.1 (2021-10-05)
 -----------------------
 
 Added
 ^^^^^
 
-- Add bandit into build and test github action
-- Add bandit to test dependencies in ``pyproject.toml``
+- Add support for absolute error conformal predictions with `lgb.Booster` models with the `LGBMBoosterAbsoluteErrorConformalPredictor` class `#23 <https://github.com/richardangell/pitci/pull/23>`_
+- Add bandit into build and test github action `#22 <https://github.com/richardangell/pitci/pull/22>`_
+- Add bandit to test dependencies in ``pyproject.toml`` `#22 <https://github.com/richardangell/pitci/pull/22>`_
+- Add badges to ``README`` `#21 <https://github.com/richardangell/pitci/pull/21>`_
+- Add new github action to check that ``_version.py`` and ``CHANGELOG.rst`` files are modified in pull requests to the master branch. This workflow is a slightly modified version of `mwcodebase/versioning-checker <https://github.com/marketplace/actions/versioning-checker>`_ (`source code <https://github.com/mwcodebase/versioning-checker>`_ ) `#20 <https://github.com/richardangell/pitci/pull/20>`_
 
 Changed
 ^^^^^^^
 
-- Rename .github/workflows/python-package.yml to .github/workflows/build-test.yml
-- Change build-test github action to also run on pushes to master
-
-0.3.1.dev2 (unreleased)
------------------------
-
-Added
-^^^^^
-
-- Add badges to ``README``
-
-0.3.1.dev1 (unreleased)
------------------------
-
-Added
-^^^^^
-
-- Add new github action to check that ``_version.py`` and ``CHANGELOG.rst`` files are modified in pull requests to the master branch. This workflow is a slightly modified version of `mwcodebase/versioning-checker <https://github.com/marketplace/actions/versioning-checker>`_ (`source code <https://github.com/mwcodebase/versioning-checker>`_ )
-
-Changed
-^^^^^^^
-
-- Change ``Python package build and test`` workflow to only trigger on pull requests to master
-
-0.3.1.dev0 (unreleased)
------------------------
-
-Changed
-^^^^^^^
-
+- Rename .github/workflows/python-package.yml to .github/workflows/build-test.yml `#22 <https://github.com/richardangell/pitci/pull/22>`_
+- Change build-test github action to also run on pushes to master `#22 <https://github.com/richardangell/pitci/pull/22>`_
+- Change ``Python package build and test`` workflow to only trigger on pull requests to master `#20 <https://github.com/richardangell/pitci/pull/20>`_
 - Change logo to; |logo| `#14 <https://github.com/richardangell/pitci/pull/14>`_
 
 .. |logo| image:: ../../logo.png

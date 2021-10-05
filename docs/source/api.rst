@@ -20,6 +20,7 @@ lightgbm module
 .. autosummary::
     :toctree: api/
 
+    lightgbm.LGBMBoosterAbsoluteErrorConformalPredictor
     lightgbm.LGBMBoosterLeafNodeScaledConformalPredictor
     lightgbm.LGBMBoosterSplitLeafNodeScaledConformalPredictor
          

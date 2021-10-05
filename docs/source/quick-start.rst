@@ -66,7 +66,7 @@ Library           Absolute Error  Leaf Node Scaled Absolute Error  Split Leaf No
 ================= =============== ================================ ======================================
 xgboost Booster   x               x                                x
 xgboost SKLearn   x               x
-lightgbm Booster                  x                                x
+lightgbm Booster  x               x                                x
 ================= =============== ================================ ======================================
 
 The intention is to add support for more libraries in the future!
